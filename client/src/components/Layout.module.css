@@ -134,7 +134,9 @@
 .areaIconItem:hover { background: var(--surface2); }
 
 /* Left bottom */
-.leftBottom { padding: 10px 8px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 5px; flex-shrink: 0; }
+.leftBottom { padding: 10px 8px; border-top: 1px solid var(--border); flex-shrink: 0; }
+.leftBottomExpanded { display: flex; flex-direction: column; gap: 5px; }
+.leftBottomIcons { display: flex; flex-direction: column; align-items: center; gap: 5px; }
 .searchBtn {
   display: flex;
   align-items: center;
@@ -170,6 +172,43 @@
   transition: border-color .15s;
 }
 .themeBtn:hover { border-color: var(--accent); color: var(--text); }
+.saveLinkBtn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text2);
+  font-size: 11px;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+  transition: border-color .15s;
+}
+.saveLinkBtn kbd {
+  background: var(--border);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-family: monospace;
+}
+.saveLinkBtn:hover { border-color: var(--accent); color: var(--accent); }
+.topSaveLinkBtn {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border);
+  background: transparent;
+  border-radius: 7px;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color .15s;
+}
+.topSaveLinkBtn:hover { border-color: var(--accent); }
 .iconBtn {
   width: 36px;
   height: 36px;
@@ -474,42 +513,44 @@
 .toolSearchInput:focus { border-color: var(--accent); }
 .toolSearchInput::placeholder { color: var(--text2); }
 
-/* Tools list — icon-left with name+pricing stacked (like screenshot) */
+/* Right sidebar expanded wrapper */
+.rightExpanded { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+/* Tools list — compact */
 .toolList {
   flex: 1;
   overflow-y: auto;
-  padding: 4px 8px;
+  padding: 4px 6px;
 }
 .toolItem {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 8px;
-  border-radius: 10px;
+  gap: 8px;
+  padding: 6px 7px;
+  border-radius: 8px;
   text-decoration: none;
-  transition: background .15s;
-  border-bottom: 1px solid transparent;
+  transition: background .12s;
 }
-.toolItem:hover { background: var(--surface2); }
 .toolItem + .toolItem { border-top: 1px solid var(--border); border-radius: 0; }
-.toolItem:first-child { border-radius: 10px 10px 0 0; }
-.toolItem:last-child  { border-radius: 0 0 10px 10px; border-bottom: none; }
+.toolItem:first-child { border-radius: 8px 8px 0 0; }
+.toolItem:last-child  { border-radius: 0 0 8px 8px; border-bottom: none; }
 
 .toolIcon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 11px;
   font-weight: 800;
   color: #fff;
   flex-shrink: 0;
 }
-.toolInfo { display: flex; flex-direction: column; gap: 2px; }
-.toolName { font-size: 14px; font-weight: 600; color: var(--text); }
-.toolPricing { font-size: 10px; font-weight: 700; letter-spacing: .04em; }
+.toolInfo { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.toolName { font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.toolPricing { font-size: 9px; font-weight: 700; letter-spacing: .04em; }
+.toolDesc { font-size: 10px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .toolsFooter {
   padding: 12px 16px;

@@ -1,31 +1,134 @@
-.page { padding: 0; }
-.pageHeader { padding: 24px 32px 0; }
-.pageTitle  { font-size: 20px; font-weight: 700; }
+.page { padding: 0; padding-bottom: 80px; }
 
-.content { max-width: 640px; padding: 24px 32px; }
-.section { margin-bottom: 36px; }
-.sectionTitle { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--text2); margin-bottom: 12px; }
+.pageHeader { padding: 28px 40px 0; }
+.pageTitle  { font-size: 24px; font-weight: 700; }
 
-.row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border); }
-.rowLabel { flex: 1; }
-.rowName  { font-size: 14px; font-weight: 500; }
-.rowDesc  { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.content { max-width: 720px; padding: 28px 40px; }
 
-.themeOptions { display: flex; gap: 8px; }
-.themeOption { padding: 7px 14px; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--text2); font-size: 13px; cursor: pointer; transition: all .15s; }
-.themeOption:hover { border-color: var(--accent); color: var(--text); }
-.themeActive { background: var(--accent-muted) !important; border-color: var(--accent) !important; color: var(--accent) !important; }
+.section { margin-bottom: 40px; }
+.sectionLabel {
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .08em;
+  color: var(--text2); margin-bottom: 6px;
+}
+.sectionDesc { font-size: 13px; color: var(--text2); margin-bottom: 20px; }
 
-.accentOptions { display: flex; gap: 8px; align-items: center; }
-.accentDot { width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: transform .15s, border-color .15s; }
-.accentDot:hover { transform: scale(1.15); }
-.accentActive { border-color: var(--text) !important; transform: scale(1.2); }
+/* Theme cards */
+.themeCards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
 
-.rowInput { padding: 7px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; color: var(--text); font-size: 13px; outline: none; min-width: 200px; }
-.rowInput:focus { border-color: var(--accent); }
-.rowInput:disabled { opacity: .5; cursor: not-allowed; }
+.themeCard {
+  background: transparent;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color .2s;
+  padding: 0;
+}
+.themeCard:hover    { border-color: var(--text2); }
+.themeCardActive    { border-color: var(--accent) !important; }
 
-.about { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; display: flex; flex-direction: column; gap: 6px; }
+.themePreview      { background: #0e0e10; padding: 4px; }
+.themePreviewLight { background: #f5f5f5; padding: 4px; }
+.previewSvg        { width: 100%; display: block; }
+
+.themeCardInfo { padding: 14px 16px; background: var(--surface); }
+.themeCardName {
+  font-size: 14px; font-weight: 600; color: var(--text);
+  display: flex; align-items: center; gap: 8px; margin-bottom: 4px;
+}
+.activeTag {
+  font-size: 11px; font-weight: 600;
+  color: var(--accent);
+}
+.themeCardDesc { font-size: 12px; color: var(--text2); line-height: 1.4; }
+
+/* Accent */
+.accentRow   { display: flex; align-items: center; gap: 16px; }
+.accentLabel { font-size: 13px; color: var(--text2); }
+.accentPicker { display: flex; gap: 8px; }
+.accentDot {
+  width: 26px; height: 26px; border-radius: 50%;
+  border: 2px solid transparent; cursor: pointer;
+  transition: transform .15s, border-color .15s;
+}
+.accentDot:hover    { transform: scale(1.15); }
+.accentDotActive    { border-color: var(--text) !important; transform: scale(1.2); }
+
+/* Account */
+.accountCard {
+  display: flex; align-items: center; gap: 16px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 20px; margin-bottom: 12px;
+}
+.accountAvatar {
+  width: 48px; height: 48px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 700; color: #fff; flex-shrink: 0;
+  transition: background .3s;
+}
+.accountInfo { flex: 1; }
+.accountNameInput {
+  font-size: 16px; font-weight: 600; color: var(--text);
+  background: transparent; border: none; outline: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color .15s; width: 100%;
+  padding: 2px 0;
+}
+.accountNameInput:focus { border-color: var(--accent); }
+.accountEmail { font-size: 12px; color: var(--text2); margin-top: 3px; }
+
+.logoutBtn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 18px;
+  color: #f43f5e;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.logoutBtn:hover { background: rgba(244,63,94,.08); border-color: #f43f5e; }
+
+/* About */
+.aboutCard {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 6px;
+}
 .aboutLogo    { font-size: 16px; font-weight: 700; color: var(--accent); }
 .aboutDesc    { font-size: 13px; color: var(--text2); }
 .aboutVersion { font-size: 11px; color: var(--text2); }
+
+/* Save bar */
+.saveBar {
+  position: fixed;
+  bottom: -70px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.4);
+  transition: bottom .25s cubic-bezier(.34,1.56,.64,1);
+  z-index: 100;
+  white-space: nowrap;
+}
+.saveBarVisible { bottom: 24px; }
+.saveBarMsg  { font-size: 13px; color: var(--text2); }
+.savedMsg    { font-size: 13px; color: #3ecf8e; font-weight: 500; }
+.saveBtn {
+  padding: 8px 18px;
+  background: var(--accent);
+  color: #fff; border: none;
+  border-radius: 8px;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.saveBtn:hover { opacity: .85; }
