@@ -41,11 +41,59 @@
 }
 .closeBtn:hover { background: var(--surface2); color: var(--text); }
 
-.body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+/* OG preview banner */
+.previewBanner {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+}
+.previewImg {
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  display: block;
+}
+.previewOverlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 4px 12px;
+  background: linear-gradient(transparent, rgba(0,0,0,.6));
+}
+.previewDomain { font-size: 11px; color: rgba(255,255,255,.8); }
+
+.body { padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; }
 
 .field { display: flex; flex-direction: column; gap: 5px; }
-.row   { display: flex; gap: 12px; }
-.row .field { flex: 1; }
+.twoCol { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* Fetch status badges */
+.fetchingBadge {
+  font-size: 10px;
+  color: var(--accent);
+  font-weight: 500;
+  margin-left: 8px;
+  text-transform: none;
+  letter-spacing: 0;
+  animation: pulse 1s ease-in-out infinite;
+}
+.fetchedBadge {
+  font-size: 10px;
+  color: #3ecf8e;
+  font-weight: 500;
+  margin-left: 8px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+.domainHint {
+  font-size: 10px;
+  color: var(--text2);
+  margin-top: 2px;
+  padding-left: 2px;
+}
 
 .label {
   font-size: 11px;
@@ -68,6 +116,8 @@
 }
 .input:focus { border-color: var(--accent); }
 .input::placeholder { color: var(--text2); }
+
+.textarea { resize: vertical; min-height: 56px; font-family: inherit; line-height: 1.5; }
 
 .select {
   padding: 9px 12px;

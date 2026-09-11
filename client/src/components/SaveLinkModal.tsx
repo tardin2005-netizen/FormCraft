@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useLinksStore } from '../store/linksStore'
 import { useAreasStore } from '../store/areasStore'
@@ -6,24 +6,49 @@ import s from './SaveLinkModal.module.css'
 
 interface Props { onClose: () => void }
 
-type ContentType = 'link' | 'pdf' | 'nota' | 'imagem'
+type ContentType = 'link' | 'pdf' | 'nota' | 'imagem' | 'prompt'
+const TYPE_ICONS: Record<ContentType, string> = { link: '🔗', pdf: '📄', nota: '📝', imagem: '🖼️', prompt: '🤖' }
 
-const TYPE_ICONS: Record<ContentType, string> = {
-  link: '🔗', pdf: '📄', nota: '📝', imagem: '🖼️'
+async function fetchMeta(url: string): Promise<{ title: string; desc: string; image: string } | null> {
+  try {
+    const proxy = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
+    const res = await fetch(proxy, { signal: AbortSignal.timeout(6000) })
+    const html = await res.text()
+    const doc  = new DOMParser().parseFromString(html, 'text/html')
+    const og   = (sel: string) => doc.querySelector(sel)?.getAttribute('content') ?? ''
+    const title = og('meta[property="og:title"]') || og('meta[name="twitter:title"]') || doc.querySelector('title')?.textContent?.trim() || ''
+    const desc  = og('meta[property="og:description"]') || og('meta[name="description"]') || og('meta[name="twitter:description"]') || ''
+    const image = og('meta[property="og:image"]') || og('meta[name="twitter:image"]') || ''
+    return { title, desc, image }
+  } catch {
+    return null
+  }
+}
+
+function detectType(u: string): ContentType {
+  if (u.endsWith('.pdf')) return 'pdf'
+  if (/\.(png|jpg|jpeg|gif|webp|svg)$/i.test(u)) return 'imagem'
+  return 'link'
+}
+
+function getDomain(u: string) {
+  try { return new URL(u).hostname.replace('www.', '') } catch { return '' }
 }
 
 export default function SaveLinkModal({ onClose }: Props) {
   const { addLink } = useLinksStore()
-  const { areas } = useAreasStore()
+  const { areas }   = useAreasStore()
 
-  const [url,     setUrl]     = useState('')
-  const [title,   setTitle]   = useState('')
-  const [type,    setType]    = useState<ContentType>('link')
-  const [areaId,  setAreaId]  = useState(areas[0]?.id ?? '')
-  const [tags,    setTags]    = useState('')
-  const [saved,   setSaved]   = useState(false)
-  const [loading, setLoading] = useState(false)
-
+  const [url,       setUrl]       = useState('')
+  const [title,     setTitle]     = useState('')
+  const [desc,      setDesc]      = useState('')
+  const [ogImage,   setOgImage]   = useState('')
+  const [type,      setType]      = useState<ContentType>('link')
+  const [areaId,    setAreaId]    = useState(areas[0]?.id ?? '')
+  const [tags,      setTags]      = useState('')
+  const [saved,     setSaved]     = useState(false)
+  const [fetching,  setFetching]  = useState(false)
+  const [fetchDone, setFetchDone] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => { inputRef.current?.focus() }, [])
@@ -37,45 +62,74 @@ export default function SaveLinkModal({ onClose }: Props) {
     return () => document.removeEventListener('keydown', onKey)
   }, [url, title, type, areaId, tags])
 
-  function detectType(u: string): ContentType {
-    if (u.endsWith('.pdf')) return 'pdf'
-    if (/\.(png|jpg|jpeg|gif|webp|svg)$/i.test(u)) return 'imagem'
-    return 'link'
-  }
+  const triggerFetch = useCallback(async (rawUrl: string) => {
+    const u = rawUrl.trim()
+    if (!u.startsWith('http')) return
+    setFetching(true)
+    setFetchDone(false)
+    const meta = await fetchMeta(u)
+    setFetching(false)
+    setFetchDone(true)
+    if (meta) {
+      if (!title && meta.title) setTitle(meta.title)
+      if (!desc  && meta.desc)  setDesc(meta.desc)
+      if (meta.image) setOgImage(meta.image)
+    }
+  }, [title, desc])
 
   function handleUrlChange(val: string) {
     setUrl(val)
-    if (!title) setType(detectType(val))
+    setType(detectType(val))
+    setFetchDone(false)
+  }
+
+  // Fetch on paste
+  function handlePaste(e: React.ClipboardEvent<HTMLInputElement>) {
+    const pasted = e.clipboardData.getData('text').trim()
+    if (pasted.startsWith('http')) {
+      setUrl(pasted)
+      setType(detectType(pasted))
+      triggerFetch(pasted)
+      e.preventDefault()
+    }
+  }
+
+  // Fetch on blur if URL valid and not yet fetched
+  function handleBlur() {
+    if (url.startsWith('http') && !fetchDone && !fetching) {
+      triggerFetch(url)
+    }
   }
 
   function handleSave() {
-    if (!url.trim()) return
-    setLoading(true)
-    setTimeout(() => {
-      addLink({
-        url: url.trim(),
-        title: title.trim() || url.trim(),
-        desc: '',
-        favicon: `https://www.google.com/s2/favicons?domain=${url}&sz=32`,
-        areaId,
-        tags: tags.split(',').map(t => t.trim()).filter(Boolean),
-        type,
-      })
-      setSaved(true)
-      setLoading(false)
-      setTimeout(onClose, 900)
-    }, 400)
+    if (!url.trim() && type !== 'nota' && type !== 'prompt') return
+    addLink({
+      url: url.trim() || '#',
+      title: title.trim() || url.trim() || 'Sem título',
+      desc: desc.trim(),
+      favicon: url.startsWith('http')
+        ? `https://www.google.com/s2/favicons?domain=${getDomain(url)}&sz=32`
+        : TYPE_ICONS[type],
+      areaId,
+      tags: tags.split(',').map(t => t.trim()).filter(Boolean),
+      type,
+    })
+    setSaved(true)
+    setTimeout(onClose, 800)
   }
+
+  const domain = getDomain(url)
+  const canSave = (url.trim().startsWith('http') || type === 'nota' || type === 'prompt') && !saved
 
   return (
     <>
       <div className={s.backdrop} onClick={onClose} />
       <motion.div
         className={s.modal}
-        initial={{ opacity: 0, y: -16, scale: .96 }}
+        initial={{ opacity: 0, y: -20, scale: .96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: -16, scale: .96 }}
-        transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+        exit={{ opacity: 0, y: -20, scale: .96 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 28 }}
       >
         <div className={s.header}>
           <span className={s.headerTitle}>🔗 Salvar conteúdo</span>
@@ -83,16 +137,66 @@ export default function SaveLinkModal({ onClose }: Props) {
         </div>
 
         <div className={s.body}>
+          {/* OG image preview */}
+          <AnimatePresence>
+            {ogImage && (
+              <motion.div
+                className={s.previewBanner}
+                initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 80 }} exit={{ opacity: 0, height: 0 }}
+              >
+                <img src={ogImage} alt="" className={s.previewImg} />
+                <div className={s.previewOverlay}>
+                  <span className={s.previewDomain}>{domain}</span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* URL */}
           <div className={s.field}>
-            <label className={s.label}>URL ou link</label>
+            <label className={s.label}>
+              URL
+              <AnimatePresence>
+                {fetching && (
+                  <motion.span className={s.fetchingBadge}
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                    ⟳ Buscando metadados...
+                  </motion.span>
+                )}
+                {fetchDone && !fetching && (
+                  <motion.span className={s.fetchedBadge}
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                    ✓ Metadados carregados
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </label>
             <input
               ref={inputRef}
               className={s.input}
-              placeholder="https://..."
+              placeholder="Cole a URL aqui..."
               value={url}
               onChange={e => handleUrlChange(e.target.value)}
+              onPaste={handlePaste}
+              onBlur={handleBlur}
             />
+            {domain && <span className={s.domainHint}>{domain}</span>}
+          </div>
+
+          {/* Tipo */}
+          <div className={s.field}>
+            <label className={s.label}>Tipo</label>
+            <div className={s.typePicker}>
+              {(Object.keys(TYPE_ICONS) as ContentType[]).map(t => (
+                <button
+                  key={t}
+                  className={`${s.typeBtn} ${type === t ? s.typeBtnActive : ''}`}
+                  onClick={() => setType(t)}
+                >
+                  {TYPE_ICONS[t]} <span>{t}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Title */}
@@ -100,54 +204,43 @@ export default function SaveLinkModal({ onClose }: Props) {
             <label className={s.label}>Título <span className={s.optional}>(opcional)</span></label>
             <input
               className={s.input}
-              placeholder="Nome do conteúdo"
+              placeholder={fetching ? 'Buscando...' : 'Nome do conteúdo'}
               value={title}
               onChange={e => setTitle(e.target.value)}
             />
           </div>
 
-          {/* Type + Area in a row */}
-          <div className={s.row}>
+          {/* Desc */}
+          {(desc || fetchDone) && (
             <div className={s.field}>
-              <label className={s.label}>Tipo</label>
-              <div className={s.typePicker}>
-                {(Object.keys(TYPE_ICONS) as ContentType[]).map(t => (
-                  <button
-                    key={t}
-                    className={`${s.typeBtn} ${type === t ? s.typeBtnActive : ''}`}
-                    onClick={() => setType(t)}
-                    title={t}
-                  >
-                    {TYPE_ICONS[t]} <span>{t}</span>
-                  </button>
-                ))}
-              </div>
+              <label className={s.label}>Descrição <span className={s.optional}>(opcional)</span></label>
+              <textarea
+                className={`${s.input} ${s.textarea}`}
+                placeholder="Descrição ou anotação..."
+                value={desc}
+                onChange={e => setDesc(e.target.value)}
+                rows={2}
+              />
             </div>
-          </div>
+          )}
 
-          {/* Area */}
-          <div className={s.field}>
-            <label className={s.label}>Área</label>
-            <select
-              className={s.select}
-              value={areaId}
-              onChange={e => setAreaId(e.target.value)}
-            >
-              {areas.map(a => (
-                <option key={a.id} value={a.id}>{a.emoji} {a.title}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Tags */}
-          <div className={s.field}>
-            <label className={s.label}>Tags <span className={s.optional}>(separadas por vírgula)</span></label>
-            <input
-              className={s.input}
-              placeholder="design, referência, ux"
-              value={tags}
-              onChange={e => setTags(e.target.value)}
-            />
+          {/* Area + Tags row */}
+          <div className={s.twoCol}>
+            <div className={s.field}>
+              <label className={s.label}>Área</label>
+              <select className={s.select} value={areaId} onChange={e => setAreaId(e.target.value)}>
+                {areas.map(a => <option key={a.id} value={a.id}>{a.emoji} {a.title}</option>)}
+              </select>
+            </div>
+            <div className={s.field}>
+              <label className={s.label}>Tags <span className={s.optional}>(vírgula)</span></label>
+              <input
+                className={s.input}
+                placeholder="design, ux, ref..."
+                value={tags}
+                onChange={e => setTags(e.target.value)}
+              />
+            </div>
           </div>
         </div>
 
@@ -156,22 +249,13 @@ export default function SaveLinkModal({ onClose }: Props) {
           <button
             className={`${s.saveBtn} ${saved ? s.saveBtnSaved : ''}`}
             onClick={handleSave}
-            disabled={!url.trim() || loading || saved}
+            disabled={!canSave}
           >
             <AnimatePresence mode="wait">
-              {saved ? (
-                <motion.span key="saved" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                  ✓ Salvo!
-                </motion.span>
-              ) : loading ? (
-                <motion.span key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                  Salvando...
-                </motion.span>
-              ) : (
-                <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                  Salvar <kbd>⌘↵</kbd>
-                </motion.span>
-              )}
+              {saved
+                ? <motion.span key="ok"   initial={{opacity:0}} animate={{opacity:1}}>✓ Salvo!</motion.span>
+                : <motion.span key="idle" initial={{opacity:0}} animate={{opacity:1}}>Salvar <kbd>⌘↵</kbd></motion.span>
+              }
             </AnimatePresence>
           </button>
         </div>
