@@ -365,7 +365,7 @@ export default function Layout() {
 
         {/* Page content */}
         <main className={s.content}>
-          <Outlet context={{ onOpenSearch: () => setSearchOpen(true) }} />
+          <Outlet context={{ onOpenSearch: () => setSearchOpen(true), onOpenSaveLink: () => setSaveLinkOpen(true) }} />
         </main>
       </div>
 
