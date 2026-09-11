@@ -1,0 +1,50 @@
+.page { min-height: 100vh; }
+
+.header {
+  display: flex; align-items: center; padding: 16px 32px;
+  border-bottom: 1px solid var(--border); background: var(--surface);
+  position: sticky; top: 0; z-index: 10;
+}
+.headerLeft { display: flex; align-items: center; gap: 20px; }
+.back { font-size: 13px; color: var(--text2); transition: color .15s; }
+.back:hover { color: var(--accent); }
+.title { font-size: 16px; font-weight: 600; }
+
+.content { max-width: 640px; padding: 40px 32px; }
+
+.section { margin-bottom: 40px; }
+.sectionTitle { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text2); margin-bottom: 16px; }
+
+.row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 0; border-bottom: 1px solid var(--border);
+}
+.rowLabel { flex: 1; }
+.rowName { font-size: 14px; font-weight: 500; }
+.rowDesc { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+.themeOptions { display: flex; gap: 8px; }
+.themeOption {
+  padding: 7px 16px; border: 1px solid var(--border);
+  border-radius: 8px; background: transparent;
+  color: var(--text2); font-size: 13px; transition: all .15s;
+}
+.themeOption:hover { border-color: var(--accent); color: var(--text); }
+.themeActive { background: var(--accent-muted) !important; border-color: var(--accent) !important; color: var(--accent) !important; }
+
+.accentOptions { display: flex; gap: 8px; align-items: center; }
+.accentDot {
+  width: 24px; height: 24px; border-radius: 50%;
+  border: 2px solid transparent; transition: transform .15s, border-color .15s;
+}
+.accentDot:hover { transform: scale(1.15); }
+.accentActive { border-color: var(--text) !important; transform: scale(1.2); }
+
+.about {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.aboutLogo { font-size: 18px; font-weight: 700; color: var(--accent); }
+.aboutDesc { font-size: 13px; color: var(--text2); }
+.aboutVersion { font-size: 11px; color: var(--text2); }

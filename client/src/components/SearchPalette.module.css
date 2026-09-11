@@ -1,0 +1,58 @@
+.backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding-top: 80px;
+  z-index: 200;
+}
+
+.palette {
+  width: 600px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,.5);
+}
+
+.inputRow {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.searchIcon { font-size: 16px; }
+.input {
+  flex: 1; background: transparent; border: none;
+  color: var(--text); font-size: 15px; outline: none;
+}
+.input::placeholder { color: var(--text2); }
+.esc {
+  background: var(--surface2); padding: 3px 8px;
+  border-radius: 5px; font-size: 11px; color: var(--text2);
+  font-family: monospace; cursor: pointer;
+}
+.esc:hover { color: var(--text); }
+
+.botAnswer {
+  margin: 12px;
+  padding: 12px 14px;
+  background: var(--accent-muted);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+}
+.botLabel { font-size: 11px; font-weight: 600; color: var(--accent); margin-bottom: 6px; }
+.botText { font-size: 13px; line-height: 1.5; }
+
+.results { padding: 8px 0 8px; max-height: 380px; overflow-y: auto; }
+
+.groupLabel {
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .08em;
+  color: var(--text2); padding: 8px 18px 4px;
+}
+
+.result {
+  padding: 9px 18px; font-size: 13px;
+  cursor: pointer; transition: background .1s;
+}
+.resultSel { background: var(--accent-muted); color: var(--accent); }
