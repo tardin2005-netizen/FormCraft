@@ -4,9 +4,9 @@ import { useCollectionsStore } from '../store/collectionsStore'
 import type { Collection } from '../store/collectionsStore'
 import { useLinksStore } from '../store/linksStore'
 import type { SavedLink } from '../store/linksStore'
+import IconPicker, { IconDisplay } from '../components/IconPicker'
 import s from './Collections.module.css'
 
-const EMOJIS = ['🎨','⚙️','🤖','🎓','📚','💡','🚀','🎯','🌐','🔬','📸','🎵','💼','🏆','🔐','🌱']
 const COLORS  = ['#7c6ef7','#3178c6','#f43f5e','#f59e0b','#10b981','#06b6d4','#8b5cf6','#ec4899','#ef4444','#0ea5e9']
 
 const TYPE_ICON: Record<string, string> = { link:'🔗', pdf:'📄', nota:'📝', imagem:'🖼️', prompt:'🤖' }
@@ -47,7 +47,7 @@ function ColCard({
       onClick={onOpen}
     >
       <div className={s.colCardTop}>
-        <span className={s.colEmoji}>{col.emoji}</span>
+        <IconDisplay value={col.emoji} size={24} color={col.color} />
         <button
           className={s.colDeleteBtn}
           onClick={e => { e.stopPropagation(); onDelete() }}
@@ -108,7 +108,7 @@ function ColDetail({
     >
       <div className={s.detailHeader} style={{ borderBottomColor: col.color + '55' }}>
         <div className={s.detailHeading}>
-          <span className={s.detailEmoji}>{col.emoji}</span>
+          <IconDisplay value={col.emoji} size={28} color={col.color} />
           <div>
             <div className={s.detailName}>{col.name}</div>
             <div className={s.detailDesc}>{col.desc}</div>
@@ -185,10 +185,11 @@ function ColDetail({
 
 /* ── New Collection Modal ── */
 function NewColModal({ onSave, onClose }: { onSave: (data: { name: string; emoji: string; color: string; desc: string }) => void; onClose: () => void }) {
-  const [name,  setName]  = useState('')
-  const [emoji, setEmoji] = useState('🎨')
-  const [color, setColor] = useState(COLORS[0])
-  const [desc,  setDesc]  = useState('')
+  const [name,       setName]       = useState('')
+  const [icon,       setIcon]       = useState('lucide:folder')
+  const [color,      setColor]      = useState(COLORS[0])
+  const [desc,       setDesc]       = useState('')
+  const [pickerOpen, setPickerOpen] = useState(false)
 
   return (
     <>
@@ -205,22 +206,25 @@ function NewColModal({ onSave, onClose }: { onSave: (data: { name: string; emoji
           <button className={s.newModalClose} onClick={onClose}>✕</button>
         </div>
         <div className={s.newModalBody}>
+          {/* Preview */}
           <div className={s.newPreview} style={{ background: color + '18', border: `2px solid ${color}` }}>
-            <span style={{ fontSize: 28 }}>{emoji}</span>
+            <button className={s.iconPickerTrigger} onClick={() => setPickerOpen(true)} title="Trocar ícone">
+              <IconDisplay value={icon} size={28} color={color} />
+            </button>
             <span className={s.newPreviewName}>{name || 'Nome da coleção'}</span>
           </div>
 
+          {/* Icon picker button */}
           <div className={s.newField}>
-            <label className={s.newLabel}>Emoji</label>
-            <div className={s.emojiGrid}>
-              {EMOJIS.map(e => (
-                <button key={e} className={`${s.emojiBtn} ${emoji === e ? s.emojiBtnActive : ''}`}
-                  style={emoji === e ? { borderColor: color } : {}}
-                  onClick={() => setEmoji(e)}>{e}</button>
-              ))}
-            </div>
+            <label className={s.newLabel}>Ícone</label>
+            <button className={s.iconSelectBtn} onClick={() => setPickerOpen(true)}>
+              <IconDisplay value={icon} size={16} color={color} />
+              <span>{icon.includes(':') ? icon.split(':')[1] : icon}</span>
+              <span className={s.iconSelectChange}>Trocar →</span>
+            </button>
           </div>
 
+          {/* Color */}
           <div className={s.newField}>
             <label className={s.newLabel}>Cor</label>
             <div className={s.colorRow}>
@@ -248,12 +252,23 @@ function NewColModal({ onSave, onClose }: { onSave: (data: { name: string; emoji
             className={s.newSaveBtn}
             style={{ background: color }}
             disabled={!name.trim()}
-            onClick={() => { if (name.trim()) { onSave({ name, emoji, color, desc }); onClose() } }}
+            onClick={() => { if (name.trim()) { onSave({ name, emoji: icon, color, desc }); onClose() } }}
           >
             Criar coleção
           </button>
         </div>
       </motion.div>
+
+      <AnimatePresence>
+        {pickerOpen && (
+          <IconPicker
+            value={icon}
+            onChange={setIcon}
+            onClose={() => setPickerOpen(false)}
+            accentColor={color}
+          />
+        )}
+      </AnimatePresence>
     </>
   )
 }

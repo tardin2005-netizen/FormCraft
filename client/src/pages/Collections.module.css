@@ -288,6 +288,36 @@
 .newInput:focus { border-color: var(--accent); }
 .newInput::placeholder { color: var(--text2); }
 
+.iconPickerTrigger {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: background .12s;
+  display: flex;
+  align-items: center;
+}
+.iconPickerTrigger:hover { background: rgba(255,255,255,.1); }
+
+.iconSelectBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color .15s;
+  width: 100%;
+  text-align: left;
+}
+.iconSelectBtn:hover { border-color: var(--accent); }
+.iconSelectChange { margin-left: auto; color: var(--accent); font-size: 11px; }
+
 .newModalFooter {
   display: flex; align-items: center; justify-content: flex-end;
   gap: 10px; padding: 14px 20px; border-top: 1px solid var(--border);
