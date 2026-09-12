@@ -93,7 +93,7 @@ const NAV_ITEMS = [
 const LEFT_EXPANDED  = 220
 const LEFT_COLLAPSED = 56
 const RIGHT_EXPANDED  = 260
-const RIGHT_COLLAPSED = 52
+const RIGHT_COLLAPSED = 36
 
 export default function Layout() {
   const { theme, toggle, accent, setAccent } = useThemeStore()
@@ -107,7 +107,7 @@ export default function Layout() {
   }
 
   const [leftCollapsed,  setLeftCollapsed]  = useState(false)
-  const [rightCollapsed, setRightCollapsed] = useState(false)
+  const [rightCollapsed, setRightCollapsed] = useState(true)
   const [searchOpen,     setSearchOpen]     = useState(false)
   const [saveLinkOpen,   setSaveLinkOpen]   = useState(false)
   const [settingsOpen,   setSettingsOpen]   = useState(false)
@@ -433,17 +433,18 @@ export default function Layout() {
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               transition={{ duration: .15 }}
             >
-              <div className={s.rightCollapsedHeader} title="Ferramentas">🛠️</div>
-              {TOOL_CATS.map(c => (
-                <button
-                  key={c}
-                  className={`${s.catIconBtn} ${toolCat === c ? s.catIconActive : ''}`}
-                  title={c}
-                  onClick={() => { setToolCat(c); setRightCollapsed(false) }}
-                >
-                  {CAT_ICONS[c]}
-                </button>
-              ))}
+              <button
+                className={s.rightExpandBtn}
+                onClick={() => setRightCollapsed(false)}
+                title="Ferramentas"
+              >
+                <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <rect x="1" y="1" width="6" height="6" rx="1.5"/>
+                  <rect x="9" y="1" width="6" height="6" rx="1.5"/>
+                  <rect x="1" y="9" width="6" height="6" rx="1.5"/>
+                  <rect x="9" y="9" width="6" height="6" rx="1.5"/>
+                </svg>
+              </button>
             </motion.div>
           ) : (
             <motion.div
