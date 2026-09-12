@@ -405,6 +405,20 @@
 }
 .settingsLink:hover { background: var(--surface2); }
 
+.settingsLogout {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 12px;
+  color: #f43f5e;
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background .15s;
+}
+.settingsLogout:hover { background: rgba(244, 63, 94, 0.08); }
+
 /* Page content */
 .content { flex: 1; overflow-y: auto; }
 

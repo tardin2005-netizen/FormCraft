@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useThemeStore, ACCENT_COLORS } from '../store/themeStore'
 import { useAreasStore } from '../store/areasStore'
 import type { Accent } from '../store/themeStore'
+import { useAuth } from '../contexts/AuthContext'
 import SearchPalette from './SearchPalette'
 import SaveLinkModal from './SaveLinkModal'
 import s from './Layout.module.css'
@@ -70,7 +71,13 @@ const RIGHT_COLLAPSED = 52
 export default function Layout() {
   const { theme, toggle, accent, setAccent } = useThemeStore()
   const { areas } = useAreasStore()
+  const { user, signOut } = useAuth()
   const navigate = useNavigate()
+
+  function getInitials(name: string | null) {
+    if (!name) return '?'
+    return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
+  }
 
   const [leftCollapsed,  setLeftCollapsed]  = useState(false)
   const [rightCollapsed, setRightCollapsed] = useState(false)
@@ -304,8 +311,12 @@ export default function Layout() {
                 className={s.avatar}
                 onClick={() => setSettingsOpen(v => !v)}
                 title="Configurações rápidas"
+                style={user?.photoURL ? { padding: 0, overflow: 'hidden' } : {}}
               >
-                JT
+                {user?.photoURL
+                  ? <img src={user.photoURL} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} referrerPolicy="no-referrer" />
+                  : getInitials(user?.displayName ?? null)
+                }
               </button>
               <AnimatePresence>
                 {settingsOpen && (
@@ -318,10 +329,15 @@ export default function Layout() {
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   >
                     <div className={s.settingsUser}>
-                      <div className={s.settingsAvatar}>JT</div>
+                      <div className={s.settingsAvatar} style={user?.photoURL ? { padding: 0, overflow: 'hidden' } : {}}>
+                        {user?.photoURL
+                          ? <img src={user.photoURL} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} referrerPolicy="no-referrer" />
+                          : getInitials(user?.displayName ?? null)
+                        }
+                      </div>
                       <div>
-                        <div className={s.settingsName}>Charles</div>
-                        <div className={s.settingsEmail}>tardin2005@gmail.com</div>
+                        <div className={s.settingsName}>{user?.displayName ?? 'Usuário'}</div>
+                        <div className={s.settingsEmail}>{user?.email ?? ''}</div>
                       </div>
                     </div>
                     <div className={s.settingsDivider} />
@@ -356,6 +372,13 @@ export default function Layout() {
                     <NavLink to="/settings" className={s.settingsLink} onClick={() => setSettingsOpen(false)}>
                       ⚙️ Ver todas as configurações →
                     </NavLink>
+                    <div className={s.settingsDivider} />
+                    <button
+                      className={s.settingsLogout}
+                      onClick={() => { signOut(); setSettingsOpen(false) }}
+                    >
+                      🚪 Sair da conta
+                    </button>
                   </motion.div>
                 )}
               </AnimatePresence>

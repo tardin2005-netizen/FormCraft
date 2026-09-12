@@ -11,29 +11,6 @@ export interface Collection {
   createdAt: number
 }
 
-const DEFAULT: Collection[] = [
-  {
-    id: 'col-1', name: 'Referências de UX', emoji: '🎨', color: '#a259ff',
-    desc: 'Artigos, heurísticas e guias de design de interfaces.',
-    itemIds: ['demo-1', 'demo-2', 'demo-5'], createdAt: Date.now() - 86400000 * 3,
-  },
-  {
-    id: 'col-2', name: 'Dev Tools', emoji: '⚙️', color: '#3178c6',
-    desc: 'Bibliotecas, documentações e snippets de desenvolvimento.',
-    itemIds: ['demo-3', 'demo-7', 'demo-8'], createdAt: Date.now() - 86400000 * 2,
-  },
-  {
-    id: 'col-3', name: 'Prompts de IA', emoji: '🤖', color: '#7c3aed',
-    desc: 'Prompts reutilizáveis para geração de conteúdo e código.',
-    itemIds: ['demo-6'], createdAt: Date.now() - 86400000,
-  },
-  {
-    id: 'col-4', name: 'TCC & Faculdade', emoji: '🎓', color: '#f59e0b',
-    desc: 'Material de estudo, artigos e rascunhos do trabalho de conclusão.',
-    itemIds: ['demo-4'], createdAt: Date.now() - 3600000 * 12,
-  },
-]
-
 interface CollectionsStore {
   collections: Collection[]
   addCollection: (c: Omit<Collection, 'id' | 'createdAt'>) => void
@@ -44,8 +21,8 @@ interface CollectionsStore {
 
 export const useCollectionsStore = create<CollectionsStore>()(
   persist(
-    (set, get) => ({
-      collections: get?.()?.collections?.length ? get().collections : DEFAULT,
+    (set) => ({
+      collections: [],
       addCollection: (c) => set(s => ({
         collections: [...s.collections, { ...c, id: `col-${Date.now()}`, createdAt: Date.now() }]
       })),
@@ -63,11 +40,6 @@ export const useCollectionsStore = create<CollectionsStore>()(
         )
       })),
     }),
-    {
-      name: 'formcraft-collections',
-      onRehydrateStorage: () => (state) => {
-        if (state && state.collections.length === 0) state.collections = DEFAULT
-      },
-    }
+    { name: 'formcraft-collections' }
   )
 )
