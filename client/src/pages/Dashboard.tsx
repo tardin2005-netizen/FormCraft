@@ -72,7 +72,7 @@ function GitHubWidget() {
 
 export default function Dashboard() {
   const { onOpenSearch } = useOutletContext<OutletCtx>()
-  const { areas, addArea } = useAreasStore()
+  const { areas, addArea, removeArea } = useAreasStore()
 
   const [heroQuery,    setHeroQuery]    = useState('')
   const [showGH,       setShowGH]       = useState(false)
@@ -154,13 +154,20 @@ export default function Dashboard() {
         </div>
         <div className={s.areasGrid}>
           {areas.map(a => (
-            <Link key={a.id} to={`/area/${a.id}`} className={s.areaCard}>
-              <div className={s.areaCardBar} style={{ background: a.color }} />
-              <div className={s.areaCardEmoji}>{a.emoji}</div>
-              <div className={s.areaCardTitle}>{a.title}</div>
-              <div className={s.areaCardDesc}>{a.desc}</div>
-              <div className={s.areaCardCount}>{a.count} itens</div>
-            </Link>
+            <div key={a.id} className={s.areaCardWrapper}>
+              <Link to={`/area/${a.id}`} className={s.areaCard}>
+                <div className={s.areaCardBar} style={{ background: a.color }} />
+                <div className={s.areaCardEmoji}>{a.emoji}</div>
+                <div className={s.areaCardTitle}>{a.title}</div>
+                <div className={s.areaCardDesc}>{a.desc}</div>
+                <div className={s.areaCardCount}>{a.count} itens</div>
+              </Link>
+              <button
+                className={s.areaDeleteBtn}
+                onClick={(e) => { e.preventDefault(); if (confirm(`Apagar área "${a.title}"?`)) removeArea(a.id) }}
+                title="Apagar área"
+              >✕</button>
+            </div>
           ))}
           <button className={s.areaCardAdd} onClick={() => setNewAreaModal(true)}>
             <span className={s.addPlusIcon}>+</span>

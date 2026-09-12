@@ -124,6 +124,26 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
 }
+.areaCardWrapper {
+  position: relative;
+}
+.areaDeleteBtn {
+  position: absolute;
+  top: 8px; right: 8px;
+  z-index: 2;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: transparent;
+  font-size: 10px;
+  cursor: pointer;
+  padding: 2px 6px;
+  transition: color .12s, background .12s;
+  line-height: 1.4;
+}
+.areaCardWrapper:hover .areaDeleteBtn { color: var(--text2); }
+.areaDeleteBtn:hover { color: #f43f5e !important; background: var(--surface); }
+
 .areaCard {
   background: var(--surface);
   border: 1px solid var(--border);
