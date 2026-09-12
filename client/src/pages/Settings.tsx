@@ -146,6 +146,29 @@ export default function Settings() {
           <button className={s.logoutBtn}>→ Sair da conta</button>
         </section>
 
+        {/* Dados */}
+        <section className={s.section}>
+          <div className={s.sectionLabel}>DADOS</div>
+          <p className={s.sectionDesc}>Gerencie seus dados locais armazenados no aplicativo.</p>
+          <div className={s.dangerCard}>
+            <div className={s.dangerInfo}>
+              <div className={s.dangerTitle}>Resetar conta</div>
+              <div className={s.dangerDesc}>Apaga todas as suas áreas, itens, links e coleções salvos localmente. Esta ação não pode ser desfeita.</div>
+            </div>
+            <button
+              className={s.resetBtn}
+              onClick={() => {
+                if (!confirm('Tem certeza? Todos os seus dados locais serão apagados e você começará do zero.')) return
+                const keys = ['formcraft-areas','formcraft-area-items','formcraft-collections','formcraft-links','formcraft-prefs']
+                keys.forEach(k => localStorage.removeItem(k))
+                window.location.reload()
+              }}
+            >
+              Limpar dados
+            </button>
+          </div>
+        </section>
+
         {/* Sobre */}
         <section className={s.section}>
           <div className={s.sectionLabel}>SOBRE</div>

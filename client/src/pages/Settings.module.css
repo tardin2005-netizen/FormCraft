@@ -92,6 +92,29 @@
 }
 .logoutBtn:hover { background: rgba(244,63,94,.08); border-color: #f43f5e; }
 
+/* Danger zone */
+.dangerCard {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 20px;
+}
+.dangerInfo { flex: 1; }
+.dangerTitle { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.dangerDesc  { font-size: 12px; color: var(--text2); line-height: 1.5; }
+.resetBtn {
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid #f43f5e;
+  border-radius: 10px;
+  padding: 9px 18px;
+  color: #f43f5e;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer;
+  transition: background .15s;
+  white-space: nowrap;
+}
+.resetBtn:hover { background: rgba(244,63,94,.08); }
+
 /* About */
 .aboutCard {
   background: var(--surface); border: 1px solid var(--border);

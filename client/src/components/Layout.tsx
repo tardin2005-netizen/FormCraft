@@ -144,7 +144,7 @@ export default function Layout() {
      t.desc.toLowerCase().includes(toolSearch.toLowerCase()))
   )
 
-  const showDesc = toolSearch.trim().length > 0
+  const showDesc = true
 
   return (
     <div className={s.shell}>
