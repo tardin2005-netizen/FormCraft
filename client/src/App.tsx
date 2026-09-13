@@ -11,6 +11,7 @@ import Settings from './pages/Settings'
 import Hubs from './pages/Hubs'
 import HubView from './pages/HubView'
 import ToolLibrary from './pages/ToolLibrary'
+import WorkspaceView from './pages/WorkspaceView'
 
 function LoadingScreen() {
   return (
@@ -40,8 +41,9 @@ function AppRoutes() {
           <Route path="/area/:id"      element={<AreaView />} />
           <Route path="/hubs"          element={<Hubs />} />
           <Route path="/hub/:id"       element={<HubView />} />
-          <Route path="/ferramentas"   element={<ToolLibrary />} />
-          <Route path="/settings"      element={<Settings />} />
+          <Route path="/ferramentas"        element={<ToolLibrary />} />
+          <Route path="/settings"           element={<Settings />} />
+          <Route path="/workspace/:id"      element={<WorkspaceView />} />
         </Route>
       </Routes>
     </>

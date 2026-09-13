@@ -237,3 +237,59 @@
 .modalSave   { padding: 8px 18px; background: var(--accent); border: none; border-radius: 7px; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity .15s; }
 .modalSave:hover:not(:disabled) { opacity: .85; }
 .modalSave:disabled { opacity: .4; cursor: not-allowed; }
+
+/* ── Workspace cards ── */
+.wsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.wsCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color .15s, transform .12s;
+  text-align: left;
+  padding: 0;
+}
+
+.wsCard:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.wsCardBar { height: 3px; }
+
+.wsCardBody { padding: 12px 14px; }
+
+.wsCardIcon { font-size: 20px; margin-bottom: 6px; }
+
+.wsCardName { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+
+.wsCardModules { font-size: 11px; color: var(--text2); }
+
+.wsEmptyCard {
+  width: 100%;
+  background: var(--surface);
+  border: 1.5px dashed var(--border);
+  border-radius: var(--r);
+  padding: 28px 20px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  transition: border-color .15s;
+  text-align: center;
+}
+
+.wsEmptyCard:hover { border-color: var(--accent); }
+
+.wsEmptyPlus { font-size: 28px; color: var(--accent); line-height: 1; }
+
+.wsEmptyTitle { font-size: 14px; font-weight: 700; color: var(--text); }
+
+.wsEmptyDesc { font-size: 12px; color: var(--text2); max-width: 280px; line-height: 1.5; }

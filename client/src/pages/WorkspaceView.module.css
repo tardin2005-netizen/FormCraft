@@ -1,0 +1,225 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.wsHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 28px 0;
+  flex-shrink: 0;
+}
+
+.wsIcon {
+  font-size: 22px;
+}
+
+.wsName {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -.01em;
+}
+
+.wsContext {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  padding: 3px 8px;
+  border-radius: 6px;
+  margin-left: 4px;
+}
+
+.wsSpacer { flex: 1; }
+
+.wsMenu {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 12px;
+  transition: all .12s;
+}
+
+.wsMenu:hover { color: var(--text); border-color: var(--text2); }
+
+/* Module tabs */
+.moduleTabs {
+  display: flex;
+  gap: 2px;
+  padding: 12px 28px 0;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+.moduleTabs::-webkit-scrollbar { height: 0; }
+
+.modTab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 8px 8px 0 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text2);
+  cursor: pointer;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  border-bottom: none;
+  transition: color .12s, background .12s;
+  position: relative;
+  bottom: -1px;
+}
+
+.modTab:hover { color: var(--text); background: var(--surface2); }
+
+.modTab.active {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border);
+  border-bottom-color: var(--surface);
+}
+
+.modTab .modTabIcon {
+  font-size: 10px;
+  font-family: 'SF Mono', 'Fira Mono', monospace;
+  color: var(--text2);
+}
+
+.modTab.active .modTabIcon { color: var(--accent); }
+
+.moduleContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 28px;
+}
+
+/* Overview layout */
+.overviewGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.overviewStat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px 16px;
+}
+
+.overviewNum {
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.overviewLabel {
+  font-size: 11px;
+  color: var(--text2);
+  margin-top: 2px;
+}
+
+.overviewModules {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.overviewModuleCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: border-color .12s;
+  text-align: left;
+  width: 100%;
+}
+
+.overviewModuleCard:hover { border-color: var(--accent); }
+
+.overviewModuleIcon {
+  font-size: 11px;
+  font-family: 'SF Mono', monospace;
+  color: var(--accent);
+  width: 22px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.overviewModuleName {
+  font-size: 13px;
+  font-weight: 600;
+  flex: 1;
+}
+
+.overviewModuleCount {
+  font-size: 11px;
+  color: var(--text2);
+}
+
+/* Shared module header */
+.moduleHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.moduleTitle {
+  font-size: 16px;
+  font-weight: 700;
+  flex: 1;
+}
+
+.addBtn {
+  padding: 7px 16px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  transition: opacity .15s;
+  border: none;
+  cursor: pointer;
+}
+
+.addBtn:hover { opacity: .85; }
+
+/* Empty state */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 32px;
+  text-align: center;
+  color: var(--text2);
+}
+
+.emptyIcon {
+  font-size: 32px;
+  margin-bottom: 12px;
+  opacity: .4;
+}
+
+.emptyTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.emptyDesc {
+  font-size: 12px;
+  line-height: 1.5;
+  max-width: 260px;
+}
