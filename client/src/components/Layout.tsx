@@ -10,6 +10,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { ALL_TOOLS, TOOL_CATS, PRICING_COLOR, type ToolCategory } from '../data/tools'
 import SearchPalette from './SearchPalette'
 import SaveLinkModal from './SaveLinkModal'
+import QuickNote from './QuickNote'
 import s from './Layout.module.css'
 
 const ACCENT_LABELS: Record<Accent, string> = {
@@ -37,9 +38,10 @@ export default function Layout() {
   const { leftState, rightState, cycleLeft, cycleRight, setLeft, setRight } = useSidebarStore()
   const { saved: savedToolNames, isSaved, saveTool, unsaveTool } = useSavedToolsStore()
 
-  const [searchOpen,   setSearchOpen]   = useState(false)
-  const [saveLinkOpen, setSaveLinkOpen] = useState(false)
-  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [searchOpen,    setSearchOpen]    = useState(false)
+  const [saveLinkOpen,  setSaveLinkOpen]  = useState(false)
+  const [settingsOpen,  setSettingsOpen]  = useState(false)
+  const [quickNoteOpen, setQuickNoteOpen] = useState(false)
   const [toolCat,      setToolCat]      = useState<ToolCategory>('Todas')
   const [toolSearch,   setToolSearch]   = useState('')
 
@@ -50,8 +52,9 @@ export default function Layout() {
     function onKey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setSearchOpen(v => !v) }
       if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); setSaveLinkOpen(v => !v) }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'n') { e.preventDefault(); setQuickNoteOpen(v => !v) }
       if ((e.metaKey || e.ctrlKey) && e.key === '\\') { e.preventDefault(); cycleLeft() }
-      if (e.key === 'Escape') { setSearchOpen(false); setSettingsOpen(false); setSaveLinkOpen(false) }
+      if (e.key === 'Escape') { setSearchOpen(false); setSettingsOpen(false); setSaveLinkOpen(false); setQuickNoteOpen(false) }
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
@@ -507,8 +510,9 @@ export default function Layout() {
         )}
       </motion.aside>
 
-      {searchOpen && <SearchPalette onClose={() => setSearchOpen(false)} />}
-      {saveLinkOpen && <SaveLinkModal onClose={() => setSaveLinkOpen(false)} />}
+      {searchOpen    && <SearchPalette onClose={() => setSearchOpen(false)} />}
+      {saveLinkOpen  && <SaveLinkModal onClose={() => setSaveLinkOpen(false)} />}
+      <AnimatePresence>{quickNoteOpen && <QuickNote onClose={() => setQuickNoteOpen(false)} />}</AnimatePresence>
     </div>
   )
 }
