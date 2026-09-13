@@ -177,6 +177,8 @@
   padding: 16px 20px; border-bottom: 1px solid var(--border);
   font-size: 14px; font-weight: 600; flex-shrink: 0;
 }
+.modalDrag { cursor: grab; user-select: none; }
+.modalDrag:active { cursor: grabbing; }
 .modalClose {
   background: transparent; border: none; color: var(--text2);
   font-size: 13px; cursor: pointer; padding: 4px 8px; border-radius: 5px;

@@ -90,6 +90,8 @@
   padding: 16px 20px; border-bottom: 1px solid var(--border);
   font-size: 14px; font-weight: 600; flex-shrink: 0; gap: 10px;
 }
+.modalDrag { cursor: grab; user-select: none; }
+.modalDrag:active { cursor: grabbing; }
 .modalClose {
   background: transparent; border: none; color: var(--text2);
   font-size: 13px; cursor: pointer; padding: 4px 8px; border-radius: 5px;
@@ -114,8 +116,8 @@
 }
 .typeOption:hover { border-color: var(--accent); transform: translateY(-1px); }
 .typeOptionEmoji { font-size: 26px; }
-.typeOptionLabel { font-size: 14px; font-weight: 600; }
-.typeOptionDesc  { font-size: 11px; color: var(--text2); text-align: center; }
+.typeOptionLabel { font-size: 14px; font-weight: 600; color: var(--text); }
+.typeOptionDesc  { font-size: 12px; color: var(--text); opacity: .65; text-align: center; line-height: 1.4; }
 
 .modalBody {
   padding: 20px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; flex: 1;

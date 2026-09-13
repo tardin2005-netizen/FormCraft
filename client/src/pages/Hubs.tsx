@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useHubsStore, type HubType } from '../store/hubsStore'
@@ -25,8 +25,22 @@ export default function Hubs() {
   const [form,     setForm]     = useState<NewHubForm>({
     type: 'faculdade', name: '', emoji: '🎓', color: '#7c6ef7',
   })
+  const [modalPos, setModalPos] = useState({ x: 0, y: 0 })
+  const drag = useRef<{ mx: number; my: number; px: number; py: number } | null>(null)
 
-  function openModal() { setModal(true); setStep('type') }
+  const onHeaderMouseDown = useCallback((e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).tagName === 'BUTTON') return
+    drag.current = { mx: e.clientX, my: e.clientY, px: modalPos.x, py: modalPos.y }
+    const onMove = (ev: MouseEvent) => {
+      if (!drag.current) return
+      setModalPos({ x: drag.current.px + ev.clientX - drag.current.mx, y: drag.current.py + ev.clientY - drag.current.my })
+    }
+    const onUp = () => { drag.current = null; window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }, [modalPos])
+
+  function openModal() { setModal(true); setStep('type'); setModalPos({ x: 0, y: 0 }) }
   function closeModal() { setModal(false); setForm({ type: 'faculdade', name: '', emoji: '🎓', color: '#7c6ef7' }) }
 
   function selectType(t: typeof HUB_TYPES[0]) {
@@ -113,10 +127,11 @@ export default function Hubs() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: .94 }}
               transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+              style={{ transform: `translate(calc(-50% + ${modalPos.x}px), calc(-50% + ${modalPos.y}px))` }}
             >
               {step === 'type' ? (
                 <>
-                  <div className={s.modalHeader}>
+                  <div className={`${s.modalHeader} ${s.modalDrag}`} onMouseDown={onHeaderMouseDown}>
                     <span>Tipo de Hub</span>
                     <button className={s.modalClose} onClick={closeModal}>✕</button>
                   </div>
@@ -132,7 +147,7 @@ export default function Hubs() {
                 </>
               ) : (
                 <>
-                  <div className={s.modalHeader}>
+                  <div className={`${s.modalHeader} ${s.modalDrag}`} onMouseDown={onHeaderMouseDown}>
                     <button className={s.backBtn} onClick={() => setStep('type')}>← Voltar</button>
                     <span>{typeInfo.emoji} Hub {typeInfo.label}</span>
                     <button className={s.modalClose} onClick={closeModal}>✕</button>

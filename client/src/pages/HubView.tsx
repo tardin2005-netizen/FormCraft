@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useHubsStore, type Semester, type Subject, type ClassItem, type HubContent } from '../store/hubsStore'
@@ -427,6 +427,21 @@ function Modal({
 }: {
   title: string; onClose: () => void; onSave: () => void; saveLabel: string; disabled?: boolean; children: React.ReactNode
 }) {
+  const [pos, setPos] = useState({ x: 0, y: 0 })
+  const drag = useRef<{ mx: number; my: number; px: number; py: number } | null>(null)
+
+  const onHeaderMouseDown = useCallback((e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).tagName === 'BUTTON') return
+    drag.current = { mx: e.clientX, my: e.clientY, px: pos.x, py: pos.y }
+    const onMove = (ev: MouseEvent) => {
+      if (!drag.current) return
+      setPos({ x: drag.current.px + ev.clientX - drag.current.mx, y: drag.current.py + ev.clientY - drag.current.my })
+    }
+    const onUp = () => { drag.current = null; window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }, [pos])
+
   return (
     <>
       <div className={s.backdrop} onClick={onClose} />
@@ -436,8 +451,9 @@ function Modal({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: .94 }}
         transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+        style={{ transform: `translate(calc(-50% + ${pos.x}px), calc(-50% + ${pos.y}px))` }}
       >
-        <div className={s.modalHeader}>
+        <div className={`${s.modalHeader} ${s.modalDrag}`} onMouseDown={onHeaderMouseDown}>
           <span>{title}</span>
           <button className={s.modalClose} onClick={onClose}>✕</button>
         </div>
