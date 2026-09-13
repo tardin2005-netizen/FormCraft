@@ -59,28 +59,40 @@ function getDomain(url: string) {
   try { return new URL(url).hostname.replace('www.', '') } catch { return '' }
 }
 
+/* ── Lightbox ── */
+function Lightbox({ src, onClose }: { src: string; onClose: () => void }) {
+  return (
+    <motion.div
+      className={s.lightbox}
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      onClick={onClose}
+    >
+      <button className={s.lightboxClose} onClick={onClose} title="Fechar">✕</button>
+      <motion.img
+        src={src}
+        className={s.lightboxImg}
+        initial={{ scale: .9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: .9, opacity: 0 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+        onClick={e => e.stopPropagation()}
+      />
+    </motion.div>
+  )
+}
+
 /* ── Grid card ── */
 function GridCard({ item, onDelete }: { item: SavedLink; onDelete: () => void }) {
-  const [hovered, setHovered] = useState(false)
+  const [hovered,   setHovered]   = useState(false)
+  const [lightbox,  setLightbox]  = useState(false)
+  const isImage = item.type === 'imagem'
+  const imgSrc  = item.ogImage ?? ''
   const fallbackEmoji = item.type === 'nota' ? '📝' : item.type === 'pdf' ? '📄' : item.type === 'prompt' ? '🤖' : '🔗'
   const color = item.color ?? '#7c6ef7'
   const domain = getDomain(item.url)
 
-  return (
-    <motion.a
-      href={item.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={s.gridCard}
-      style={{ '--card-color': color } as React.CSSProperties}
-      onHoverStart={() => setHovered(true)}
-      onHoverEnd={() => setHovered(false)}
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: .95 }}
-      whileHover={{ y: -3 }}
-      transition={{ duration: .2 }}
-    >
+  const cardContent = (
+    <>
       {/* Thumbnail */}
       <div className={s.cardThumb} style={{ background: `linear-gradient(135deg, ${color}33 0%, ${color}11 100%)` }}>
         {item.ogImage
@@ -97,13 +109,18 @@ function GridCard({ item, onDelete }: { item: SavedLink; onDelete: () => void })
             >✕</motion.button>
           )}
         </AnimatePresence>
+        {isImage && hovered && (
+          <motion.div
+            className={s.expandHint}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          >⛶ Ver em tela cheia</motion.div>
+        )}
         <TypeBadge type={item.type} />
       </div>
-
       {/* Body */}
       <div className={s.cardBody}>
-        <div className={s.cardTitle}>{item.title}</div>
-        {domain && <div className={s.cardDomain}>
+        <div className={s.cardTitle}>{item.title || 'Sem título'}</div>
+        {domain && !isImage && <div className={s.cardDomain}>
           <FaviconImg src={item.favicon} fallback={fallbackEmoji} />
           <span>{domain}</span>
         </div>}
@@ -115,6 +132,49 @@ function GridCard({ item, onDelete }: { item: SavedLink; onDelete: () => void })
           <span className={s.cardTime}>{timeAgo(item.savedAt)}</span>
         </div>
       </div>
+    </>
+  )
+
+  if (isImage) {
+    return (
+      <>
+        <motion.div
+          className={s.gridCard}
+          style={{ '--card-color': color, cursor: 'zoom-in' } as React.CSSProperties}
+          onHoverStart={() => setHovered(true)}
+          onHoverEnd={() => setHovered(false)}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, scale: .95 }}
+          whileHover={{ y: -3 }}
+          transition={{ duration: .2 }}
+          onClick={() => { if (imgSrc) setLightbox(true) }}
+        >
+          {cardContent}
+        </motion.div>
+        <AnimatePresence>
+          {lightbox && imgSrc && <Lightbox src={imgSrc} onClose={() => setLightbox(false)} />}
+        </AnimatePresence>
+      </>
+    )
+  }
+
+  return (
+    <motion.a
+      href={item.url && item.url !== '#' ? item.url : undefined}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={s.gridCard}
+      style={{ '--card-color': color } as React.CSSProperties}
+      onHoverStart={() => setHovered(true)}
+      onHoverEnd={() => setHovered(false)}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: .95 }}
+      whileHover={{ y: -3 }}
+      transition={{ duration: .2 }}
+    >
+      {cardContent}
     </motion.a>
   )
 }
