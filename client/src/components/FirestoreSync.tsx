@@ -8,6 +8,8 @@ import { useAreasStore } from '../store/areasStore'
 import { useAreaItemsStore } from '../store/areaItemsStore'
 import { useHubsStore } from '../store/hubsStore'
 import { useSavedToolsStore } from '../store/savedToolsStore'
+import { useWorkspacesStore } from '../store/workspacesStore'
+import { useContentItemsStore } from '../store/contentItemsStore'
 
 export default function FirestoreSync() {
   const { user } = useAuth()
@@ -58,6 +60,14 @@ export default function FirestoreSync() {
         snap => {
           if (snap.exists()) useSavedToolsStore.getState().hydrate(snap.data().saved ?? [])
         }
+      ),
+      onSnapshot(
+        collection(db, 'users', uid, 'workspaces'),
+        snap => useWorkspacesStore.getState().hydrate(snap.docs.map(d => d.data() as any))
+      ),
+      onSnapshot(
+        collection(db, 'users', uid, 'contentItems'),
+        snap => useContentItemsStore.getState().hydrate(snap.docs.map(d => d.data() as any))
       ),
     ]
 
