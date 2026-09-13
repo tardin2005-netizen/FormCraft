@@ -1,0 +1,247 @@
+/* Hub page shell */
+.hubPage { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+
+.hubHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 28px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; gap: 12px;
+}
+.hubHeaderLeft { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+.breadcrumb { font-size: 13px; color: var(--accent); text-decoration: none; transition: opacity .12s; }
+.breadcrumb:hover { opacity: .7; }
+.breadcrumbSep { color: var(--text2); font-size: 13px; }
+.hubEmoji  { font-size: 22px; }
+.hubTitle  { font-size: 17px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hubBar    { display: inline-block; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+.deleteHubBtn {
+  padding: 7px 14px; background: transparent; border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text2); font-size: 12px; cursor: pointer;
+  transition: all .12s; flex-shrink: 0; white-space: nowrap;
+}
+.deleteHubBtn:hover { border-color: #f43f5e; color: #f43f5e; }
+
+/* Not found */
+.notFound {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 12px; color: var(--text2);
+}
+.backLink { color: var(--accent); font-size: 13px; }
+
+/* ─── Faculdade ─── */
+.facPage { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+.semBar {
+  display: flex; align-items: center; gap: 2px;
+  padding: 10px 14px; border-bottom: 1px solid var(--border);
+  overflow-x: auto; flex-shrink: 0;
+}
+.semTab {
+  padding: 6px 14px; border: none; border-radius: 7px;
+  background: transparent; color: var(--text2); font-size: 13px; cursor: pointer;
+  transition: background .12s, color .12s; white-space: nowrap;
+}
+.semTab:hover { background: var(--surface2); color: var(--text); }
+.semTabActive { background: var(--accent-muted) !important; color: var(--accent) !important; font-weight: 600; }
+.addSemBtn {
+  padding: 6px 12px; border: 1px dashed var(--border); border-radius: 7px;
+  background: transparent; color: var(--text2); font-size: 12px; cursor: pointer;
+  transition: border-color .12s, color .12s; white-space: nowrap; margin-left: 4px;
+}
+.addSemBtn:hover { border-color: var(--accent); color: var(--accent); }
+
+.facContent { flex: 1; display: flex; overflow: hidden; }
+
+/* Subjects panel */
+.subjPanel {
+  width: 200px; flex-shrink: 0; border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.panelHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 12px 10px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--text2);
+}
+.panelAdd {
+  width: 22px; height: 22px; background: var(--surface2); border: none;
+  border-radius: 5px; color: var(--text2); font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: background .12s, color .12s;
+}
+.panelAdd:hover { background: var(--accent-muted); color: var(--accent); }
+.panelEmpty { padding: 12px; font-size: 12px; color: var(--text2); }
+
+.subjItem {
+  display: flex; align-items: center; gap: 6px; padding: 8px 12px;
+  cursor: pointer; transition: background .12s; font-size: 12px;
+  overflow: hidden;
+}
+.subjItem:hover { background: var(--surface2); }
+.subjActive { background: var(--accent-muted) !important; }
+.subjDot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.subjEmoji { font-size: 14px; flex-shrink: 0; }
+.subjName { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+
+.itemDelBtn {
+  background: transparent; border: none; color: transparent; font-size: 10px;
+  cursor: pointer; padding: 2px 5px; border-radius: 4px; transition: color .12s; flex-shrink: 0;
+}
+.subjItem:hover .itemDelBtn,
+.classRow:hover .itemDelBtn,
+.contentRow:hover .itemDelBtn { color: var(--text2); }
+.itemDelBtn:hover { color: #f43f5e !important; }
+
+/* Main panel */
+.mainPanel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+.mainHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; border-bottom: 1px solid var(--border); flex-shrink: 0; gap: 12px;
+}
+.mainTitle {
+  display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700;
+  overflow: hidden;
+}
+.professor { font-size: 12px; color: var(--text2); font-weight: 400; white-space: nowrap; }
+.mainActions { display: flex; gap: 6px; flex-shrink: 0; }
+.actionBtn {
+  padding: 7px 14px; background: transparent; border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text2); font-size: 12px; cursor: pointer;
+  transition: all .12s; white-space: nowrap;
+}
+.actionBtn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Class list */
+.classList {
+  flex-shrink: 0; max-height: 240px; overflow-y: auto;
+  border-bottom: 1px solid var(--border);
+}
+.classRow {
+  display: flex; align-items: center; gap: 10px; padding: 9px 18px;
+  cursor: pointer; transition: background .12s; font-size: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.classRow:last-child { border-bottom: none; }
+.classRow:hover { background: var(--surface2); }
+.classActive { background: var(--accent-muted) !important; }
+.classType {
+  font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; color: #fff;
+  flex-shrink: 0; letter-spacing: .04em;
+}
+.classTitle { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.classDate  { font-size: 11px; color: var(--text2); flex-shrink: 0; }
+
+/* Content section */
+.contentSection { flex: 1; overflow-y: auto; padding: 12px 18px; }
+.contentLabel {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--text2); margin-bottom: 8px;
+}
+
+.contentRow {
+  display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px;
+  border: 1px solid var(--border); border-radius: 9px; margin-bottom: 6px;
+  background: var(--surface); transition: border-color .12s;
+}
+.contentRow:hover { border-color: var(--accent); }
+.contentIcon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.contentInfo { flex: 1; min-width: 0; }
+.contentTitle { font-size: 13px; font-weight: 500; color: var(--text); }
+.contentTitle a { color: var(--accent); text-decoration: none; }
+.contentTitle a:hover { text-decoration: underline; }
+.contentBody { font-size: 12px; color: var(--text2); margin-top: 3px; line-height: 1.5; white-space: pre-wrap; }
+
+/* Generic hub */
+.genericPage { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.genericActions { padding: 14px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.contentList { flex: 1; overflow-y: auto; padding: 14px 20px; display: flex; flex-direction: column; gap: 6px; }
+
+.emptyState {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 10px; color: var(--text2); font-size: 14px; padding: 40px;
+  font-size: 32px;
+}
+.emptyState > *:nth-child(2) { font-size: 14px; }
+.emptyState > *:nth-child(3) { font-size: 13px; }
+
+/* Modal shared styles */
+.backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 59; }
+.modal {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  width: 440px; max-width: calc(100vw - 32px); max-height: calc(100vh - 48px);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; box-shadow: 0 24px 64px rgba(0,0,0,.5); z-index: 60;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.modalHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  font-size: 14px; font-weight: 600; flex-shrink: 0;
+}
+.modalClose {
+  background: transparent; border: none; color: var(--text2);
+  font-size: 13px; cursor: pointer; padding: 4px 8px; border-radius: 5px;
+  transition: background .12s;
+}
+.modalClose:hover { background: var(--surface2); }
+.modalBody { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; flex: 1; }
+.modalFooter {
+  display: flex; align-items: center; justify-content: flex-end; gap: 10px;
+  padding: 14px 20px; border-top: 1px solid var(--border); flex-shrink: 0;
+}
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+.label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text2); }
+.input {
+  padding: 9px 12px; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 9px; color: var(--text); font-size: 13px; outline: none;
+  transition: border-color .15s; width: 100%; box-sizing: border-box;
+}
+.input:focus { border-color: var(--accent); }
+.input::placeholder { color: var(--text2); }
+.textarea { resize: vertical; min-height: 80px; font-family: inherit; line-height: 1.5; }
+
+.emojiRow { display: flex; flex-wrap: wrap; gap: 4px; }
+.emojiBtn {
+  width: 32px; height: 32px; background: var(--surface2); border: 2px solid transparent;
+  border-radius: 7px; font-size: 16px; cursor: pointer; transition: border-color .12s;
+}
+.emojiBtn:hover { border-color: var(--border); }
+.emojiActive { border-color: var(--accent) !important; background: var(--accent-muted) !important; }
+
+.colorRow { display: flex; gap: 8px; align-items: center; }
+.colorDot {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 2px solid transparent; cursor: pointer; transition: transform .12s, border-color .12s;
+}
+.colorDot:hover { transform: scale(1.15); }
+.colorActive { border-color: var(--text) !important; transform: scale(1.25); }
+
+.periodRow { display: flex; gap: 8px; }
+.periodBtn {
+  flex: 1; padding: 8px; background: transparent; border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text2); font-size: 12px; cursor: pointer;
+  transition: all .12s;
+}
+.periodBtn:hover { border-color: var(--accent); color: var(--text); }
+.periodActive { background: var(--accent-muted) !important; border-color: var(--accent) !important; color: var(--accent) !important; }
+
+.typeRow { display: flex; gap: 6px; flex-wrap: wrap; }
+.typeBtn {
+  padding: 6px 12px; border: 1px solid var(--border); border-radius: 8px;
+  background: transparent; color: var(--text2); font-size: 12px; cursor: pointer;
+  transition: all .12s;
+}
+.typeBtn:hover { border-color: var(--accent); color: var(--text); }
+.typeActive { background: var(--accent-muted) !important; border-color: var(--accent) !important; }
+
+.cancelBtn {
+  padding: 8px 16px; background: transparent; border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text2); font-size: 13px; cursor: pointer; transition: all .12s;
+}
+.cancelBtn:hover { border-color: var(--text2); color: var(--text); }
+.saveBtn {
+  padding: 8px 20px; background: var(--accent); border: none; border-radius: 8px;
+  color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity .15s;
+}
+.saveBtn:disabled { opacity: .4; cursor: not-allowed; }
+.saveBtn:not(:disabled):hover { opacity: .85; }

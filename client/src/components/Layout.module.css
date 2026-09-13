@@ -4,20 +4,30 @@
   height: 100vh;
   overflow: hidden;
   background: var(--bg);
+  position: relative;
 }
 
 /* ── Left Sidebar ── */
 .left {
-  width: 220px;
   flex-shrink: 0;
   background: var(--surface);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  transition: width .2s ease;
   overflow: hidden;
 }
-.leftCollapsed { width: 56px; }
+
+/* Sliver shown when left sidebar is hidden */
+.leftSliver {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 6px;
+  cursor: pointer;
+  z-index: 20;
+  background: transparent;
+  transition: background .15s;
+}
+.leftSliver:hover { background: var(--accent-muted); }
 
 .leftHeader {
   display: flex;
@@ -32,104 +42,53 @@
 .logoMini { font-size: 18px; color: var(--accent); }
 
 .collapseBtn {
-  width: 22px;
-  height: 22px;
-  border: none;
-  background: var(--surface2);
-  border-radius: 5px;
-  color: var(--text2);
-  font-size: 14px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: background .15s, color .15s;
-  line-height: 1;
+  width: 22px; height: 22px; border: none; background: var(--surface2);
+  border-radius: 5px; color: var(--text2); font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  transition: background .15s, color .15s; line-height: 1;
 }
 .collapseBtn:hover { background: var(--border); color: var(--text); }
 
 /* Nav */
 .leftNav { display: flex; flex-direction: column; gap: 2px; padding: 10px 8px 0; }
-
 .navItem {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  border-radius: 8px;
-  color: var(--text2);
-  font-size: 13px;
-  text-decoration: none;
-  transition: background .15s, color .15s;
-  white-space: nowrap;
-  overflow: hidden;
+  display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+  border-radius: 8px; color: var(--text2); font-size: 13px; text-decoration: none;
+  transition: background .15s, color .15s; white-space: nowrap; overflow: hidden;
 }
 .navItem:hover { background: var(--surface2); color: var(--text); }
 .navActive  { background: var(--accent-muted) !important; color: var(--accent) !important; font-weight: 500; }
-.navCollapsed { justify-content: center; padding: 10px; }
-
-.navIcon  { font-size: 16px; flex-shrink: 0; }
+.navCompact { justify-content: center; padding: 10px; }
+.navIcon  { font-size: 15px; flex-shrink: 0; }
 .navLabel { font-size: 13px; overflow: hidden; text-overflow: ellipsis; }
 
 /* Areas */
 .areasSection { flex: 1; overflow-y: auto; padding: 14px 8px 0; }
 .areasLabel {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .07em;
-  color: var(--text2);
-  padding: 0 10px;
-  margin-bottom: 4px;
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .07em; color: var(--text2); padding: 0 10px; margin-bottom: 4px;
 }
 .areaItem {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  border-radius: 7px;
-  font-size: 12px;
-  color: var(--text2);
-  text-decoration: none;
+  display: flex; align-items: center; gap: 8px; padding: 6px 10px;
+  border-radius: 7px; font-size: 12px; color: var(--text2); text-decoration: none;
   transition: background .15s, color .15s;
 }
 .areaItem:hover { background: var(--surface2); color: var(--text); }
 .areaItemTitle { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .areaItemCount {
-  font-size: 10px;
-  background: var(--surface2);
-  padding: 1px 6px;
-  border-radius: 10px;
-  flex-shrink: 0;
+  font-size: 10px; background: var(--surface2); padding: 1px 6px; border-radius: 10px; flex-shrink: 0;
 }
 .addAreaBtn {
-  width: 100%;
-  text-align: left;
-  padding: 6px 10px;
-  background: transparent;
-  border: none;
-  color: var(--text2);
-  font-size: 12px;
-  cursor: pointer;
-  border-radius: 7px;
-  transition: background .15s, color .15s;
-  margin-top: 2px;
+  width: 100%; text-align: left; padding: 6px 10px;
+  background: transparent; border: none; color: var(--text2); font-size: 12px;
+  cursor: pointer; border-radius: 7px; transition: background .15s, color .15s; margin-top: 2px;
 }
 .addAreaBtn:hover { background: var(--surface2); color: var(--accent); }
 
-/* Icons-only areas (collapsed) */
 .areasIconsOnly { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0; flex: 1; overflow-y: auto; }
 .areaIconItem {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  font-size: 18px;
-  text-decoration: none;
-  transition: background .15s;
+  width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+  border-radius: 8px; font-size: 18px; text-decoration: none; transition: background .15s;
 }
 .areaIconItem:hover { background: var(--surface2); }
 
@@ -138,165 +97,69 @@
 .leftBottomExpanded { display: flex; flex-direction: column; gap: 5px; }
 .leftBottomIcons { display: flex; flex-direction: column; align-items: center; gap: 5px; }
 .searchBtn {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text2);
-  font-size: 12px;
-  cursor: pointer;
-  width: 100%;
-  transition: border-color .15s;
+  display: flex; align-items: center; justify-content: space-between; padding: 8px 12px;
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text2); font-size: 12px; cursor: pointer; width: 100%; transition: border-color .15s;
 }
-.searchBtn kbd {
-  background: var(--border);
-  padding: 1px 5px;
-  border-radius: 4px;
-  font-size: 10px;
-  font-family: monospace;
-}
+.searchBtn kbd { background: var(--border); padding: 1px 5px; border-radius: 4px; font-size: 10px; font-family: monospace; }
 .searchBtn:hover { border-color: var(--accent); color: var(--text); }
-.themeBtn {
-  padding: 7px 12px;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text2);
-  font-size: 11px;
-  text-align: left;
-  cursor: pointer;
-  width: 100%;
+.saveLinkBtn {
+  display: flex; align-items: center; justify-content: space-between; padding: 7px 12px;
+  background: transparent; border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text2); font-size: 11px; text-align: left; cursor: pointer; width: 100%;
   transition: border-color .15s;
+}
+.saveLinkBtn kbd { background: var(--border); padding: 1px 5px; border-radius: 4px; font-size: 10px; font-family: monospace; }
+.saveLinkBtn:hover { border-color: var(--accent); color: var(--accent); }
+.themeBtn {
+  padding: 7px 12px; background: transparent; border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text2); font-size: 11px; text-align: left;
+  cursor: pointer; width: 100%; transition: border-color .15s;
 }
 .themeBtn:hover { border-color: var(--accent); color: var(--text); }
-.saveLinkBtn {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 7px 12px;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text2);
-  font-size: 11px;
-  text-align: left;
-  cursor: pointer;
-  width: 100%;
-  transition: border-color .15s;
-}
-.saveLinkBtn kbd {
-  background: var(--border);
-  padding: 1px 5px;
-  border-radius: 4px;
-  font-size: 10px;
-  font-family: monospace;
-}
-.saveLinkBtn:hover { border-color: var(--accent); color: var(--accent); }
-.topSaveLinkBtn {
-  width: 34px;
-  height: 34px;
-  border: 1px solid var(--border);
-  background: transparent;
-  border-radius: 7px;
-  font-size: 15px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: border-color .15s;
-}
-.topSaveLinkBtn:hover { border-color: var(--accent); }
 .iconBtn {
-  width: 36px;
-  height: 36px;
-  border: none;
-  background: transparent;
-  border-radius: 8px;
-  font-size: 18px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  align-self: center;
-  transition: background .15s;
+  width: 36px; height: 36px; border: none; background: transparent; border-radius: 8px;
+  font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  align-self: center; transition: background .15s;
 }
 .iconBtn:hover { background: var(--surface2); }
 
 /* ── Main Wrapper ── */
-.mainWrapper {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  overflow: hidden;
-}
+.mainWrapper { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
 
 /* Top Bar */
 .topBar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 24px;
-  height: 52px;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
-  flex-shrink: 0;
-  position: relative;
-  z-index: 10;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px; height: 52px; border-bottom: 1px solid var(--border);
+  background: var(--surface); flex-shrink: 0; position: relative; z-index: 10;
 }
-
+.topLeft { display: flex; align-items: center; gap: 8px; }
 .topNav { display: flex; gap: 2px; }
 .topNavItem {
-  padding: 6px 14px;
-  border-radius: 7px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text2);
-  text-decoration: none;
-  transition: background .15s, color .15s;
+  padding: 5px 12px; border-radius: 7px; font-size: 12px; font-weight: 500;
+  color: var(--text2); text-decoration: none; transition: background .15s, color .15s; white-space: nowrap;
 }
 .topNavItem:hover { background: var(--surface2); color: var(--text); }
 .topNavActive { background: var(--accent-muted) !important; color: var(--accent) !important; }
 
-.topActions { display: flex; align-items: center; gap: 8px; }
-
+.topActions { display: flex; align-items: center; gap: 6px; }
 .topSearchBtn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text2);
-  font-size: 12px;
-  cursor: pointer;
-  transition: border-color .15s;
+  display: flex; align-items: center; gap: 8px; padding: 6px 14px;
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text2); font-size: 12px; cursor: pointer; transition: border-color .15s;
 }
 .topSearchBtn:hover { border-color: var(--accent); color: var(--text); }
-.topKbd {
-  background: var(--border);
-  padding: 1px 5px;
-  border-radius: 4px;
-  font-size: 10px;
-  font-family: monospace;
+.topKbd { background: var(--border); padding: 1px 5px; border-radius: 4px; font-size: 10px; font-family: monospace; }
+.topSaveLinkBtn {
+  width: 34px; height: 34px; border: 1px solid var(--border); background: transparent;
+  border-radius: 7px; font-size: 15px; cursor: pointer; display: flex;
+  align-items: center; justify-content: center; transition: border-color .15s;
 }
-
+.topSaveLinkBtn:hover { border-color: var(--accent); }
 .topIconBtn {
-  width: 34px;
-  height: 34px;
-  border: 1px solid var(--border);
-  background: transparent;
-  border-radius: 7px;
-  color: var(--text2);
-  font-size: 15px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 34px; height: 34px; border: 1px solid var(--border); background: transparent;
+  border-radius: 7px; color: var(--text2); font-size: 15px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
   transition: border-color .15s, color .15s, background .15s;
 }
 .topIconBtn:hover { border-color: var(--accent); color: var(--text); }
@@ -305,288 +168,169 @@
 /* Avatar + settings popup */
 .avatarWrapper { position: relative; }
 .avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: opacity .15s;
+  width: 34px; height: 34px; border-radius: 50%; background: var(--accent);
+  color: #fff; border: none; font-size: 11px; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: opacity .15s;
 }
 .avatar:hover { opacity: .85; }
-
 .settingsPopup {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  width: 260px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 0;
-  overflow: hidden;
-  box-shadow: 0 12px 40px rgba(0,0,0,.4);
-  z-index: 100;
+  position: absolute; top: calc(100% + 8px); right: 0; width: 270px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,.4); z-index: 100;
 }
-.settingsUser {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px;
-}
+.settingsUser { display: flex; align-items: center; gap: 12px; padding: 16px; }
 .settingsAvatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--accent);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 700;
-  flex-shrink: 0;
+  width: 40px; height: 40px; border-radius: 50%; background: var(--accent);
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; flex-shrink: 0;
 }
 .settingsName  { font-size: 14px; font-weight: 600; }
 .settingsEmail { font-size: 11px; color: var(--text2); margin-top: 1px; }
 .settingsDivider { height: 1px; background: var(--border); }
-
 .settingsRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 16px; border-bottom: 1px solid var(--border);
 }
 .settingsRowLabel { font-size: 12px; color: var(--text2); }
-
 .themeToggle { display: flex; gap: 4px; }
 .themeOpt {
-  width: 30px;
-  height: 30px;
-  border: 1px solid var(--border);
-  background: transparent;
-  border-radius: 7px;
-  font-size: 15px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all .15s;
+  width: 30px; height: 30px; border: 1px solid var(--border); background: transparent;
+  border-radius: 7px; font-size: 15px; cursor: pointer; display: flex;
+  align-items: center; justify-content: center; transition: all .15s;
 }
 .themeOpt:hover { border-color: var(--accent); }
 .themeOptActive { background: var(--accent-muted) !important; border-color: var(--accent) !important; }
-
-.accentPicker { display: flex; gap: 6px; align-items: center; }
+.accentPicker { display: flex; gap: 5px; align-items: center; }
 .accentDot {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  cursor: pointer;
-  transition: transform .15s, border-color .15s;
+  width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent;
+  cursor: pointer; transition: transform .15s, border-color .15s;
 }
 .accentDot:hover { transform: scale(1.15); }
 .accentDotActive { border-color: var(--text) !important; transform: scale(1.2); }
-
+.sidebarPills { display: flex; gap: 4px; }
+.sidebarPill {
+  padding: 4px 8px; border: 1px solid var(--border); background: transparent;
+  border-radius: 6px; color: var(--text2); font-size: 14px; cursor: pointer; transition: all .12s;
+}
+.sidebarPill:hover { border-color: var(--accent); color: var(--accent); }
+.sidebarPillActive { background: var(--accent-muted) !important; border-color: var(--accent) !important; color: var(--accent) !important; }
 .settingsLink {
-  display: block;
-  padding: 12px 16px;
-  font-size: 12px;
-  color: var(--accent);
-  text-decoration: none;
-  transition: background .15s;
+  display: block; padding: 11px 16px; font-size: 12px; color: var(--accent);
+  text-decoration: none; transition: background .15s;
 }
 .settingsLink:hover { background: var(--surface2); }
-
 .settingsLogout {
-  display: block;
-  width: 100%;
-  padding: 12px 16px;
-  font-size: 12px;
-  color: #f43f5e;
-  background: transparent;
-  border: none;
-  text-align: left;
-  cursor: pointer;
-  transition: background .15s;
+  display: block; width: 100%; padding: 11px 16px; font-size: 12px;
+  color: #f43f5e; background: transparent; border: none; text-align: left;
+  cursor: pointer; transition: background .15s;
 }
-.settingsLogout:hover { background: rgba(244, 63, 94, 0.08); }
+.settingsLogout:hover { background: rgba(244,63,94,.08); }
 
 /* Page content */
 .content { flex: 1; overflow-y: auto; }
 
-/* ── Right Sidebar (Tools) ── */
+/* ── Right Sidebar ── */
 .right {
-  width: 260px;
-  flex-shrink: 0;
-  background: var(--surface);
-  border-left: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  transition: width .2s ease;
-  overflow: hidden;
+  flex-shrink: 0; background: var(--surface); border-left: 1px solid var(--border);
+  display: flex; flex-direction: column; overflow: hidden;
 }
-.rightCollapsed { width: 52px; }
 
-.rightCollapsedInner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 10px 0;
-  gap: 4px;
-}
-.rightCollapsedHeader {
-  font-size: 18px;
-  padding: 10px;
-  color: var(--text2);
+/* Compact state (icons column) */
+.rightCompact {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 10px 0; gap: 2px; overflow-y: auto;
 }
 .rightExpandBtn {
-  width: 30px;
-  height: 30px;
-  border: none;
-  background: transparent;
-  border-radius: 7px;
-  color: var(--text2);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background .12s, color .12s;
+  width: 30px; height: 30px; border: none; background: transparent;
+  border-radius: 7px; color: var(--text2); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .12s, color .12s; margin-bottom: 6px;
 }
 .rightExpandBtn:hover { background: var(--surface2); color: var(--text); }
 .catIconBtn {
-  width: 36px;
-  height: 36px;
-  border: none;
-  background: transparent;
-  border-radius: 8px;
-  font-size: 18px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background .15s;
-  color: var(--text2);
+  width: 36px; height: 36px; border: none; background: transparent; border-radius: 8px;
+  font-size: 17px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background .15s; color: var(--text2);
 }
 .catIconBtn:hover  { background: var(--surface2); }
 .catIconActive     { background: var(--accent-muted) !important; }
 
+/* Expanded state */
+.rightExpanded { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
 .rightHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 14px 14px;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-  min-height: 53px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 14px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; min-height: 53px;
 }
 .rightTitle { font-size: 13px; font-weight: 600; }
 .rightCollapseBtn {
-  width: 22px;
-  height: 22px;
-  border: none;
-  background: var(--surface2);
-  border-radius: 5px;
-  color: var(--text2);
-  font-size: 14px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background .15s;
-  line-height: 1;
+  width: 22px; height: 22px; border: none; background: var(--surface2);
+  border-radius: 5px; color: var(--text2); font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: background .15s; line-height: 1;
 }
 .rightCollapseBtn:hover { background: var(--border); color: var(--text); }
 
+/* Saved tools strip */
+.savedStrip {
+  display: flex; gap: 5px; padding: 8px 12px;
+  border-bottom: 1px solid var(--border); flex-shrink: 0; overflow-x: auto;
+}
+.savedPin {
+  width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center;
+  justify-content: center; font-size: 10px; font-weight: 800; color: #fff;
+  text-decoration: none; flex-shrink: 0; transition: opacity .12s;
+}
+.savedPin:hover { opacity: .8; }
+
+/* Tool filters */
 .toolCats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
+  display: flex; flex-wrap: wrap; gap: 4px; padding: 9px 10px;
+  border-bottom: 1px solid var(--border); flex-shrink: 0;
 }
 .toolCatBtn {
-  padding: 3px 9px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: transparent;
-  color: var(--text2);
-  font-size: 11px;
-  cursor: pointer;
-  transition: all .15s;
-  white-space: nowrap;
+  padding: 3px 8px; border: 1px solid var(--border); border-radius: 12px;
+  background: transparent; color: var(--text2); font-size: 10px; cursor: pointer;
+  transition: all .15s; white-space: nowrap;
 }
 .toolCatBtn:hover { border-color: var(--accent); color: var(--text); }
 .toolCatActive { background: var(--accent) !important; border-color: var(--accent) !important; color: #fff !important; }
 
-.toolSearchRow { padding: 10px 12px; flex-shrink: 0; }
+.toolSearchRow { padding: 8px 10px; flex-shrink: 0; }
 .toolSearchInput {
-  width: 100%;
-  padding: 8px 12px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text);
-  font-size: 12px;
-  outline: none;
+  width: 100%; padding: 7px 10px; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: 8px; color: var(--text);
+  font-size: 11px; outline: none;
 }
 .toolSearchInput:focus { border-color: var(--accent); }
 .toolSearchInput::placeholder { color: var(--text2); }
 
-/* Right sidebar expanded wrapper */
-.rightExpanded { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
-
-/* Tools list — compact */
-.toolList {
-  flex: 1;
-  overflow-y: auto;
-  padding: 4px 6px;
-}
+/* Tools list */
+.toolList { flex: 1; overflow-y: auto; padding: 3px 5px; }
 .toolItem {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 7px;
-  border-radius: 8px;
-  text-decoration: none;
-  transition: background .12s;
+  display: flex; align-items: center; gap: 8px; padding: 6px 7px;
+  border-radius: 8px; text-decoration: none; transition: background .12s;
+  border-bottom: 1px solid var(--border);
 }
-.toolItem + .toolItem { border-top: 1px solid var(--border); border-radius: 0; }
-.toolItem:first-child { border-radius: 8px 8px 0 0; }
-.toolItem:last-child  { border-radius: 0 0 8px 8px; border-bottom: none; }
-
+.toolItem:last-child { border-bottom: none; }
 .toolIcon {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 800;
-  color: #fff;
-  flex-shrink: 0;
+  width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center;
+  justify-content: center; font-size: 10px; font-weight: 800; color: #fff; flex-shrink: 0;
 }
-.toolInfo { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.toolName { font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.toolPricing { font-size: 9px; font-weight: 700; letter-spacing: .04em; }
+.toolInfo { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+.toolName { font-size: 11px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .toolDesc { font-size: 10px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.toolSaveBtn {
+  width: 20px; height: 20px; border: 1px solid var(--border); background: transparent;
+  border-radius: 5px; color: var(--text2); font-size: 11px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all .12s; opacity: 0;
+}
+.toolItem:hover .toolSaveBtn { opacity: 1; }
+.toolSaveBtn:hover { border-color: var(--accent); color: var(--accent); }
+.toolSaved { opacity: 1 !important; background: var(--accent-muted) !important; border-color: var(--accent) !important; color: var(--accent) !important; }
 
 .toolsFooter {
-  padding: 12px 16px;
-  border-top: 1px solid var(--border);
-  font-size: 11px;
-  color: var(--accent);
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: opacity .15s;
+  padding: 11px 14px; border-top: 1px solid var(--border);
+  font-size: 11px; color: var(--accent); cursor: pointer; flex-shrink: 0;
+  text-decoration: none; display: block; transition: opacity .15s;
 }
 .toolsFooter:hover { opacity: .7; }
