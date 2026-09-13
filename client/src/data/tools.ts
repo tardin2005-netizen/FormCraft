@@ -36,6 +36,7 @@ export const ALL_TOOLS: Tool[] = [
   { name: 'Canva',            cat: 'Imagem & Design',  pricing: 'FREEMIUM',   color: '#00C4CC', letter: 'C', url: 'https://canva.com',                      desc: 'Criação gráfica acessível para todos' },
   { name: 'Midjourney',       cat: 'Imagem & Design',  pricing: 'ASSINATURA', color: '#2D3277', letter: 'M', url: 'https://midjourney.com',                 desc: 'Geração de imagens de alta qualidade com IA' },
   { name: 'Adobe Firefly',    cat: 'Imagem & Design',  pricing: 'FREEMIUM',   color: '#FF0000', letter: 'A', url: 'https://firefly.adobe.com',              desc: 'IA generativa integrada ao ecossistema Adobe' },
+  { name: 'Lightroom',        cat: 'Imagem & Design',  pricing: 'ASSINATURA', color: '#31A8FF', letter: 'L', url: 'https://lightroom.adobe.com',            desc: 'Edição e organização profissional de fotos' },
   { name: 'Framer',           cat: 'Imagem & Design',  pricing: 'FREEMIUM',   color: '#0E0E0E', letter: 'F', url: 'https://framer.com',                     desc: 'Design e prototipagem com animações avançadas' },
   { name: 'Spline',           cat: 'Imagem & Design',  pricing: 'FREEMIUM',   color: '#5F6FFF', letter: 'S', url: 'https://spline.design',                  desc: 'Modelagem e animação 3D no navegador' },
   { name: 'Webflow',          cat: 'Imagem & Design',  pricing: 'FREEMIUM',   color: '#4353FF', letter: 'W', url: 'https://webflow.com',                    desc: 'Criação de sites sem código com CMS' },
@@ -45,6 +46,7 @@ export const ALL_TOOLS: Tool[] = [
   { name: 'Pika',             cat: 'Criar vídeo',      pricing: 'FREEMIUM',   color: '#6366F1', letter: 'P', url: 'https://pika.art',                       desc: 'Criação de vídeos curtos com IA' },
   { name: 'Luma AI',          cat: 'Criar vídeo',      pricing: 'FREEMIUM',   color: '#FF6B35', letter: 'L', url: 'https://lumalabs.ai',                    desc: 'Geração de vídeos e cenas 3D com IA' },
   { name: 'CapCut',           cat: 'Criar vídeo',      pricing: 'FREEMIUM',   color: '#000000', letter: 'C', url: 'https://capcut.com',                     desc: 'Edição de vídeo simples para redes sociais' },
+  { name: 'OBS Studio',       cat: 'Criar vídeo',      pricing: 'GRATUITO',   color: '#302E31', letter: 'O', url: 'https://obsproject.com',                 desc: 'Gravação de tela e streaming open source' },
   // Áudio & Voz
   { name: 'ElevenLabs',       cat: 'Áudio & Voz',      pricing: 'FREEMIUM',   color: '#7B61FF', letter: 'E', url: 'https://elevenlabs.io',                  desc: 'Síntese de voz ultra-realista com IA' },
   { name: 'Suno',             cat: 'Áudio & Voz',      pricing: 'FREEMIUM',   color: '#F59E0B', letter: 'S', url: 'https://suno.com',                       desc: 'Criação de músicas completas com IA' },
@@ -77,6 +79,7 @@ export const ALL_TOOLS: Tool[] = [
   { name: '1Password',        cat: 'Segurança',        pricing: 'ASSINATURA', color: '#0094F5', letter: '1', url: 'https://1password.com',                  desc: 'Cofre de senhas premium para times e famílias' },
   { name: 'Have I Been Pwned',cat: 'Segurança',        pricing: 'GRATUITO',   color: '#D73E3E', letter: 'H', url: 'https://haveibeenpwned.com',             desc: 'Verifica se seu e-mail foi vazado' },
   { name: 'Virustotal',       cat: 'Segurança',        pricing: 'GRATUITO',   color: '#394EFF', letter: 'V', url: 'https://virustotal.com',                 desc: 'Analisa arquivos e URLs em busca de malware' },
+  { name: 'Brave',            cat: 'Segurança',        pricing: 'GRATUITO',   color: '#FB542B', letter: 'B', url: 'https://brave.com',                      desc: 'Navegador focado em privacidade com bloqueador nativo' },
   // Produtividade
   { name: 'Notion',           cat: 'Produtividade',    pricing: 'FREEMIUM',   color: '#000000', letter: 'N', url: 'https://notion.so',                      desc: 'Notas, wikis e banco de dados all-in-one' },
   { name: 'Obsidian',         cat: 'Produtividade',    pricing: 'FREEMIUM',   color: '#7E6AD2', letter: 'O', url: 'https://obsidian.md',                    desc: 'Notas em Markdown com links bidirecionais' },
@@ -84,6 +87,7 @@ export const ALL_TOOLS: Tool[] = [
   { name: 'Linear',           cat: 'Produtividade',    pricing: 'FREEMIUM',   color: '#5E6AD2', letter: 'L', url: 'https://linear.app',                     desc: 'Gestão de issues para times de produto' },
   { name: 'Todoist',          cat: 'Produtividade',    pricing: 'FREEMIUM',   color: '#DB4035', letter: 'T', url: 'https://todoist.com',                    desc: 'Gerenciador de tarefas cross-platform' },
   { name: 'Toggl',            cat: 'Produtividade',    pricing: 'FREEMIUM',   color: '#E01E5A', letter: 'T', url: 'https://toggl.com',                      desc: 'Time tracking simples com relatórios' },
+  { name: 'AnyDesk',          cat: 'Produtividade',    pricing: 'FREEMIUM',   color: '#EF443B', letter: 'A', url: 'https://anydesk.com',                    desc: 'Acesso remoto a computadores com baixa latência' },
   // Banco de Imagens
   { name: 'Unsplash',         cat: 'Banco de Imagens', pricing: 'GRATUITO',   color: '#111111', letter: 'U', url: 'https://unsplash.com',                   desc: 'Banco de fotos gratuito de alta qualidade' },
   { name: 'Pexels',           cat: 'Banco de Imagens', pricing: 'GRATUITO',   color: '#05A081', letter: 'P', url: 'https://pexels.com',                     desc: 'Fotos e vídeos gratuitos para projetos web' },

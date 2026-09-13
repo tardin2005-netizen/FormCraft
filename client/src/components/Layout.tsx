@@ -442,62 +442,59 @@ export default function Layout() {
             transition={{ duration: .15 }}
           >
             <div className={s.rightHeader}>
-              <span className={s.rightTitle}>🛠️ Ferramentas</span>
+              <span className={s.rightTitle}>⭐ Favoritas</span>
               <button className={s.rightCollapseBtn} onClick={cycleRight} title="Compactar">›</button>
-            </div>
-
-            <div className={s.toolCats}>
-              {TOOL_CATS.map(c => (
-                <button
-                  key={c}
-                  className={`${s.toolCatBtn} ${toolCat === c ? s.toolCatActive : ''}`}
-                  onClick={() => setToolCat(c)}
-                >{c}</button>
-              ))}
             </div>
 
             <div className={s.toolSearchRow}>
               <input
                 className={s.toolSearchInput}
-                placeholder="🔍 Buscar ferramenta..."
+                placeholder="🔍 Buscar favorita..."
                 value={toolSearch}
                 onChange={e => setToolSearch(e.target.value)}
               />
             </div>
 
             <div className={s.toolList}>
-              {filteredTools.map((t, i) => (
-                <motion.a
-                  key={t.name}
-                  href={t.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={s.toolItem}
-                  initial={{ opacity: 0, x: 12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * .02, duration: .18 }}
-                  whileHover={{ backgroundColor: 'var(--surface2)' }}
-                >
-                  <span className={s.toolIcon} style={{ background: t.color }}>{t.letter}</span>
-                  <span className={s.toolInfo}>
-                    <span className={s.toolName}>
-                      {isSaved(t.name) && <span className={s.toolStar}>★</span>}
-                      {t.name}
-                    </span>
-                    <span className={s.toolDesc}>{t.desc}</span>
-                  </span>
-                  <button
-                    className={`${s.toolSaveBtn} ${isSaved(t.name) ? s.toolSaved : ''}`}
-                    onClick={e => {
-                      e.preventDefault()
-                      isSaved(t.name) ? unsaveTool(t.name) : saveTool(t.name)
-                    }}
-                    title={isSaved(t.name) ? 'Remover dos favoritos' : 'Salvar nos favoritos'}
+              {(() => {
+                const favs = ALL_TOOLS.filter(t =>
+                  isSaved(t.name) &&
+                  (!toolSearch || t.name.toLowerCase().includes(toolSearch.toLowerCase()) || t.desc.toLowerCase().includes(toolSearch.toLowerCase()))
+                )
+                if (favs.length === 0) return (
+                  <div className={s.toolEmptyFav}>
+                    <div className={s.toolEmptyFavIcon}>☆</div>
+                    <div className={s.toolEmptyFavText}>Nenhuma ferramenta favorita ainda</div>
+                    <NavLink to="/ferramentas" className={s.toolEmptyFavLink} onClick={cycleRight}>
+                      Abrir biblioteca →
+                    </NavLink>
+                  </div>
+                )
+                return favs.map((t, i) => (
+                  <motion.a
+                    key={t.name}
+                    href={t.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={s.toolItem}
+                    initial={{ opacity: 0, x: 12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * .02, duration: .18 }}
+                    whileHover={{ backgroundColor: 'var(--surface2)' }}
                   >
-                    {isSaved(t.name) ? '★' : '☆'}
-                  </button>
-                </motion.a>
-              ))}
+                    <span className={s.toolIcon} style={{ background: t.color }}>{t.letter}</span>
+                    <span className={s.toolInfo}>
+                      <span className={s.toolName}>{t.name}</span>
+                      <span className={s.toolDesc}>{t.desc}</span>
+                    </span>
+                    <button
+                      className={`${s.toolSaveBtn} ${s.toolSaved}`}
+                      onClick={e => { e.preventDefault(); unsaveTool(t.name) }}
+                      title="Remover dos favoritos"
+                    >★</button>
+                  </motion.a>
+                ))
+              })()}
             </div>
 
             <NavLink to="/ferramentas" className={s.toolsFooter}>

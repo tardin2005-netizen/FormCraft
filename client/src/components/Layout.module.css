@@ -319,6 +319,19 @@
 }
 .toolsFooter:hover { opacity: .7; }
 
+.toolEmptyFav {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 8px; padding: 40px 16px; text-align: center;
+}
+.toolEmptyFavIcon { font-size: 28px; color: var(--text2); }
+.toolEmptyFavText { font-size: 12px; color: var(--text2); line-height: 1.5; }
+.toolEmptyFavLink {
+  font-size: 12px; color: var(--accent); text-decoration: none;
+  padding: 6px 14px; border: 1px solid var(--accent); border-radius: 8px;
+  transition: opacity .15s; margin-top: 4px;
+}
+.toolEmptyFavLink:hover { opacity: .7; }
+
 /* ── Mobile bottom nav ── */
 .bottomNav { display: none; }
 

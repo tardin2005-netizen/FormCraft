@@ -19,7 +19,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: client/package-lock.json
 
-      - name: Instalar dependências
+      - name: Instalar dependências (client)
         run: npm ci
         working-directory: client
 
@@ -27,10 +27,23 @@ jobs:
         run: npm run build
         working-directory: client
 
-      - name: Deploy para Firebase Hosting
+      - name: Instalar dependências (functions)
+        run: npm ci
+        working-directory: functions
+
+      - name: Build das Firebase Functions
+        run: npm run build
+        working-directory: functions
+
+      - name: Deploy Hosting para Firebase
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
           channelId: live
           projectId: formcraft-52279
+
+      - name: Deploy Functions para Firebase
+        run: |
+          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > /tmp/sa.json
+          GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa.json npx firebase-tools@latest deploy --only functions --project formcraft-52279 --non-interactive

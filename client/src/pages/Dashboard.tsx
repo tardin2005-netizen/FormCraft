@@ -6,6 +6,7 @@ import { useAreaItemsStore } from '../store/areaItemsStore'
 import { useWorkspacesStore } from '../store/workspacesStore'
 import { useLinksStore } from '../store/linksStore'
 import WorkspaceCreator from '../components/WorkspaceCreator'
+import VoiceSearch from '../components/VoiceSearch'
 import s from './Dashboard.module.css'
 
 interface OutletCtx { onOpenSearch: () => void }
@@ -115,7 +116,7 @@ export default function Dashboard() {
       {/* Hero search */}
       <section className={s.hero}>
         <h1 className={s.heroTitle}>O que você precisa agora?</h1>
-        <p className={s.heroSub}>Descreva um problema e o FormCraft recomenda a ferramenta certa — ou entre numa área abaixo.</p>
+        <p className={s.heroSub}>Descreva ou fale sua dor e o FormCraft recomenda a ferramenta certa com IA.</p>
         <div className={s.heroSearch}>
           <span className={s.heroSearchIcon}>💬</span>
           <input
@@ -126,6 +127,10 @@ export default function Dashboard() {
             onFocus={onOpenSearch}
           />
           <button className={s.heroBtn}>Encontrar</button>
+        </div>
+        <div className={s.voiceRow}>
+          <VoiceSearch />
+          <span className={s.voiceHint}>ou fale sua dor — a IA recomenda a ferramenta certa</span>
         </div>
         <div className={s.chips}>
           {CHIPS.map(c => (
