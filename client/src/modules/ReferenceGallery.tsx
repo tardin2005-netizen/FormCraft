@@ -14,11 +14,41 @@ interface ReferenceData {
   category: string
 }
 
+async function fetchSiteMeta(url: string) {
+  try {
+    const proxy = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
+    const res = await fetch(proxy, { signal: AbortSignal.timeout(6000) })
+    const html = await res.text()
+    const doc = new DOMParser().parseFromString(html, 'text/html')
+    const og = (sel: string) => doc.querySelector(sel)?.getAttribute('content') ?? ''
+    return {
+      title: og('meta[property="og:title"]') || og('meta[name="twitter:title"]') || doc.querySelector('title')?.textContent?.trim() || '',
+      desc: og('meta[property="og:description"]') || og('meta[name="description"]') || '',
+      image: og('meta[property="og:image"]') || og('meta[name="twitter:image"]') || '',
+    }
+  } catch { return null }
+}
+
 export default function ReferenceGallery({ module, workspaceId, items, addItem, removeItem, toggleStar }: ModuleProps) {
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState<ReferenceData>({ title: '', url: '', imageUrl: '', pastedImage: '', description: '', why: '', tags: '', category: '' })
   const [view, setView] = useState<'grid' | 'list'>('grid')
+  const [fetching, setFetching] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  async function handleUrlBlur() {
+    if (!form.url.startsWith('http') || form.imageUrl || form.pastedImage) return
+    setFetching(true)
+    const meta = await fetchSiteMeta(form.url)
+    setFetching(false)
+    if (!meta) return
+    setForm(p => ({
+      ...p,
+      title: p.title || meta.title,
+      description: p.description || meta.desc,
+      imageUrl: p.imageUrl || meta.image,
+    }))
+  }
 
   useEffect(() => {
     if (!showForm) return

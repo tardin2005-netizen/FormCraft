@@ -149,20 +149,43 @@ export default function SaveLinkModal({ onClose }: Props) {
   const domain = getDomain(url)
   const canSave = (url.trim().startsWith('http') || type === 'nota' || type === 'prompt' || !!pastedImage) && !saved
 
+  // Drag
+  const [pos, setPos] = useState({ x: 0, y: 0 })
+  const dragRef = useRef<{ mx: number; my: number; px: number; py: number } | null>(null)
+
+  function onHeaderMouseDown(e: React.MouseEvent) {
+    if ((e.target as HTMLElement).closest('button, a, input, select')) return
+    dragRef.current = { mx: e.clientX, my: e.clientY, px: pos.x, py: pos.y }
+    function onMove(ev: MouseEvent) {
+      if (!dragRef.current) return
+      const maxX = window.innerWidth / 2 - 80
+      const maxY = window.innerHeight / 2 - 60
+      setPos({
+        x: Math.max(-maxX, Math.min(maxX, dragRef.current.px + ev.clientX - dragRef.current.mx)),
+        y: Math.max(-maxY, Math.min(maxY, dragRef.current.py + ev.clientY - dragRef.current.my)),
+      })
+    }
+    function onUp() { dragRef.current = null; window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }
+
   return (
     <>
       <div className={s.backdrop} onClick={onClose} />
+      <div style={{ position: 'fixed', top: '50%', left: '50%', zIndex: 60, transform: `translate(calc(-50% + ${pos.x}px), calc(-50% + ${pos.y}px))`, width: 440, maxWidth: 'calc(100vw - 32px)' }}>
       <motion.div
         className={s.modal}
-        initial={{ opacity: 0, y: -20, scale: .96 }}
+        style={{ position: 'relative', top: 'auto', left: 'auto', transform: 'none', width: '100%' }}
+        initial={{ opacity: 0, y: -16, scale: .96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: -20, scale: .96 }}
+        exit={{ opacity: 0, y: -16, scale: .96 }}
         transition={{ type: 'spring', stiffness: 400, damping: 28 }}
       >
-        <div className={s.header}>
+        <div className={s.header} onMouseDown={onHeaderMouseDown} style={{ cursor: 'grab', userSelect: 'none' }}>
           <span className={s.headerTitle}>🔗 Salvar conteúdo</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 10, color: 'var(--text2)', background: 'var(--surface2)', padding: '2px 7px', borderRadius: 5, border: '1px solid var(--border)' }}>
+            <span style={{ fontSize: 10, color: 'var(--text2)', background: 'var(--surface2)', padding: '2px 7px', borderRadius: 5, border: '1px solid var(--border)', cursor: 'default', userSelect: 'none' }}>
               ⌘V para colar imagem
             </span>
             <button className={s.closeBtn} onClick={onClose}>✕</button>
@@ -276,13 +299,16 @@ export default function SaveLinkModal({ onClose }: Props) {
 
           {/* Area + Tags row */}
           <div className={s.twoCol}>
-            <div className={s.field}>
-              <label className={s.label}>Área</label>
-              <select className={s.select} value={areaId} onChange={e => setAreaId(e.target.value)}>
-                {areas.map(a => <option key={a.id} value={a.id}>{a.emoji} {a.title}</option>)}
-              </select>
-            </div>
-            <div className={s.field}>
+            {areas.length > 0 && (
+              <div className={s.field}>
+                <label className={s.label}>Área <span className={s.optional}>(opcional)</span></label>
+                <select className={s.select} value={areaId} onChange={e => setAreaId(e.target.value)}>
+                  <option value="">— Sem área —</option>
+                  {areas.map(a => <option key={a.id} value={a.id}>{a.emoji} {a.title}</option>)}
+                </select>
+              </div>
+            )}
+            <div className={s.field} style={areas.length === 0 ? { gridColumn: '1 / -1' } : {}}>
               <label className={s.label}>Tags <span className={s.optional}>(vírgula)</span></label>
               <input
                 className={s.input}
@@ -310,6 +336,7 @@ export default function SaveLinkModal({ onClose }: Props) {
           </button>
         </div>
       </motion.div>
+      </div>
     </>
   )
 }

@@ -4,6 +4,7 @@ import { useAreasStore } from '../store/areasStore'
 import { useCollectionsStore } from '../store/collectionsStore'
 import { useAreaItemsStore } from '../store/areaItemsStore'
 import { useWorkspacesStore } from '../store/workspacesStore'
+import { useLinksStore } from '../store/linksStore'
 import WorkspaceCreator from '../components/WorkspaceCreator'
 import s from './Dashboard.module.css'
 
@@ -12,13 +13,19 @@ interface OutletCtx { onOpenSearch: () => void }
 type GHCommit = { sha: string; commit: { message: string; author: { date: string } } }
 type GHRepo   = { stargazers_count: number; open_issues_count: number; pushed_at: string; description: string | null }
 
-const RECENT = [
-  { icon: '📄', title: 'Princípios de Design Visual.pdf', area: 'UX & Design', time: '2h atrás' },
-  { icon: '🔗', title: 'Figma Handbook', area: 'UX & Design', time: '5h atrás' },
-  { icon: '📝', title: 'Ideias para o TCC', area: 'Faculdade', time: 'ontem' },
-  { icon: '🖼️', title: 'Moodboard marca pessoal', area: 'Design', time: '2 dias' },
-  { icon: '🤖', title: 'Prompt para geração de paleta', area: 'UX & Design', time: '3 dias' },
-]
+const TYPE_ICON: Record<string, string> = { link: '🔗', pdf: '📄', nota: '📝', imagem: '🖼️', prompt: '🤖' }
+
+function timeAgo(dateStr: string) {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const m = Math.floor(diff / 60000)
+  if (m < 60) return `${m}min atrás`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${h}h atrás`
+  const d = Math.floor(h / 24)
+  if (d === 1) return 'ontem'
+  if (d < 7) return `${d} dias`
+  return `${Math.floor(d / 7)} semanas`
+}
 
 const CHIPS = [
   { emoji: '🎬', label: 'gerar vídeo com IA' },
@@ -81,10 +88,15 @@ export default function Dashboard() {
   const { collections } = useCollectionsStore()
   const { items } = useAreaItemsStore()
   const { workspaces } = useWorkspacesStore()
+  const { links } = useLinksStore()
   const [showWorkspaceCreator, setShowWorkspaceCreator] = useState(false)
 
   const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
   const thisWeekCount = items.filter(i => new Date(i.createdAt).getTime() > oneWeekAgo).length
+
+  const recentLinks = [...links]
+    .sort((a, b) => (b.savedAt ?? 0) - (a.savedAt ?? 0))
+    .slice(0, 5)
 
   const [heroQuery,    setHeroQuery]    = useState('')
   const [showGH,       setShowGH]       = useState(false)
@@ -221,20 +233,28 @@ export default function Dashboard() {
       </section>
 
       {/* Recentes */}
-      <section className={s.section}>
-        <h2 className={s.sectionTitle}>Adicionados recentemente</h2>
-        <div className={s.recentList}>
-          {RECENT.map((r, i) => (
-            <div key={i} className={s.recentItem}>
-              <span className={s.recentIcon}>{r.icon}</span>
-              <div className={s.recentInfo}>
-                <div className={s.recentTitle}>{r.title}</div>
-                <div className={s.recentMeta}>{r.area} · {r.time}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+      {recentLinks.length > 0 && (
+        <section className={s.section}>
+          <h2 className={s.sectionTitle}>Adicionados recentemente</h2>
+          <div className={s.recentList}>
+            {recentLinks.map(link => {
+              const areaName = areas.find(a => a.id === link.areaId)?.title ?? ''
+              return (
+                <div key={link.id} className={s.recentItem}>
+                  <span className={s.recentIcon}>{TYPE_ICON[link.type] ?? '🔗'}</span>
+                  <div className={s.recentInfo}>
+                    <div className={s.recentTitle}>{link.title}</div>
+                    <div className={s.recentMeta}>
+                      {areaName && `${areaName} · `}
+                      {timeAgo(new Date(link.savedAt).toISOString())}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Workspace Creator */}
       {showWorkspaceCreator && (
