@@ -269,17 +269,10 @@
 }
 .rightCollapseBtn:hover { background: var(--border); color: var(--text); }
 
-/* Saved tools strip */
-.savedStrip {
-  display: flex; gap: 5px; padding: 8px 12px;
-  border-bottom: 1px solid var(--border); flex-shrink: 0; overflow-x: auto;
+/* Saved star indicator in tool name */
+.toolStar {
+  color: #f59e0b; font-size: 10px; margin-right: 3px; vertical-align: middle;
 }
-.savedPin {
-  width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center;
-  justify-content: center; font-size: 10px; font-weight: 800; color: #fff;
-  text-decoration: none; flex-shrink: 0; transition: opacity .12s;
-}
-.savedPin:hover { opacity: .8; }
 
 /* Tool filters */
 .toolCats {

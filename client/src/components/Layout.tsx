@@ -73,12 +73,16 @@ export default function Layout() {
     return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
   }
 
-  const savedTools = ALL_TOOLS.filter(t => isSaved(t.name))
-  const filteredTools = ALL_TOOLS.filter(t =>
-    (toolCat === 'Todas' || t.cat === toolCat) &&
-    (t.name.toLowerCase().includes(toolSearch.toLowerCase()) ||
-     t.desc.toLowerCase().includes(toolSearch.toLowerCase()))
-  )
+  const filteredTools = (() => {
+    const matches = ALL_TOOLS.filter(t =>
+      (toolCat === 'Todas' || t.cat === toolCat) &&
+      (t.name.toLowerCase().includes(toolSearch.toLowerCase()) ||
+       t.desc.toLowerCase().includes(toolSearch.toLowerCase()))
+    )
+    const saved = matches.filter(t => isSaved(t.name))
+    const rest  = matches.filter(t => !isSaved(t.name))
+    return [...saved, ...rest]
+  })()
 
   const leftW  = LEFT_W[leftState]
   const rightW = RIGHT_W[rightState]
@@ -442,19 +446,6 @@ export default function Layout() {
               <button className={s.rightCollapseBtn} onClick={cycleRight} title="Compactar">›</button>
             </div>
 
-            {/* Saved tools quick-access */}
-            {savedTools.length > 0 && (
-              <div className={s.savedStrip}>
-                {savedTools.slice(0, 6).map(t => (
-                  <a key={t.name} href={t.url} target="_blank" rel="noopener noreferrer"
-                    className={s.savedPin} title={t.name}
-                    style={{ background: t.color }}>
-                    {t.letter}
-                  </a>
-                ))}
-              </div>
-            )}
-
             <div className={s.toolCats}>
               {TOOL_CATS.map(c => (
                 <button
@@ -489,7 +480,10 @@ export default function Layout() {
                 >
                   <span className={s.toolIcon} style={{ background: t.color }}>{t.letter}</span>
                   <span className={s.toolInfo}>
-                    <span className={s.toolName}>{t.name}</span>
+                    <span className={s.toolName}>
+                      {isSaved(t.name) && <span className={s.toolStar}>★</span>}
+                      {t.name}
+                    </span>
                     <span className={s.toolDesc}>{t.desc}</span>
                   </span>
                   <button
@@ -498,9 +492,9 @@ export default function Layout() {
                       e.preventDefault()
                       isSaved(t.name) ? unsaveTool(t.name) : saveTool(t.name)
                     }}
-                    title={isSaved(t.name) ? 'Remover da sidebar' : 'Fixar na sidebar'}
+                    title={isSaved(t.name) ? 'Remover dos favoritos' : 'Salvar nos favoritos'}
                   >
-                    {isSaved(t.name) ? '✓' : '+'}
+                    {isSaved(t.name) ? '★' : '☆'}
                   </button>
                 </motion.a>
               ))}

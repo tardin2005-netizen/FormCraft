@@ -5,6 +5,10 @@ export type ToolCategory =
   | 'Criar vídeo'
   | 'Áudio & Voz'
   | 'Métricas'
+  | 'Redes Sociais'
+  | 'CMS & Sites'
+  | 'Segurança'
+  | 'Produtividade'
   | 'Banco de Imagens'
   | 'Ícones & SVG'
 
@@ -50,6 +54,36 @@ export const ALL_TOOLS: Tool[] = [
   { name: 'Google Analytics', cat: 'Métricas',         pricing: 'GRATUITO',   color: '#F4B400', letter: 'G', url: 'https://analytics.google.com',           desc: 'Análise de tráfego e comportamento no site' },
   { name: 'Hotjar',           cat: 'Métricas',         pricing: 'FREEMIUM',   color: '#FD3A5C', letter: 'H', url: 'https://hotjar.com',                     desc: 'Mapas de calor e gravações de sessão' },
   { name: 'Mixpanel',         cat: 'Métricas',         pricing: 'FREEMIUM',   color: '#7C3AED', letter: 'M', url: 'https://mixpanel.com',                   desc: 'Analytics de produto e funis de conversão' },
+  { name: 'SimilarWeb',       cat: 'Métricas',         pricing: 'FREEMIUM',   color: '#FF5F58', letter: 'S', url: 'https://similarweb.com',                 desc: 'Tráfego e ranking de qualquer site' },
+  { name: 'SEMrush',          cat: 'Métricas',         pricing: 'ASSINATURA', color: '#FF6900', letter: 'S', url: 'https://semrush.com',                    desc: 'SEO, tráfego pago e análise de concorrentes' },
+  { name: 'Ahrefs',           cat: 'Métricas',         pricing: 'ASSINATURA', color: '#0EA5E9', letter: 'A', url: 'https://ahrefs.com',                     desc: 'Backlinks, palavras-chave e auditoria SEO' },
+  { name: 'Amplitude',        cat: 'Métricas',         pricing: 'FREEMIUM',   color: '#1B55E2', letter: 'A', url: 'https://amplitude.com',                  desc: 'Analytics comportamental de produtos digitais' },
+  { name: 'Clarity',          cat: 'Métricas',         pricing: 'GRATUITO',   color: '#0067B8', letter: 'C', url: 'https://clarity.microsoft.com',          desc: 'Mapas de calor e sessões grátis da Microsoft' },
+  // Redes Sociais
+  { name: 'SocialBlade',      cat: 'Redes Sociais',    pricing: 'FREEMIUM',   color: '#333333', letter: 'S', url: 'https://socialblade.com',                desc: 'Estatísticas e ranking de canais e perfis' },
+  { name: 'Buffer',           cat: 'Redes Sociais',    pricing: 'FREEMIUM',   color: '#168EEA', letter: 'B', url: 'https://buffer.com',                     desc: 'Agendamento de posts para múltiplas redes' },
+  { name: 'Hootsuite',        cat: 'Redes Sociais',    pricing: 'ASSINATURA', color: '#143059', letter: 'H', url: 'https://hootsuite.com',                  desc: 'Gestão completa de redes sociais' },
+  { name: 'Later',            cat: 'Redes Sociais',    pricing: 'FREEMIUM',   color: '#FF6B9D', letter: 'L', url: 'https://later.com',                      desc: 'Planejamento visual para Instagram e TikTok' },
+  { name: 'Metricool',        cat: 'Redes Sociais',    pricing: 'FREEMIUM',   color: '#00B4D8', letter: 'M', url: 'https://metricool.com',                  desc: 'Analytics e agendamento de redes sociais' },
+  // CMS & Sites
+  { name: 'WordPress',        cat: 'CMS & Sites',      pricing: 'FREEMIUM',   color: '#21759B', letter: 'W', url: 'https://wordpress.com',                  desc: 'CMS mais usado do mundo, blogs e sites' },
+  { name: 'Ghost',            cat: 'CMS & Sites',      pricing: 'FREEMIUM',   color: '#15171A', letter: 'G', url: 'https://ghost.org',                      desc: 'CMS moderno para blogs e newsletters' },
+  { name: 'Wix',              cat: 'CMS & Sites',      pricing: 'FREEMIUM',   color: '#FAAD4D', letter: 'W', url: 'https://wix.com',                        desc: 'Criador de sites com arrastar e soltar' },
+  { name: 'Squarespace',      cat: 'CMS & Sites',      pricing: 'ASSINATURA', color: '#000000', letter: 'S', url: 'https://squarespace.com',                desc: 'Sites com design profissional e templates' },
+  { name: 'Shopify',          cat: 'CMS & Sites',      pricing: 'ASSINATURA', color: '#96BF48', letter: 'S', url: 'https://shopify.com',                    desc: 'Plataforma de e-commerce completa' },
+  // Segurança
+  { name: 'Bitwarden',        cat: 'Segurança',        pricing: 'FREEMIUM',   color: '#175DDC', letter: 'B', url: 'https://bitwarden.com',                  desc: 'Gerenciador de senhas open source e seguro' },
+  { name: 'NordPass',         cat: 'Segurança',        pricing: 'FREEMIUM',   color: '#4687FF', letter: 'N', url: 'https://nordpass.com',                   desc: 'Gerenciador de senhas da Nord Security' },
+  { name: '1Password',        cat: 'Segurança',        pricing: 'ASSINATURA', color: '#0094F5', letter: '1', url: 'https://1password.com',                  desc: 'Cofre de senhas premium para times e famílias' },
+  { name: 'Have I Been Pwned',cat: 'Segurança',        pricing: 'GRATUITO',   color: '#D73E3E', letter: 'H', url: 'https://haveibeenpwned.com',             desc: 'Verifica se seu e-mail foi vazado' },
+  { name: 'Virustotal',       cat: 'Segurança',        pricing: 'GRATUITO',   color: '#394EFF', letter: 'V', url: 'https://virustotal.com',                 desc: 'Analisa arquivos e URLs em busca de malware' },
+  // Produtividade
+  { name: 'Notion',           cat: 'Produtividade',    pricing: 'FREEMIUM',   color: '#000000', letter: 'N', url: 'https://notion.so',                      desc: 'Notas, wikis e banco de dados all-in-one' },
+  { name: 'Obsidian',         cat: 'Produtividade',    pricing: 'FREEMIUM',   color: '#7E6AD2', letter: 'O', url: 'https://obsidian.md',                    desc: 'Notas em Markdown com links bidirecionais' },
+  { name: 'Trello',           cat: 'Produtividade',    pricing: 'FREEMIUM',   color: '#0052CC', letter: 'T', url: 'https://trello.com',                     desc: 'Kanban simples para organizar projetos' },
+  { name: 'Linear',           cat: 'Produtividade',    pricing: 'FREEMIUM',   color: '#5E6AD2', letter: 'L', url: 'https://linear.app',                     desc: 'Gestão de issues para times de produto' },
+  { name: 'Todoist',          cat: 'Produtividade',    pricing: 'FREEMIUM',   color: '#DB4035', letter: 'T', url: 'https://todoist.com',                    desc: 'Gerenciador de tarefas cross-platform' },
+  { name: 'Toggl',            cat: 'Produtividade',    pricing: 'FREEMIUM',   color: '#E01E5A', letter: 'T', url: 'https://toggl.com',                      desc: 'Time tracking simples com relatórios' },
   // Banco de Imagens
   { name: 'Unsplash',         cat: 'Banco de Imagens', pricing: 'GRATUITO',   color: '#111111', letter: 'U', url: 'https://unsplash.com',                   desc: 'Banco de fotos gratuito de alta qualidade' },
   { name: 'Pexels',           cat: 'Banco de Imagens', pricing: 'GRATUITO',   color: '#05A081', letter: 'P', url: 'https://pexels.com',                     desc: 'Fotos e vídeos gratuitos para projetos web' },
@@ -79,7 +113,9 @@ export const ALL_TOOLS: Tool[] = [
 ]
 
 export const TOOL_CATS: ToolCategory[] = [
-  'Todas','IA & Pesquisa','Imagem & Design','Criar vídeo','Áudio & Voz','Métricas','Banco de Imagens','Ícones & SVG',
+  'Todas','IA & Pesquisa','Imagem & Design','Criar vídeo','Áudio & Voz',
+  'Métricas','Redes Sociais','CMS & Sites','Segurança','Produtividade',
+  'Banco de Imagens','Ícones & SVG',
 ]
 
 export const PRICING_COLOR: Record<string, string> = {
