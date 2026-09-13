@@ -7,6 +7,8 @@
   --text2: #9999b0;
   --accent: #7c6ef7;
   --accent-muted: rgba(124, 110, 247, 0.15);
+  --accent-m: rgba(124, 110, 247, 0.15);
+  --r: 10px;
   --radius: 10px;
   --sidebar-w: 260px;
 }
@@ -20,6 +22,7 @@
   --text2: #555555;
   --accent: #111111;
   --accent-muted: rgba(0,0,0,0.08);
+  --accent-m: rgba(0,0,0,0.08);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }

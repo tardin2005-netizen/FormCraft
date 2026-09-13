@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { ModuleProps } from './moduleProps'
 import s from './modules.module.css'
+import DeleteBtn from './DeleteBtn'
 
 interface FontData {
   name: string
@@ -88,7 +89,7 @@ export default function FontLibrary({ module, workspaceId, items, addItem, remov
                     {d.url && (
                       <a href={d.url} target="_blank" rel="noreferrer" className={s.linkBtn} title="Abrir fonte">↗</a>
                     )}
-                    <button className={s.removeBtn} onClick={() => removeItem(item.id)} title="Remover">×</button>
+                    <DeleteBtn onConfirm={() => removeItem(item.id)} />
                   </div>
                 </div>
 

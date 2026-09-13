@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { ModuleProps } from './moduleProps'
 import s from './modules.module.css'
+import DeleteBtn from './DeleteBtn'
 
 interface ColorData {
   name: string
@@ -102,7 +103,7 @@ export default function ColorLibrary({ module, workspaceId, items, addItem, remo
                     <span className={s.colorName}>{d.name}</span>
                     <div style={{ display: 'flex', gap: 4 }}>
                       <button className={`${s.starBtn} ${item.starred ? s.starActive : ''}`} onClick={() => toggleStar(item.id)}>{item.starred ? '★' : '☆'}</button>
-                      <button className={s.removeBtn} onClick={() => removeItem(item.id)}>×</button>
+                      <DeleteBtn onConfirm={() => removeItem(item.id)} />
                     </div>
                   </div>
 

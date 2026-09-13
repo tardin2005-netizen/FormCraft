@@ -146,6 +146,44 @@
 
 .removeBtn:hover { color: #f43f5e; }
 
+.deletePending {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  animation: deleteFadeIn .12s ease;
+}
+
+@keyframes deleteFadeIn { from { opacity: 0; transform: scale(.8); } to { opacity: 1; transform: scale(1); } }
+
+.deleteConfirmBtn {
+  background: #f43f5e;
+  border: none;
+  cursor: pointer;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1.4;
+  transition: opacity .12s;
+}
+
+.deleteConfirmBtn:hover { opacity: .85; }
+
+.deleteCancelBtn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  color: var(--text2);
+  font-size: 11px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  line-height: 1.4;
+  transition: color .12s;
+}
+
+.deleteCancelBtn:hover { color: var(--text); }
+
 /* starred highlight */
 .starred { border-color: color-mix(in srgb, #f59e0b 35%, var(--border)) !important; }
 
@@ -740,6 +778,24 @@
   word-break: break-word;
 }
 
+/* ── IMAGE DROP ZONE ── */
+.imageDrop {
+  border: 1.5px dashed var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  text-align: center;
+  cursor: pointer;
+  color: var(--text2);
+  font-size: 12px;
+  transition: border-color .15s, background .15s;
+}
+
+.imageDrop:hover {
+  border-color: var(--accent);
+  background: var(--accent-muted);
+  color: var(--accent);
+}
+
 /* ── GENERIC MODULE ── */
 .genericList { display: flex; flex-direction: column; gap: 6px; }
 
@@ -755,6 +811,15 @@
 }
 
 .genericItem:hover { background: var(--surface2); }
+
+.genericThumb {
+  width: 64px;
+  height: 52px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
 
 .genericLeft { flex: 1; min-width: 0; }
 

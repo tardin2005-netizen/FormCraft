@@ -84,17 +84,19 @@ export default function WorkspaceView() {
         <button className={s.wsMenu} onClick={() => navigate('/settings')}>Configurar</button>
       </div>
 
-      <div className={s.moduleTabs}>
-        {sortedModules.map(m => (
-          <button
-            key={m.id}
-            className={`${s.modTab} ${activeModule?.id === m.id ? s.active : ''}`}
-            onClick={() => setActiveModuleId(m.id)}
-          >
-            <span className={s.modTabIcon}>{m.icon}</span>
-            {m.name}
-          </button>
-        ))}
+      <div className={s.moduleTabsWrap}>
+        <div className={s.moduleTabs}>
+          {sortedModules.map(m => (
+            <button
+              key={m.id}
+              className={`${s.modTab} ${activeModule?.id === m.id ? s.active : ''}`}
+              onClick={() => setActiveModuleId(m.id)}
+            >
+              <span className={s.modTabIcon}>{m.icon}</span>
+              {m.name}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className={s.moduleContent}>

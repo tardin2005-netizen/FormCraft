@@ -39,19 +39,45 @@ export default function SaveLinkModal({ onClose }: Props) {
   const { addLink } = useLinksStore()
   const { areas }   = useAreasStore()
 
-  const [url,       setUrl]       = useState('')
-  const [title,     setTitle]     = useState('')
-  const [desc,      setDesc]      = useState('')
-  const [ogImage,   setOgImage]   = useState('')
-  const [type,      setType]      = useState<ContentType>('link')
-  const [areaId,    setAreaId]    = useState(areas[0]?.id ?? '')
-  const [tags,      setTags]      = useState('')
-  const [saved,     setSaved]     = useState(false)
-  const [fetching,  setFetching]  = useState(false)
-  const [fetchDone, setFetchDone] = useState(false)
+  const [url,         setUrl]         = useState('')
+  const [title,       setTitle]       = useState('')
+  const [desc,        setDesc]        = useState('')
+  const [ogImage,     setOgImage]     = useState('')
+  const [pastedImage, setPastedImage] = useState<string>('')
+  const [type,        setType]        = useState<ContentType>('link')
+  const [areaId,      setAreaId]      = useState(areas[0]?.id ?? '')
+  const [tags,        setTags]        = useState('')
+  const [saved,       setSaved]       = useState(false)
+  const [fetching,    setFetching]    = useState(false)
+  const [fetchDone,   setFetchDone]   = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => { inputRef.current?.focus() }, [])
+
+  // Global paste listener for images (Cmd+V / Ctrl+V anywhere on modal)
+  useEffect(() => {
+    function onGlobalPaste(e: ClipboardEvent) {
+      const items = e.clipboardData?.items
+      if (!items) return
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.startsWith('image/')) {
+          const file = items[i].getAsFile()
+          if (!file) continue
+          const reader = new FileReader()
+          reader.onload = ev => {
+            const dataUrl = ev.target?.result as string
+            setPastedImage(dataUrl)
+            setType('imagem')
+          }
+          reader.readAsDataURL(file)
+          e.preventDefault()
+          return
+        }
+      }
+    }
+    window.addEventListener('paste', onGlobalPaste)
+    return () => window.removeEventListener('paste', onGlobalPaste)
+  }, [])
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -102,7 +128,8 @@ export default function SaveLinkModal({ onClose }: Props) {
   }
 
   function handleSave() {
-    if (!url.trim() && type !== 'nota' && type !== 'prompt') return
+    const hasContent = url.trim().startsWith('http') || type === 'nota' || type === 'prompt' || !!pastedImage
+    if (!hasContent) return
     addLink({
       url: url.trim() || '#',
       title: title.trim() || url.trim() || 'Sem título',
@@ -110,7 +137,7 @@ export default function SaveLinkModal({ onClose }: Props) {
       favicon: url.startsWith('http')
         ? `https://www.google.com/s2/favicons?domain=${getDomain(url)}&sz=32`
         : TYPE_ICONS[type],
-      ogImage: ogImage || undefined,
+      ogImage: pastedImage || ogImage || undefined,
       areaId,
       tags: tags.split(',').map(t => t.trim()).filter(Boolean),
       type,
@@ -120,7 +147,7 @@ export default function SaveLinkModal({ onClose }: Props) {
   }
 
   const domain = getDomain(url)
-  const canSave = (url.trim().startsWith('http') || type === 'nota' || type === 'prompt') && !saved
+  const canSave = (url.trim().startsWith('http') || type === 'nota' || type === 'prompt' || !!pastedImage) && !saved
 
   return (
     <>
@@ -134,13 +161,35 @@ export default function SaveLinkModal({ onClose }: Props) {
       >
         <div className={s.header}>
           <span className={s.headerTitle}>🔗 Salvar conteúdo</span>
-          <button className={s.closeBtn} onClick={onClose}>✕</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 10, color: 'var(--text2)', background: 'var(--surface2)', padding: '2px 7px', borderRadius: 5, border: '1px solid var(--border)' }}>
+              ⌘V para colar imagem
+            </span>
+            <button className={s.closeBtn} onClick={onClose}>✕</button>
+          </div>
         </div>
 
         <div className={s.body}>
+          {/* Pasted image preview */}
+          <AnimatePresence>
+            {pastedImage && (
+              <motion.div
+                className={s.previewBanner}
+                style={{ height: 'auto' }}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              >
+                <img src={pastedImage} alt="Screenshot colado" className={s.previewImg} style={{ height: 120, objectFit: 'contain', background: 'var(--surface2)' }} />
+                <div className={s.previewOverlay} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span className={s.previewDomain}>📋 Imagem do clipboard</span>
+                  <button onClick={() => setPastedImage('')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,.8)', cursor: 'pointer', fontSize: 13 }}>✕</button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* OG image preview */}
           <AnimatePresence>
-            {ogImage && (
+            {ogImage && !pastedImage && (
               <motion.div
                 className={s.previewBanner}
                 initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 80 }} exit={{ opacity: 0, height: 0 }}

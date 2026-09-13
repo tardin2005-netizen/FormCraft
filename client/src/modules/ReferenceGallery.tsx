@@ -1,11 +1,13 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { ModuleProps } from './moduleProps'
 import s from './modules.module.css'
+import DeleteBtn from './DeleteBtn'
 
 interface ReferenceData {
   title: string
   url: string
   imageUrl: string
+  pastedImage?: string
   description: string
   why: string
   tags: string
@@ -14,8 +16,38 @@ interface ReferenceData {
 
 export default function ReferenceGallery({ module, workspaceId, items, addItem, removeItem, toggleStar }: ModuleProps) {
   const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState<ReferenceData>({ title: '', url: '', imageUrl: '', description: '', why: '', tags: '', category: '' })
+  const [form, setForm] = useState<ReferenceData>({ title: '', url: '', imageUrl: '', pastedImage: '', description: '', why: '', tags: '', category: '' })
   const [view, setView] = useState<'grid' | 'list'>('grid')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (!showForm) return
+    function onPaste(e: ClipboardEvent) {
+      const items = e.clipboardData?.items
+      if (!items) return
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.startsWith('image/')) {
+          const file = items[i].getAsFile()
+          if (!file) continue
+          const reader = new FileReader()
+          reader.onload = ev => setForm(p => ({ ...p, pastedImage: ev.target?.result as string }))
+          reader.readAsDataURL(file)
+          e.preventDefault()
+          return
+        }
+      }
+    }
+    window.addEventListener('paste', onPaste)
+    return () => window.removeEventListener('paste', onPaste)
+  }, [showForm])
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = ev => setForm(p => ({ ...p, pastedImage: ev.target?.result as string }))
+    reader.readAsDataURL(file)
+  }
 
   function handleAdd() {
     if (!form.title.trim()) return
@@ -28,7 +60,7 @@ export default function ReferenceGallery({ module, workspaceId, items, addItem, 
       starred: false,
     })
     setShowForm(false)
-    setForm({ title: '', url: '', imageUrl: '', description: '', why: '', tags: '', category: '' })
+    setForm({ title: '', url: '', imageUrl: '', pastedImage: '', description: '', why: '', tags: '', category: '' })
   }
 
   return (
@@ -54,8 +86,8 @@ export default function ReferenceGallery({ module, workspaceId, items, addItem, 
             const d = item.data as unknown as ReferenceData
             return (
               <div key={item.id} className={`${s.refCard} ${item.starred ? s.starred : ''}`}>
-                {d.imageUrl ? (
-                  <img src={d.imageUrl} alt={d.title} className={s.refImage} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                {(d.pastedImage || d.imageUrl) ? (
+                  <img src={d.pastedImage || d.imageUrl} alt={d.title} className={s.refImage} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
                 ) : (
                   <div className={s.refImagePlaceholder}>{d.url ? '🔗' : '◈'}</div>
                 )}
@@ -65,7 +97,7 @@ export default function ReferenceGallery({ module, workspaceId, items, addItem, 
                     <div style={{ display: 'flex', gap: 4 }}>
                       <button className={`${s.starBtn} ${item.starred ? s.starActive : ''}`} onClick={() => toggleStar(item.id)}>{item.starred ? '★' : '☆'}</button>
                       {d.url && <a href={d.url} target="_blank" rel="noreferrer" className={s.linkBtn}>↗</a>}
-                      <button className={s.removeBtn} onClick={() => removeItem(item.id)}>×</button>
+                      <DeleteBtn onConfirm={() => removeItem(item.id)} />
                     </div>
                   </div>
                   {d.why && <div className={s.refWhy}>"{d.why}"</div>}
@@ -85,8 +117,8 @@ export default function ReferenceGallery({ module, workspaceId, items, addItem, 
             return (
               <div key={item.id} className={s.refListItem}>
                 <div className={s.refListLeft}>
-                  {d.imageUrl
-                    ? <img src={d.imageUrl} alt="" className={s.refListThumb} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                  {(d.pastedImage || d.imageUrl)
+                    ? <img src={d.pastedImage || d.imageUrl} alt="" className={s.refListThumb} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
                     : <div className={s.refListThumbPlaceholder}>◈</div>
                   }
                 </div>
@@ -100,7 +132,7 @@ export default function ReferenceGallery({ module, workspaceId, items, addItem, 
                 <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
                   <button className={`${s.starBtn} ${item.starred ? s.starActive : ''}`} onClick={() => toggleStar(item.id)}>{item.starred ? '★' : '☆'}</button>
                   {d.url && <a href={d.url} target="_blank" rel="noreferrer" className={s.linkBtn}>↗</a>}
-                  <button className={s.removeBtn} onClick={() => removeItem(item.id)}>×</button>
+                  <DeleteBtn onConfirm={() => removeItem(item.id)} />
                 </div>
               </div>
             )
@@ -121,13 +153,30 @@ export default function ReferenceGallery({ module, workspaceId, items, addItem, 
                 <label className={s.label}>Por que salvei isso?</label>
                 <input className={s.input} placeholder="O que me chamou atenção nessa referência..." value={form.why} onChange={e => setForm(p => ({ ...p, why: e.target.value }))} />
               </div>
+              <div className={`${s.formGroup} ${s.fullWidth}`}>
+                <label className={s.label}>Imagem <span style={{ fontWeight: 400, textTransform: 'none' }}>(cole ⌘V ou selecione arquivo)</span></label>
+                {form.pastedImage ? (
+                  <div style={{ position: 'relative', display: 'inline-block' }}>
+                    <img src={form.pastedImage} alt="" style={{ maxHeight: 160, maxWidth: '100%', borderRadius: 8, display: 'block', border: '1px solid var(--border)' }} />
+                    <button onClick={() => setForm(p => ({ ...p, pastedImage: '' }))}
+                      style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(0,0,0,.5)', border: 'none', color: '#fff', borderRadius: 4, cursor: 'pointer', padding: '2px 6px', fontSize: 11 }}>
+                      ✕ remover
+                    </button>
+                  </div>
+                ) : (
+                  <div className={s.imageDrop} onClick={() => fileInputRef.current?.click()}>
+                    <span>📋 Cole com ⌘V ou clique para selecionar</span>
+                    <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileChange} />
+                  </div>
+                )}
+              </div>
               <div className={s.formGroup}>
-                <label className={s.label}>URL</label>
+                <label className={s.label}>URL do site</label>
                 <input className={s.input} placeholder="https://..." value={form.url} onChange={e => setForm(p => ({ ...p, url: e.target.value }))} />
               </div>
               <div className={s.formGroup}>
-                <label className={s.label}>URL da imagem</label>
-                <input className={s.input} placeholder="https://... (screenshot)" value={form.imageUrl} onChange={e => setForm(p => ({ ...p, imageUrl: e.target.value }))} />
+                <label className={s.label}>URL da imagem (externo)</label>
+                <input className={s.input} placeholder="https://... (opcional)" value={form.imageUrl} onChange={e => setForm(p => ({ ...p, imageUrl: e.target.value }))} />
               </div>
               <div className={s.formGroup}>
                 <label className={s.label}>Categoria</label>

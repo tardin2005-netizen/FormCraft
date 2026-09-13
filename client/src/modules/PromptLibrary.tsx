@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { ModuleProps } from './moduleProps'
 import s from './modules.module.css'
+import DeleteBtn from './DeleteBtn'
 
 interface PromptData {
   title: string
@@ -74,7 +75,7 @@ export default function PromptLibrary({ module, workspaceId, items, addItem, rem
                   </div>
                   <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                     <button className={`${s.starBtn} ${item.starred ? s.starActive : ''}`} onClick={e => { e.stopPropagation(); toggleStar(item.id) }}>{item.starred ? '★' : '☆'}</button>
-                    <button className={s.removeBtn} onClick={e => { e.stopPropagation(); removeItem(item.id) }}>×</button>
+                    <DeleteBtn onConfirm={() => removeItem(item.id)} />
                     <span style={{ color: 'var(--text2)', fontSize: 12 }}>{isOpen ? '↑' : '↓'}</span>
                   </div>
                 </div>

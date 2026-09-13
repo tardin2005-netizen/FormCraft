@@ -435,7 +435,14 @@ function Modal({
     drag.current = { mx: e.clientX, my: e.clientY, px: pos.x, py: pos.y }
     const onMove = (ev: MouseEvent) => {
       if (!drag.current) return
-      setPos({ x: drag.current.px + ev.clientX - drag.current.mx, y: drag.current.py + ev.clientY - drag.current.my })
+      const maxX = window.innerWidth / 2 - 60
+      const maxY = window.innerHeight / 2 - 60
+      const nx = drag.current.px + ev.clientX - drag.current.mx
+      const ny = drag.current.py + ev.clientY - drag.current.my
+      setPos({
+        x: Math.max(-maxX, Math.min(maxX, nx)),
+        y: Math.max(-maxY, Math.min(maxY, ny)),
+      })
     }
     const onUp = () => { drag.current = null; window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
     window.addEventListener('mousemove', onMove)
