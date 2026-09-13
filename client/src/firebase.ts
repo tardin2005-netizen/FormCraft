@@ -1,6 +1,7 @@
 import { initializeApp, getApps } from 'firebase/app'
 import { getFirestore } from 'firebase/firestore'
 import { getAuth } from 'firebase/auth'
+import { getStorage } from 'firebase/storage'
 
 // ⚠️  Preencha com as credenciais do seu projeto no Firebase Console
 // https://console.firebase.google.com  →  Configurações do projeto  →  SDK
@@ -17,6 +18,7 @@ const firebaseConfig = {
 // Evita reinicializar se já foi feito (hot-reload)
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]
 
-export const db   = getFirestore(app)
-export const auth = getAuth(app)
+export const db      = getFirestore(app)
+export const auth    = getAuth(app)
+export const storage = getStorage(app)
 export default app
