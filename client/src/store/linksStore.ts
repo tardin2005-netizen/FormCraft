@@ -9,6 +9,7 @@ export interface SavedLink {
   title: string
   desc: string
   favicon: string
+  ogImage?: string
   areaId: string
   tags: string[]
   type: 'link' | 'pdf' | 'nota' | 'imagem' | 'prompt'

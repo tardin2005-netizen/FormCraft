@@ -110,6 +110,7 @@ export default function SaveLinkModal({ onClose }: Props) {
       favicon: url.startsWith('http')
         ? `https://www.google.com/s2/favicons?domain=${getDomain(url)}&sz=32`
         : TYPE_ICONS[type],
+      ogImage: ogImage || undefined,
       areaId,
       tags: tags.split(',').map(t => t.trim()).filter(Boolean),
       type,

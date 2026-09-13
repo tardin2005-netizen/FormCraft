@@ -55,39 +55,58 @@ function TagChip({ tag }: { tag: string }) {
   return <span className={s.tagChip}>{tag}</span>
 }
 
+function getDomain(url: string) {
+  try { return new URL(url).hostname.replace('www.', '') } catch { return '' }
+}
+
 /* ── Grid card ── */
 function GridCard({ item, onDelete }: { item: SavedLink; onDelete: () => void }) {
   const [hovered, setHovered] = useState(false)
+  const fallbackEmoji = item.type === 'nota' ? '📝' : item.type === 'pdf' ? '📄' : item.type === 'prompt' ? '🤖' : '🔗'
+  const color = item.color ?? '#7c6ef7'
+  const domain = getDomain(item.url)
 
   return (
-    <motion.div
+    <motion.a
+      href={item.url}
+      target="_blank"
+      rel="noopener noreferrer"
       className={s.gridCard}
-      style={{ '--card-color': item.color ?? '#7c6ef7' } as React.CSSProperties}
+      style={{ '--card-color': color } as React.CSSProperties}
       onHoverStart={() => setHovered(true)}
       onHoverEnd={() => setHovered(false)}
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: .95 }}
-      whileHover={{ y: -2 }}
+      whileHover={{ y: -3 }}
       transition={{ duration: .2 }}
     >
-      <div className={s.cardColorBar} style={{ background: item.color ?? '#7c6ef7' }} />
+      {/* Thumbnail */}
+      <div className={s.cardThumb} style={{ background: `linear-gradient(135deg, ${color}33 0%, ${color}11 100%)` }}>
+        {item.ogImage
+          ? <img src={item.ogImage} alt="" className={s.cardThumbImg} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+          : <span className={s.cardThumbEmoji}>{fallbackEmoji}</span>
+        }
+        <AnimatePresence>
+          {hovered && (
+            <motion.button
+              className={s.deleteBtn}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={e => { e.preventDefault(); e.stopPropagation(); onDelete() }}
+              title="Remover"
+            >✕</motion.button>
+          )}
+        </AnimatePresence>
+        <TypeBadge type={item.type} />
+      </div>
+
+      {/* Body */}
       <div className={s.cardBody}>
-        <div className={s.cardTopRow}>
-          <FaviconImg src={item.favicon} fallback={item.type === 'nota' ? '📝' : item.type === 'pdf' ? '📄' : item.type === 'prompt' ? '🤖' : '🔗'} />
-          <TypeBadge type={item.type} />
-          <AnimatePresence>
-            {hovered && (
-              <motion.button
-                className={s.deleteBtn}
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                onClick={e => { e.preventDefault(); onDelete() }}
-                title="Remover"
-              >✕</motion.button>
-            )}
-          </AnimatePresence>
-        </div>
         <div className={s.cardTitle}>{item.title}</div>
+        {domain && <div className={s.cardDomain}>
+          <FaviconImg src={item.favicon} fallback={fallbackEmoji} />
+          <span>{domain}</span>
+        </div>}
         {item.desc && <div className={s.cardDesc}>{item.desc}</div>}
         <div className={s.cardFooter}>
           <div className={s.cardTags}>
@@ -96,7 +115,7 @@ function GridCard({ item, onDelete }: { item: SavedLink; onDelete: () => void })
           <span className={s.cardTime}>{timeAgo(item.savedAt)}</span>
         </div>
       </div>
-    </motion.div>
+    </motion.a>
   )
 }
 

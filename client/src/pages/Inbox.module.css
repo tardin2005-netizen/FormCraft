@@ -156,60 +156,57 @@
 .gridCard {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 14px;
   overflow: hidden;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
   position: relative;
-  transition: border-color .2s, box-shadow .2s;
+  transition: border-color .2s, box-shadow .2s, transform .2s;
 }
 .gridCard:hover {
   border-color: var(--card-color, var(--accent));
-  box-shadow: 0 4px 20px rgba(0,0,0,.2);
+  box-shadow: 0 8px 28px rgba(0,0,0,.25);
 }
 
-.cardColorBar {
-  height: 3px;
-  width: 100%;
+/* Thumbnail area */
+.cardThumb {
+  width: 100%; height: 148px;
+  position: relative; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
 }
-
-.cardBody { padding: 14px; }
-
-.cardTopRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
+.cardThumbImg {
+  width: 100%; height: 100%; object-fit: cover; display: block;
 }
-.favicon {
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-.faviconEmoji { font-size: 16px; flex-shrink: 0; line-height: 1; }
+.cardThumbEmoji { font-size: 44px; }
 
 .typeBadge {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .05em;
-  padding: 2px 7px;
-  border-radius: 8px;
+  position: absolute; bottom: 8px; left: 10px;
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .05em; padding: 2px 8px; border-radius: 8px;
+  backdrop-filter: blur(6px);
 }
 
 .deleteBtn {
-  margin-left: auto;
-  background: transparent;
-  border: none;
-  color: var(--text2);
-  font-size: 11px;
-  cursor: pointer;
-  padding: 2px 5px;
-  border-radius: 4px;
-  transition: color .15s;
+  position: absolute; top: 8px; right: 8px;
+  background: rgba(0,0,0,.55); border: none; color: #fff;
+  font-size: 11px; cursor: pointer; padding: 4px 7px;
+  border-radius: 6px; backdrop-filter: blur(4px);
+  transition: background .15s;
 }
-.deleteBtn:hover { color: #f43f5e; }
+.deleteBtn:hover { background: #f43f5e; }
+
+/* Card body */
+.cardBody { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+
+.cardDomain {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; color: var(--text2);
+}
+.favicon { width: 13px; height: 13px; border-radius: 3px; object-fit: cover; flex-shrink: 0; }
+.faviconEmoji { font-size: 12px; flex-shrink: 0; line-height: 1; }
 
 .cardTitle {
   font-size: 13px;
