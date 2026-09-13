@@ -1,13 +1,17 @@
 import { useState, useRef, useEffect } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import {
+  LayoutDashboard, Hexagon, Inbox, BookMarked, Wrench, Settings,
+  LogOut, Search, Link2, Sun, Moon, PanelLeft, Grid2X2,
+} from 'lucide-react'
 import { useThemeStore, ACCENT_COLORS } from '../store/themeStore'
 import { useAreasStore } from '../store/areasStore'
 import { useSidebarStore } from '../store/sidebarStore'
 import { useSavedToolsStore } from '../store/savedToolsStore'
 import type { Accent } from '../store/themeStore'
 import { useAuth } from '../contexts/AuthContext'
-import { ALL_TOOLS, TOOL_CATS, PRICING_COLOR, type ToolCategory } from '../data/tools'
+import { ALL_TOOLS, TOOL_CATS, type ToolCategory } from '../data/tools'
 import SearchPalette from './SearchPalette'
 import SaveLinkModal from './SaveLinkModal'
 import QuickNote from './QuickNote'
@@ -18,12 +22,12 @@ const ACCENT_LABELS: Record<Accent, string> = {
 }
 
 const NAV_ITEMS = [
-  { to: '/',            icon: '⊞',  label: 'Início' },
-  { to: '/hubs',        icon: '⬡',  label: 'Meus Hubs' },
-  { to: '/inbox',       icon: '⊡',  label: 'Inbox' },
-  { to: '/colecoes',    icon: '⊟',  label: 'Coleções' },
-  { to: '/ferramentas', icon: '⊕',  label: 'Ferramentas' },
-  { to: '/settings',    icon: '⊙',  label: 'Config.' },
+  { to: '/',            Icon: LayoutDashboard, label: 'Início' },
+  { to: '/hubs',        Icon: Hexagon,         label: 'Meus Hubs' },
+  { to: '/inbox',       Icon: Inbox,           label: 'Inbox' },
+  { to: '/colecoes',    Icon: BookMarked,      label: 'Coleções' },
+  { to: '/ferramentas', Icon: Wrench,          label: 'Ferramentas' },
+  { to: '/settings',    Icon: Settings,        label: 'Config.' },
 ]
 
 const LEFT_W  = { expanded: 220, compact: 56, hidden: 0 }
@@ -130,17 +134,17 @@ export default function Layout() {
             </div>
 
             <nav className={s.leftNav}>
-              {NAV_ITEMS.map(item => (
+              {NAV_ITEMS.map(({ to, Icon, label }) => (
                 <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end={item.to === '/'}
+                  key={to}
+                  to={to}
+                  end={to === '/'}
                   className={({ isActive }) =>
                     `${s.navItem} ${isActive ? s.navActive : ''} ${leftState === 'compact' ? s.navCompact : ''}`
                   }
-                  title={leftState === 'compact' ? item.label : undefined}
+                  title={leftState === 'compact' ? label : undefined}
                 >
-                  <span className={s.navIcon}>{item.icon}</span>
+                  <Icon size={16} className={s.navIcon} />
                   <AnimatePresence initial={false}>
                     {leftState === 'expanded' && (
                       <motion.span
@@ -149,7 +153,7 @@ export default function Layout() {
                         animate={{ opacity: 1, width: 'auto' }}
                         exit={{ opacity: 0, width: 0 }}
                         transition={{ duration: .15 }}
-                      >{item.label}</motion.span>
+                      >{label}</motion.span>
                     )}
                   </AnimatePresence>
                 </NavLink>
@@ -208,32 +212,44 @@ export default function Layout() {
                 {leftState === 'expanded' ? (
                   <motion.div
                     key="exp"
-                    className={s.leftBottomExpanded}
+                    className={s.userCard}
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                     transition={{ duration: .15 }}
                   >
-                    <button className={s.searchBtn} onClick={() => setSearchOpen(true)}>
-                      🔎 Buscar <kbd>⌘K</kbd>
-                    </button>
-                    <button className={s.saveLinkBtn} onClick={() => setSaveLinkOpen(true)}>
-                      🔗 Salvar link <kbd>⌘S</kbd>
-                    </button>
-                    <button className={s.themeBtn} onClick={toggle}>
-                      {theme === 'dark' ? '☀️ Modo claro' : '🌙 Modo escuro'}
+                    <div
+                      className={s.userAvatar}
+                      style={user?.photoURL ? { padding: 0, overflow: 'hidden' } : {}}
+                    >
+                      {user?.photoURL
+                        ? <img src={user.photoURL} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} referrerPolicy="no-referrer" />
+                        : getInitials(user?.displayName ?? null)
+                      }
+                    </div>
+                    <div className={s.userInfo}>
+                      <div className={s.userName}>{user?.displayName ?? 'Usuário'}</div>
+                      <div className={s.userEmail}>{user?.email ?? ''}</div>
+                    </div>
+                    <button className={s.userSignOut} onClick={signOut} title="Sair da conta">
+                      <LogOut size={14} />
                     </button>
                   </motion.div>
                 ) : (
                   <motion.div
                     key="cmp"
-                    className={s.leftBottomIcons}
+                    className={s.userAvatarCompact}
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                     transition={{ duration: .15 }}
                   >
-                    <button className={s.iconBtn} onClick={() => setSearchOpen(true)} title="Buscar">🔎</button>
-                    <button className={s.iconBtn} onClick={() => setSaveLinkOpen(true)} title="Salvar link">🔗</button>
-                    <button className={s.iconBtn} onClick={toggle} title="Tema">
-                      {theme === 'dark' ? '☀️' : '🌙'}
-                    </button>
+                    <div
+                      className={s.userAvatarIcon}
+                      style={user?.photoURL ? { padding: 0, overflow: 'hidden' } : {}}
+                      title={user?.displayName ?? 'Usuário'}
+                    >
+                      {user?.photoURL
+                        ? <img src={user.photoURL} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} referrerPolicy="no-referrer" />
+                        : getInitials(user?.displayName ?? null)
+                      }
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -251,39 +267,25 @@ export default function Layout() {
       <div className={s.mainWrapper}>
         <header className={s.topBar}>
           <div className={s.topLeft}>
-            {/* Sidebar toggle when hidden */}
             {isLeftHidden && (
               <button
                 className={s.topIconBtn}
                 onClick={() => setLeft('compact')}
-                title="Mostrar sidebar"
+                title="Mostrar sidebar (⌘\\)"
               >
-                <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <rect x="1" y="1" width="14" height="14" rx="2"/>
-                  <line x1="5" y1="1" x2="5" y2="15"/>
-                </svg>
+                <PanelLeft size={15} />
               </button>
             )}
-            <nav className={s.topNav}>
-              {NAV_ITEMS.slice(0, 5).map(item => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end={item.to === '/'}
-                  className={({ isActive }) => `${s.topNavItem} ${isActive ? s.topNavActive : ''}`}
-                >{item.label}</NavLink>
-              ))}
-            </nav>
+            <span className={s.topLogo}>⬡ FormCraft</span>
           </div>
 
           <div className={s.topActions}>
             <button className={s.topSearchBtn} onClick={() => setSearchOpen(true)}>
-              🔎 Buscar <kbd className={s.topKbd}>⌘K</kbd>
+              <Search size={13} /> Buscar <kbd className={s.topKbd}>⌘K</kbd>
             </button>
             <button className={s.topSaveLinkBtn} onClick={() => setSaveLinkOpen(true)} title="Salvar link (⌘S)">
-              🔗
+              <Link2 size={15} />
             </button>
-            {/* Right sidebar toggle */}
             <button
               className={`${s.topIconBtn} ${rightState !== 'hidden' ? s.topIconActive : ''}`}
               onClick={cycleRight}
@@ -292,15 +294,10 @@ export default function Layout() {
                 rightState === 'compact'  ? 'Ocultar ferramentas' : 'Mostrar ferramentas'
               }
             >
-              <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <rect x="1" y="1" width="6" height="6" rx="1.5"/>
-                <rect x="9" y="1" width="6" height="6" rx="1.5"/>
-                <rect x="1" y="9" width="6" height="6" rx="1.5"/>
-                <rect x="9" y="9" width="6" height="6" rx="1.5"/>
-              </svg>
+              <Grid2X2 size={15} />
             </button>
             <button className={s.topIconBtn} onClick={toggle} title="Tema">
-              {theme === 'dark' ? '☀️' : '🌙'}
+              {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
             </button>
             <div className={s.avatarWrapper}>
               <button
@@ -509,6 +506,21 @@ export default function Layout() {
           </motion.div>
         )}
       </motion.aside>
+
+      {/* ── Mobile bottom nav ── */}
+      <nav className={s.bottomNav}>
+        {NAV_ITEMS.slice(0, 5).map(({ to, Icon, label }) => (
+          <NavLink
+            key={to}
+            to={to}
+            end={to === '/'}
+            className={({ isActive }) => `${s.bottomNavItem} ${isActive ? s.bottomNavActive : ''}`}
+          >
+            <Icon size={20} />
+            <span>{label}</span>
+          </NavLink>
+        ))}
+      </nav>
 
       {searchOpen    && <SearchPalette onClose={() => setSearchOpen(false)} />}
       {saveLinkOpen  && <SaveLinkModal onClose={() => setSaveLinkOpen(false)} />}

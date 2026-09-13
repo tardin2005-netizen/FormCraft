@@ -445,24 +445,30 @@ function Modal({
   return (
     <>
       <div className={s.backdrop} onClick={onClose} />
-      <motion.div
-        className={s.modal}
-        initial={{ opacity: 0, scale: .94, y: -10 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: .94 }}
-        transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-        style={{ transform: `translate(calc(-50% + ${pos.x}px), calc(-50% + ${pos.y}px))` }}
-      >
-        <div className={`${s.modalHeader} ${s.modalDrag}`} onMouseDown={onHeaderMouseDown}>
-          <span>{title}</span>
-          <button className={s.modalClose} onClick={onClose}>✕</button>
-        </div>
-        <div className={s.modalBody}>{children}</div>
-        <div className={s.modalFooter}>
-          <button className={s.cancelBtn} onClick={onClose}>Cancelar</button>
-          <button className={s.saveBtn} disabled={disabled} onClick={onSave}>{saveLabel}</button>
-        </div>
-      </motion.div>
+      {/* outer div handles drag position; inner motion.div handles enter/exit animation */}
+      <div style={{
+        position: 'fixed', top: '50%', left: '50%', zIndex: 60,
+        transform: `translate(calc(-50% + ${pos.x}px), calc(-50% + ${pos.y}px))`,
+      }}>
+        <motion.div
+          className={s.modal}
+          initial={{ opacity: 0, scale: .94, y: -10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: .94 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+          style={{ position: 'relative', top: 'auto', left: 'auto', transform: 'none' }}
+        >
+          <div className={`${s.modalHeader} ${s.modalDrag}`} onMouseDown={onHeaderMouseDown}>
+            <span>{title}</span>
+            <button className={s.modalClose} onClick={onClose}>✕</button>
+          </div>
+          <div className={s.modalBody}>{children}</div>
+          <div className={s.modalFooter}>
+            <button className={s.cancelBtn} onClick={onClose}>Cancelar</button>
+            <button className={s.saveBtn} disabled={disabled} onClick={onSave}>{saveLabel}</button>
+          </div>
+        </motion.div>
+      </div>
     </>
   )
 }
