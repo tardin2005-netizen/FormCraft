@@ -50,27 +50,21 @@ export default function ToolLibrary() {
           const saved = isSaved(t.name)
           return (
             <div key={t.name} className={s.card}>
-              {/* Thumbnail */}
-              <div
-                className={s.cardThumb}
-                style={{ background: `linear-gradient(145deg, ${t.color}44 0%, ${t.color}18 100%)` }}
-              >
-                <span className={s.cardLetter} style={{ color: t.color }}>{t.letter}</span>
-                <span
-                  className={s.pricingBadge}
-                  style={{ color: PRICING_COLOR[t.pricing], background: PRICING_COLOR[t.pricing] + '22' }}
-                >
-                  {PRICING_LABEL[t.pricing]}
-                </span>
-                {saved && <span className={s.savedBadge}>★</span>}
+              {/* Header */}
+              <div className={s.cardHeader}>
+                <div className={s.cardIcon} style={{ background: t.color }}>{t.letter}</div>
+                <div className={s.cardMeta}>
+                  <div className={s.cardName}>{t.name}</div>
+                  <div className={s.cardCat}>Por {t.cat}</div>
+                </div>
+                {saved
+                  ? <span className={s.savedStar}>★</span>
+                  : <span className={s.pricingBadge} style={{ color: PRICING_COLOR[t.pricing], background: PRICING_COLOR[t.pricing] + '22' }}>{PRICING_LABEL[t.pricing]}</span>
+                }
               </div>
 
-              {/* Body */}
-              <div className={s.cardBody}>
-                <div className={s.cardName}>{t.name}</div>
-                <div className={s.cardCat}>Por {t.cat}</div>
-                <div className={s.cardDesc}>{t.desc}</div>
-              </div>
+              {/* Description */}
+              <div className={s.cardDesc}>{t.desc}</div>
 
               {/* Actions */}
               <div className={s.cardActions}>
