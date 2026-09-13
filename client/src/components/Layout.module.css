@@ -155,6 +155,7 @@
 }
 .topIconBtn:hover { border-color: var(--accent); color: var(--text); }
 .topIconActive { background: var(--accent-muted) !important; border-color: var(--accent) !important; color: var(--accent) !important; }
+.aiBtn { font-size: 16px; font-weight: 700; color: var(--accent); }
 
 /* Avatar + settings popup */
 .avatarWrapper { position: relative; }

@@ -15,6 +15,7 @@ import { ALL_TOOLS, TOOL_CATS, type ToolCategory } from '../data/tools'
 import SearchPalette from './SearchPalette'
 import SaveLinkModal from './SaveLinkModal'
 import QuickNote from './QuickNote'
+import FormCraftChat from './FormCraftChat'
 import s from './Layout.module.css'
 
 const ACCENT_LABELS: Record<Accent, string> = {
@@ -46,6 +47,7 @@ export default function Layout() {
   const [saveLinkOpen,  setSaveLinkOpen]  = useState(false)
   const [settingsOpen,  setSettingsOpen]  = useState(false)
   const [quickNoteOpen, setQuickNoteOpen] = useState(false)
+  const [aiChatOpen,    setAiChatOpen]    = useState(false)
   const [toolCat,      setToolCat]      = useState<ToolCategory>('Todas')
   const [toolSearch,   setToolSearch]   = useState('')
 
@@ -58,7 +60,8 @@ export default function Layout() {
       if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); setSaveLinkOpen(v => !v) }
       if ((e.metaKey || e.ctrlKey) && e.key === 'n') { e.preventDefault(); setQuickNoteOpen(v => !v) }
       if ((e.metaKey || e.ctrlKey) && e.key === '\\') { e.preventDefault(); cycleLeft() }
-      if (e.key === 'Escape') { setSearchOpen(false); setSettingsOpen(false); setSaveLinkOpen(false); setQuickNoteOpen(false) }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'j') { e.preventDefault(); setAiChatOpen(v => !v) }
+      if (e.key === 'Escape') { setSearchOpen(false); setSettingsOpen(false); setSaveLinkOpen(false); setQuickNoteOpen(false); setAiChatOpen(false) }
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
@@ -296,6 +299,13 @@ export default function Layout() {
             >
               <Grid2X2 size={15} />
             </button>
+            <button
+              className={`${s.topIconBtn} ${s.aiBtn} ${aiChatOpen ? s.topIconActive : ''}`}
+              onClick={() => setAiChatOpen(v => !v)}
+              title="FormCraft AI (⌘J)"
+            >
+              ⬡
+            </button>
             <button className={s.topIconBtn} onClick={toggle} title="Tema">
               {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
             </button>
@@ -522,6 +532,7 @@ export default function Layout() {
       {searchOpen    && <SearchPalette onClose={() => setSearchOpen(false)} />}
       {saveLinkOpen  && <SaveLinkModal onClose={() => setSaveLinkOpen(false)} />}
       <AnimatePresence>{quickNoteOpen && <QuickNote onClose={() => setQuickNoteOpen(false)} />}</AnimatePresence>
+      <FormCraftChat open={aiChatOpen} onClose={() => setAiChatOpen(false)} />
     </div>
   )
 }
