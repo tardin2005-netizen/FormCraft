@@ -149,7 +149,7 @@
 .deletePending {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 6px;
   animation: deleteFadeIn .12s ease;
 }
 
@@ -160,12 +160,13 @@
   border: none;
   cursor: pointer;
   color: #fff;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: 5px 12px;
+  border-radius: 6px;
   line-height: 1.4;
   transition: opacity .12s;
+  min-width: 36px;
 }
 
 .deleteConfirmBtn:hover { opacity: .85; }
@@ -175,11 +176,12 @@
   border: 1px solid var(--border);
   cursor: pointer;
   color: var(--text2);
-  font-size: 11px;
-  padding: 2px 5px;
-  border-radius: 4px;
+  font-size: 13px;
+  padding: 5px 12px;
+  border-radius: 6px;
   line-height: 1.4;
   transition: color .12s;
+  min-width: 36px;
 }
 
 .deleteCancelBtn:hover { color: var(--text); }

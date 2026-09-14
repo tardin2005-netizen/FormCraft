@@ -138,8 +138,8 @@ function GridCard({ item, onDelete }: { item: SavedLink; onDelete: () => void })
               {confirming ? (
                 <>
                   <span style={{ fontSize: 10, whiteSpace: 'nowrap' }}>Apagar?</span>
-                  <button onClick={requestDelete} title="Confirmar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: 13, padding: '0 2px' }}>✓</button>
-                  <button onClick={cancelDelete} title="Cancelar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: 13, padding: '0 2px' }}>✕</button>
+                  <button onClick={requestDelete} title="Confirmar" style={{ background: 'rgba(255,255,255,0.25)', border: '1.5px solid rgba(255,255,255,0.5)', cursor: 'pointer', color: '#fff', fontSize: 15, fontWeight: 700, padding: '4px 10px', borderRadius: 6, lineHeight: 1 }}>✓</button>
+                  <button onClick={cancelDelete} title="Cancelar" style={{ background: 'rgba(0,0,0,0.3)', border: '1.5px solid rgba(255,255,255,0.3)', cursor: 'pointer', color: '#fff', fontSize: 15, padding: '4px 10px', borderRadius: 6, lineHeight: 1 }}>✕</button>
                 </>
               ) : (
                 <button onClick={requestDelete} title="Remover" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: 13, width: '100%', height: '100%' }}>✕</button>
@@ -240,10 +240,10 @@ function ListRow({ item, onDelete }: { item: SavedLink; onDelete: () => void }) 
         <TypeBadge type={item.type} />
         <span className={s.listTime}>{timeAgo(item.savedAt)}</span>
         {confirming ? (
-          <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--danger, #f43f5e)' }}>
-            <span>Apagar?</span>
-            <button className={s.listDeleteBtn} onClick={requestDelete} title="Confirmar" style={{ color: 'var(--danger, #f43f5e)' }}>✓</button>
-            <button className={s.listDeleteBtn} onClick={cancelDelete} title="Cancelar">✕</button>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--danger, #f43f5e)' }}>
+            <span style={{ whiteSpace: 'nowrap' }}>Apagar?</span>
+            <button onClick={requestDelete} title="Confirmar" style={{ background: '#f43f5e', border: 'none', cursor: 'pointer', color: '#fff', fontSize: 14, fontWeight: 700, padding: '5px 12px', borderRadius: 6, lineHeight: 1 }}>✓</button>
+            <button onClick={cancelDelete} title="Cancelar" style={{ background: 'var(--surface2)', border: '1px solid var(--border)', cursor: 'pointer', color: 'var(--text2)', fontSize: 14, padding: '5px 12px', borderRadius: 6, lineHeight: 1 }}>✕</button>
           </span>
         ) : (
           <button className={s.listDeleteBtn} onClick={requestDelete} title="Remover">✕</button>
@@ -269,10 +269,9 @@ function CompactRow({ item, onDelete }: { item: SavedLink; onDelete: () => void 
       <span className={s.compactTags}>{item.tags.slice(0, 2).join(', ')}</span>
       <span className={s.compactTime}>{timeAgo(item.savedAt)}</span>
       {confirming ? (
-        <span style={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 11, color: 'var(--danger, #f43f5e)' }}>
-          <span>Apagar?</span>
-          <button className={s.compactDelete} onClick={requestDelete} title="Confirmar" style={{ color: 'var(--danger, #f43f5e)' }}>✓</button>
-          <button className={s.compactDelete} onClick={cancelDelete} title="Cancelar">✕</button>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--danger, #f43f5e)' }}>
+          <button onClick={requestDelete} title="Confirmar" style={{ background: '#f43f5e', border: 'none', cursor: 'pointer', color: '#fff', fontSize: 13, fontWeight: 700, padding: '4px 10px', borderRadius: 6, lineHeight: 1 }}>✓</button>
+          <button onClick={cancelDelete} title="Cancelar" style={{ background: 'var(--surface2)', border: '1px solid var(--border)', cursor: 'pointer', color: 'var(--text2)', fontSize: 13, padding: '4px 10px', borderRadius: 6, lineHeight: 1 }}>✕</button>
         </span>
       ) : (
         <button className={s.compactDelete} onClick={requestDelete} title="Remover">✕</button>
