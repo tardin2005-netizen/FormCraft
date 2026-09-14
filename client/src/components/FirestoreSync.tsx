@@ -18,42 +18,57 @@ export default function FirestoreSync() {
     if (!user?.uid) return
     const uid = user.uid
 
+    // Track which collections have received their first snapshot.
+    // On first snapshot: only hydrate if Firestore has data (prevents wiping
+    // localStorage data that was never uploaded to Firestore).
+    // On subsequent snapshots: always hydrate so deletions propagate correctly.
+    const initialized = new Set<string>()
+
+    function safe<T>(key: string, docs: T[], fn: (data: T[]) => void) {
+      if (initialized.has(key)) {
+        fn(docs)
+      } else {
+        initialized.add(key)
+        if (docs.length > 0) fn(docs)
+      }
+    }
+
     const unsubs = [
       onSnapshot(
         query(collection(db, 'users', uid, 'links'), orderBy('savedAt', 'desc')),
-        snap => useLinksStore.getState().hydrate(snap.docs.map(d => d.data() as any))
+        snap => safe('links', snap.docs.map(d => d.data() as any), d => useLinksStore.getState().hydrate(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'collections'),
-        snap => useCollectionsStore.getState().hydrate(snap.docs.map(d => d.data() as any))
+        snap => safe('collections', snap.docs.map(d => d.data() as any), d => useCollectionsStore.getState().hydrate(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'areas'),
-        snap => useAreasStore.getState().hydrate(snap.docs.map(d => d.data() as any))
+        snap => safe('areas', snap.docs.map(d => d.data() as any), d => useAreasStore.getState().hydrate(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'areaItems'),
-        snap => useAreaItemsStore.getState().hydrate(snap.docs.map(d => d.data() as any))
+        snap => safe('areaItems', snap.docs.map(d => d.data() as any), d => useAreaItemsStore.getState().hydrate(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'hubs'),
-        snap => useHubsStore.getState().hydrateHubs(snap.docs.map(d => d.data() as any))
+        snap => safe('hubs', snap.docs.map(d => d.data() as any), d => useHubsStore.getState().hydrateHubs(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'hubSemesters'),
-        snap => useHubsStore.getState().hydrateSemesters(snap.docs.map(d => d.data() as any))
+        snap => safe('hubSemesters', snap.docs.map(d => d.data() as any), d => useHubsStore.getState().hydrateSemesters(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'hubSubjects'),
-        snap => useHubsStore.getState().hydrateSubjects(snap.docs.map(d => d.data() as any))
+        snap => safe('hubSubjects', snap.docs.map(d => d.data() as any), d => useHubsStore.getState().hydrateSubjects(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'hubClasses'),
-        snap => useHubsStore.getState().hydrateClasses(snap.docs.map(d => d.data() as any))
+        snap => safe('hubClasses', snap.docs.map(d => d.data() as any), d => useHubsStore.getState().hydrateClasses(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'hubContents'),
-        snap => useHubsStore.getState().hydrateContents(snap.docs.map(d => d.data() as any))
+        snap => safe('hubContents', snap.docs.map(d => d.data() as any), d => useHubsStore.getState().hydrateContents(d))
       ),
       onSnapshot(
         doc(db, 'users', uid, 'meta', 'savedTools'),
@@ -63,11 +78,11 @@ export default function FirestoreSync() {
       ),
       onSnapshot(
         collection(db, 'users', uid, 'workspaces'),
-        snap => useWorkspacesStore.getState().hydrate(snap.docs.map(d => d.data() as any))
+        snap => safe('workspaces', snap.docs.map(d => d.data() as any), d => useWorkspacesStore.getState().hydrate(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'contentItems'),
-        snap => useContentItemsStore.getState().hydrate(snap.docs.map(d => d.data() as any))
+        snap => safe('contentItems', snap.docs.map(d => d.data() as any), d => useContentItemsStore.getState().hydrate(d))
       ),
     ]
 
