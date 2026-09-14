@@ -1,0 +1,120 @@
+.list { display: flex; flex-direction: column; gap: 10px; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color .12s;
+}
+
+.card:hover { border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); }
+
+.starred { border-left: 3px solid #f59e0b; }
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.meta { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+
+.cardActions { display: flex; gap: 2px; align-items: center; flex-shrink: 0; }
+
+.chevron { font-size: 11px; color: var(--text2); margin-left: 2px; }
+
+.fmtBadge {
+  padding: 2px 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--text2);
+}
+
+.tomBadge {
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.canalBadge {
+  padding: 2px 8px;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--accent);
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.cardTitle {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.copyBlock {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.copyBlockHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.copyLabel {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--text2);
+}
+
+.copyText {
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.6;
+  padding: 8px 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.expanded {
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.section { display: flex; flex-direction: column; gap: 3px; }
+
+.sLabel {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--accent);
+}
+
+.sText {
+  font-size: 11.5px;
+  color: var(--text2);
+  line-height: 1.5;
+  margin: 0;
+}

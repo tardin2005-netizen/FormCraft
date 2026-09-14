@@ -1,0 +1,152 @@
+.kanban {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 12px;
+  align-items: start;
+  overflow-x: auto;
+}
+@media(max-width:900px){.kanban{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.kanban{grid-template-columns:1fr}}
+
+.column {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 100px;
+}
+
+.colHeader {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+
+.colDot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+.colLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--text2);
+  flex: 1;
+}
+
+.colCount {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text2);
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 1px 7px;
+  font-variant-numeric: tabular-nums;
+}
+
+.colItems { display: flex; flex-direction: column; gap: 8px; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  transition: border-color .12s;
+}
+
+.card:hover { border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); }
+
+.starred { border-left: 3px solid #f59e0b; }
+
+.cardTop {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.cardTitle {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+  min-width: 0;
+}
+
+.cardActions { display: flex; gap: 2px; align-items: center; flex-shrink: 0; }
+
+.chevron { font-size: 11px; color: var(--text2); margin-left: 2px; }
+
+.objetivo {
+  font-size: 11.5px;
+  color: var(--text2);
+  line-height: 1.45;
+}
+
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+
+.chip {
+  padding: 2px 7px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  font-size: 10px;
+  color: var(--text2);
+}
+
+.canalChip {
+  padding: 2px 7px;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--accent);
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text2);
+  font-variant-numeric: tabular-nums;
+}
+
+.budget {
+  margin-left: auto;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.expanded {
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.expandSection { display: flex; flex-direction: column; gap: 3px; }
+
+.expandLabel {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--accent);
+}
+
+.expandText {
+  font-size: 11.5px;
+  color: var(--text2);
+  line-height: 1.5;
+  margin: 0;
+}

@@ -11,6 +11,14 @@ import PromptLibrary from '../modules/PromptLibrary'
 import DisciplinesModule from '../modules/DisciplinesModule'
 import AssignmentsModule from '../modules/AssignmentsModule'
 import ExamsModule from '../modules/ExamsModule'
+import CampaignsModule from '../modules/CampaignsModule'
+import PersonasModule from '../modules/PersonasModule'
+import CopywritingModule from '../modules/CopywritingModule'
+import SocialModule from '../modules/SocialModule'
+import MetricsModule from '../modules/MetricsModule'
+import ScriptsModule from '../modules/ScriptsModule'
+import TroubleshootingModule from '../modules/TroubleshootingModule'
+import ToolsDbModule from '../modules/ToolsDbModule'
 import GenericModule from '../modules/GenericModule'
 import s from './WorkspaceView.module.css'
 
@@ -33,10 +41,18 @@ function ModuleContent({ module, workspaceId }: { module: WorkspaceModule; works
     case 'ui-inspiration': return <ReferenceGallery {...props} />
     case 'animations':     return <AnimationLibrary {...props} />
     case 'prompts':        return <PromptLibrary {...props} />
-    case 'disciplines':    return <DisciplinesModule {...props} />
-    case 'assignments':    return <AssignmentsModule {...props} />
-    case 'exams':          return <ExamsModule {...props} />
-    default:               return <GenericModule {...props} />
+    case 'disciplines':      return <DisciplinesModule {...props} />
+    case 'assignments':      return <AssignmentsModule {...props} />
+    case 'exams':            return <ExamsModule {...props} />
+    case 'campaigns':        return <CampaignsModule {...props} />
+    case 'personas':         return <PersonasModule {...props} />
+    case 'copywriting':      return <CopywritingModule {...props} />
+    case 'social':           return <SocialModule {...props} />
+    case 'metrics':          return <MetricsModule {...props} />
+    case 'scripts':          return <ScriptsModule {...props} />
+    case 'troubleshooting':  return <TroubleshootingModule {...props} />
+    case 'tools-db':         return <ToolsDbModule {...props} />
+    default:                 return <GenericModule {...props} />
   }
 }
 
