@@ -1,5 +1,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { defineSecret } from 'firebase-functions/params'
+import * as https from 'https'
+import * as http from 'http'
 
 const anthropicKey = defineSecret('ANTHROPIC_KEY')
 
@@ -300,5 +302,85 @@ export const chatFormCraft = onCall(
 
     const data = await res.json() as { content: Array<{ text: string }> }
     return { answer: data.content?.[0]?.text ?? '' }
+  }
+)
+
+// Fetch page HTML via server-side request (no CORS issues)
+function fetchPageHtml(url: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const lib = url.startsWith('https') ? https : http
+    const req = lib.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; FormCraftBot/1.0)',
+        'Accept': 'text/html',
+      },
+      timeout: 8000,
+    }, (res) => {
+      // Handle redirects
+      if ((res.statusCode === 301 || res.statusCode === 302) && res.headers.location) {
+        fetchPageHtml(res.headers.location).then(resolve).catch(reject)
+        return
+      }
+      let body = ''
+      res.setEncoding('utf8')
+      res.on('data', chunk => { body += chunk; if (body.length > 200000) req.destroy() })
+      res.on('end', () => resolve(body))
+    })
+    req.on('error', reject)
+    req.on('timeout', () => { req.destroy(); reject(new Error('timeout')) })
+  })
+}
+
+function extractOgMeta(html: string) {
+  const get = (pattern: RegExp) => { const m = html.match(pattern); return m ? m[1].replace(/&amp;/g, '&').trim() : '' }
+  const title = get(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)/i)
+    || get(/<meta[^>]+name=["']twitter:title["'][^>]+content=["']([^"']+)/i)
+    || get(/<title[^>]*>([^<]+)<\/title>/i)
+  const desc  = get(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)/i)
+    || get(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)/i)
+    || get(/<meta[^>]+name=["']twitter:description["'][^>]+content=["']([^"']+)/i)
+  const image = get(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)/i)
+    || get(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)/i)
+  return { title, desc, image }
+}
+
+export const analyzeLink = onCall(
+  { secrets: [anthropicKey], cors: true, region: 'us-central1', timeoutSeconds: 30 },
+  async (request) => {
+    const { url } = request.data as { url: string }
+    if (!url?.startsWith('http')) throw new HttpsError('invalid-argument', 'url is required')
+
+    let meta = { title: '', desc: '', image: '' }
+    try {
+      const html = await fetchPageHtml(url)
+      meta = extractOgMeta(html)
+    } catch {
+      // Continue with empty meta — will generate description from URL alone
+    }
+
+    // If no description found, generate one with Claude
+    if (!meta.desc && meta.title) {
+      try {
+        const key = anthropicKey.value()
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+          body: JSON.stringify({
+            model: 'claude-haiku-4-5-20251001',
+            max_tokens: 120,
+            messages: [{
+              role: 'user',
+              content: `URL: ${url}\nTítulo: ${meta.title}\n\nEscreva uma descrição curta (1-2 frases, máximo 150 caracteres) em português sobre o que este link se refere. Apenas a descrição, sem explicações.`,
+            }],
+          }),
+        })
+        if (res.ok) {
+          const data = await res.json() as { content: Array<{ text: string }> }
+          meta.desc = data.content?.[0]?.text?.trim() ?? ''
+        }
+      } catch { /* ignore */ }
+    }
+
+    return meta
   }
 )

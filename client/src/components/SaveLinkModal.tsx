@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { getFunctions, httpsCallable } from 'firebase/functions'
+import app from '../firebase'
 import { useLinksStore } from '../store/linksStore'
 import { useAreasStore } from '../store/areasStore'
 import s from './SaveLinkModal.module.css'
@@ -9,21 +11,10 @@ interface Props { onClose: () => void }
 type ContentType = 'link' | 'pdf' | 'nota' | 'imagem' | 'prompt'
 const TYPE_ICONS: Record<ContentType, string> = { link: '🔗', pdf: '📄', nota: '📝', imagem: '🖼️', prompt: '🤖' }
 
-async function fetchMeta(url: string): Promise<{ title: string; desc: string; image: string } | null> {
-  try {
-    const proxy = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
-    const res = await fetch(proxy, { signal: AbortSignal.timeout(6000) })
-    const html = await res.text()
-    const doc  = new DOMParser().parseFromString(html, 'text/html')
-    const og   = (sel: string) => doc.querySelector(sel)?.getAttribute('content') ?? ''
-    const title = og('meta[property="og:title"]') || og('meta[name="twitter:title"]') || doc.querySelector('title')?.textContent?.trim() || ''
-    const desc  = og('meta[property="og:description"]') || og('meta[name="description"]') || og('meta[name="twitter:description"]') || ''
-    const image = og('meta[property="og:image"]') || og('meta[name="twitter:image"]') || ''
-    return { title, desc, image }
-  } catch {
-    return null
-  }
-}
+const functions = getFunctions(app, 'us-central1')
+const analyzeLinkFn = httpsCallable<{ url: string }, { title: string; desc: string; image: string }>(
+  functions, 'analyzeLink'
+)
 
 function detectType(u: string): ContentType {
   if (u.endsWith('.pdf')) return 'pdf'
@@ -93,13 +84,17 @@ export default function SaveLinkModal({ onClose }: Props) {
     if (!u.startsWith('http')) return
     setFetching(true)
     setFetchDone(false)
-    const meta = await fetchMeta(u)
-    setFetching(false)
-    setFetchDone(true)
-    if (meta) {
+    try {
+      const result = await analyzeLinkFn({ url: u })
+      const meta = result.data
       if (!title && meta.title) setTitle(meta.title)
       if (!desc  && meta.desc)  setDesc(meta.desc)
       if (meta.image) setOgImage(meta.image)
+    } catch {
+      // fail silently — user can fill manually
+    } finally {
+      setFetching(false)
+      setFetchDone(true)
     }
   }, [title, desc])
 
@@ -229,20 +224,9 @@ export default function SaveLinkModal({ onClose }: Props) {
           <div className={s.field}>
             <label className={s.label}>
               URL
-              <AnimatePresence>
-                {fetching && (
-                  <motion.span className={s.fetchingBadge}
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                    ⟳ Buscando metadados...
-                  </motion.span>
-                )}
-                {fetchDone && !fetching && (
-                  <motion.span className={s.fetchedBadge}
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                    ✓ Metadados carregados
-                  </motion.span>
-                )}
-              </AnimatePresence>
+              {fetchDone && !fetching && (
+                <span className={s.fetchedBadge} style={{ marginLeft: 8 }}>✓ Análise completa</span>
+              )}
             </label>
             <input
               ref={inputRef}
@@ -284,18 +268,19 @@ export default function SaveLinkModal({ onClose }: Props) {
           </div>
 
           {/* Desc */}
-          {(desc || fetchDone) && (
-            <div className={s.field}>
-              <label className={s.label}>Descrição <span className={s.optional}>(opcional)</span></label>
-              <textarea
-                className={`${s.input} ${s.textarea}`}
-                placeholder="Descrição ou anotação..."
-                value={desc}
-                onChange={e => setDesc(e.target.value)}
-                rows={2}
-              />
-            </div>
-          )}
+          <div className={s.field}>
+            <label className={s.label}>
+              Descrição <span className={s.optional}>(opcional)</span>
+              {fetching && <span className={s.fetchingBadge} style={{ marginLeft: 8 }}>⬡ IA analisando...</span>}
+            </label>
+            <textarea
+              className={`${s.input} ${s.textarea}`}
+              placeholder={fetching ? 'Gerando descrição...' : 'Descrição gerada automaticamente ou escreva sua anotação...'}
+              value={desc}
+              onChange={e => setDesc(e.target.value)}
+              rows={2}
+            />
+          </div>
 
           {/* Area + Tags row */}
           <div className={s.twoCol}>

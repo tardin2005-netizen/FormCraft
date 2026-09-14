@@ -18,12 +18,44 @@ interface AuthCtx {
 const Ctx = createContext<AuthCtx>({} as AuthCtx)
 export const useAuth = () => useContext(Ctx)
 
+// localStorage keys for data stores (NOT prefs like theme/sidebar)
+const DATA_STORE_KEYS = [
+  'formcraft-links',
+  'formcraft-areas',
+  'formcraft-area-items',
+  'formcraft-collections',
+  'formcraft-hubs',
+  'formcraft-workspaces',
+  'formcraft-content-items',
+  'formcraft-saved-tools',
+]
+
+const SESSION_UID_KEY = 'formcraft-session-uid'
+
+function clearDataStores() {
+  DATA_STORE_KEYS.forEach(k => localStorage.removeItem(k))
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     return onAuthStateChanged(auth, (u) => {
+      const prevUid = localStorage.getItem(SESSION_UID_KEY)
+
+      if (u) {
+        if (prevUid && prevUid !== u.uid) {
+          // Different user logged in — clear previous user's data from localStorage
+          clearDataStores()
+        }
+        localStorage.setItem(SESSION_UID_KEY, u.uid)
+      } else {
+        // Logged out — clear data so next user starts fresh
+        clearDataStores()
+        localStorage.removeItem(SESSION_UID_KEY)
+      }
+
       setUser(u)
       setLoading(false)
     })
