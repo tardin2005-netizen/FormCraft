@@ -43,7 +43,3 @@ jobs:
           channelId: live
           projectId: formcraft-52279
 
-      - name: Deploy Functions para Firebase
-        run: |
-          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > /tmp/sa.json
-          GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa.json npx firebase-tools@latest deploy --only functions --project formcraft-52279 --non-interactive
