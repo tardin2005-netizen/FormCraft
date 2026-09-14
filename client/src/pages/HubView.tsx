@@ -514,27 +514,24 @@ function ChatsView({ hubId }: { hubId: string }) {
   }
 
   function sendMessage() {
-    if (!msgText.trim() || !selChat) return
-    addChatMessage({
-      chatId: selChat,
-      hubId,
-      text: msgText.trim(),
-      url: msgUrl.trim() || undefined,
-      subjectId: msgSubjectId || undefined,
-    })
-    if (msgSubjectId) {
-      addContent({
-        hubId,
-        subjectId: msgSubjectId,
-        type: msgUrl.trim() ? 'link' : 'note',
-        title: msgText.trim().slice(0, 80),
-        url: msgUrl.trim() || undefined,
-        content: msgUrl.trim() ? undefined : msgText.trim(),
-      })
-    }
+    const text = msgText.trim()
+    const url = msgUrl.trim()
+    const subjectId = msgSubjectId
+    if (!text || !selChat) return
     setMsgText('')
     setMsgUrl('')
     setMsgSubjectId('')
+    addChatMessage({ chatId: selChat, hubId, text, url: url || undefined, subjectId: subjectId || undefined })
+    if (subjectId) {
+      addContent({
+        hubId,
+        subjectId,
+        type: url ? 'link' : 'note',
+        title: text.slice(0, 80),
+        url: url || undefined,
+        content: url ? undefined : text,
+      })
+    }
   }
 
   const currentChat = chats.find(c => c.id === selChat)
@@ -656,7 +653,7 @@ function ChatsView({ hubId }: { hubId: string }) {
                           🔗 {msg.url}
                         </a>
                       )}
-                      <button className={s.msgDel} onClick={() => removeChatMessage(msg.id)}>✕</button>
+                      <DeleteBtn onConfirm={() => removeChatMessage(msg.id)} />
                     </motion.div>
                   )
                 })}

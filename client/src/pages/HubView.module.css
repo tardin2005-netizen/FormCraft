@@ -337,13 +337,7 @@
   text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .msgLink:hover { text-decoration: underline; }
-.msgDel {
-  position: absolute; top: 6px; right: 8px; background: var(--surface);
-  border: 1px solid var(--border); border-radius: 5px; color: transparent;
-  font-size: 10px; cursor: pointer; padding: 2px 6px; transition: all .12s;
-}
-.msgRow:hover .msgDel { color: var(--text2); }
-.msgDel:hover { border-color: #f43f5e; color: #f43f5e !important; }
+/* msgDel replaced by DeleteBtn component */
 
 /* Message input */
 .msgInputArea {
