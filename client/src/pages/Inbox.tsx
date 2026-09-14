@@ -147,11 +147,13 @@ function GridCard({ item, onDelete }: { item: SavedLink; onDelete: () => void })
             </motion.div>
           )}
         </AnimatePresence>
-        {isImage && hovered && (
+        {isImage && imgSrc && hovered && (
           <motion.div
             className={s.expandHint}
+            style={{ cursor: 'zoom-in', pointerEvents: 'auto' }}
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          >⛶ Ver em tela cheia</motion.div>
+            onClick={e => { e.preventDefault(); e.stopPropagation(); setLightbox(true) }}
+          >⛶ Ver imagem</motion.div>
         )}
         <TypeBadge type={item.type} />
       </div>
@@ -173,7 +175,11 @@ function GridCard({ item, onDelete }: { item: SavedLink; onDelete: () => void })
     </>
   )
 
-  if (isImage) {
+  const hasRealUrl = item.url && item.url !== '#'
+
+  // If item has a real URL, always open it on click (even if type=imagem).
+  // Lightbox is only for pure image items without a URL.
+  if (isImage && !hasRealUrl) {
     return (
       <>
         <motion.div
@@ -198,22 +204,27 @@ function GridCard({ item, onDelete }: { item: SavedLink; onDelete: () => void })
   }
 
   return (
-    <motion.a
-      href={item.url && item.url !== '#' ? item.url : undefined}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={s.gridCard}
-      style={{ '--card-color': color } as React.CSSProperties}
-      onHoverStart={() => setHovered(true)}
-      onHoverEnd={() => setHovered(false)}
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: .95 }}
-      whileHover={{ y: -3 }}
-      transition={{ duration: .2 }}
-    >
-      {cardContent}
-    </motion.a>
+    <>
+      <motion.a
+        href={hasRealUrl ? item.url : undefined}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={s.gridCard}
+        style={{ '--card-color': color } as React.CSSProperties}
+        onHoverStart={() => setHovered(true)}
+        onHoverEnd={() => setHovered(false)}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, scale: .95 }}
+        whileHover={{ y: -3 }}
+        transition={{ duration: .2 }}
+      >
+        {cardContent}
+      </motion.a>
+      <AnimatePresence>
+        {lightbox && imgSrc && <Lightbox src={imgSrc} onClose={() => setLightbox(false)} />}
+      </AnimatePresence>
+    </>
   )
 }
 
