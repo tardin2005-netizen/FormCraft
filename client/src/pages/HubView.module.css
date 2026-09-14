@@ -119,6 +119,12 @@
   transition: all .12s; white-space: nowrap;
 }
 .actionBtn:hover { border-color: var(--accent); color: var(--accent); }
+.actionBtnPdf {
+  padding: 7px 14px; background: var(--accent); border: none;
+  border-radius: 8px; color: #fff; font-size: 12px; cursor: pointer;
+  transition: filter .12s; white-space: nowrap; font-weight: 600;
+}
+.actionBtnPdf:hover { filter: brightness(1.1); }
 
 /* Class list */
 .classList {

@@ -384,3 +384,85 @@ export const analyzeLink = onCall(
     return meta
   }
 )
+
+interface AulaSection { heading: string; content: string }
+interface ProcessAulaResult {
+  title: string
+  summary: string
+  keyPoints: string[]
+  sections: AulaSection[]
+  rawText: string
+}
+
+export const processAulaPdf = onCall(
+  { secrets: [anthropicKey], cors: true, region: 'us-central1', timeoutSeconds: 120 },
+  async (request) => {
+    const { text, subjectName, fileName } = request.data as {
+      text: string
+      subjectName?: string
+      fileName?: string
+    }
+
+    if (!text?.trim()) throw new HttpsError('invalid-argument', 'text is required')
+
+    const key = anthropicKey.value()
+    const truncated = text.slice(0, 12000)
+
+    const prompt = `Você receberá o texto extraído de um PDF de aula${subjectName ? ` da matéria "${subjectName}"` : ''}${fileName ? ` (arquivo: ${fileName})` : ''}.
+
+Analise o conteúdo e retorne um JSON com a seguinte estrutura EXATA (sem markdown, apenas JSON puro):
+{
+  "title": "Título principal da aula ou tema central (máx 80 chars)",
+  "summary": "Resumo do conteúdo em 2-3 frases diretas",
+  "keyPoints": ["Ponto chave 1", "Ponto chave 2", "Ponto chave 3", "...até 6 pontos"],
+  "sections": [
+    { "heading": "Nome da seção", "content": "Conteúdo resumido da seção em 2-4 frases" },
+    ...até 5 seções
+  ]
+}
+
+Texto do PDF:
+---
+${truncated}
+---
+
+Retorne SOMENTE o JSON, sem texto antes ou depois.`
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    })
+
+    if (!res.ok) {
+      const err = await res.text()
+      throw new HttpsError('internal', `Claude API error: ${err}`)
+    }
+
+    const data = await res.json() as { content: Array<{ text: string }> }
+    const raw = data.content?.[0]?.text ?? ''
+
+    let parsed: Omit<ProcessAulaResult, 'rawText'>
+    try {
+      const jsonMatch = raw.match(/\{[\s\S]*\}/)
+      parsed = JSON.parse(jsonMatch ? jsonMatch[0] : raw)
+    } catch {
+      parsed = {
+        title: fileName?.replace('.pdf', '') ?? 'Aula processada',
+        summary: raw.slice(0, 300),
+        keyPoints: [],
+        sections: [],
+      }
+    }
+
+    return { ...parsed, rawText: text.slice(0, 500) } as ProcessAulaResult
+  }
+)

@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.analyzeLink = exports.chatFormCraft = exports.askClaude = void 0;
+exports.processAulaPdf = exports.analyzeLink = exports.chatFormCraft = exports.askClaude = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const params_1 = require("firebase-functions/params");
 const https = __importStar(require("https"));
@@ -387,5 +387,65 @@ exports.analyzeLink = (0, https_1.onCall)({ secrets: [anthropicKey], cors: true,
         catch ( /* ignore */_f) { /* ignore */ }
     }
     return meta;
+});
+exports.processAulaPdf = (0, https_1.onCall)({ secrets: [anthropicKey], cors: true, region: 'us-central1', timeoutSeconds: 120 }, async (request) => {
+    var _a, _b, _c, _d;
+    const { text, subjectName, fileName } = request.data;
+    if (!(text === null || text === void 0 ? void 0 : text.trim()))
+        throw new https_1.HttpsError('invalid-argument', 'text is required');
+    const key = anthropicKey.value();
+    const truncated = text.slice(0, 12000);
+    const prompt = `Você receberá o texto extraído de um PDF de aula${subjectName ? ` da matéria "${subjectName}"` : ''}${fileName ? ` (arquivo: ${fileName})` : ''}.
+
+Analise o conteúdo e retorne um JSON com a seguinte estrutura EXATA (sem markdown, apenas JSON puro):
+{
+  "title": "Título principal da aula ou tema central (máx 80 chars)",
+  "summary": "Resumo do conteúdo em 2-3 frases diretas",
+  "keyPoints": ["Ponto chave 1", "Ponto chave 2", "Ponto chave 3", "...até 6 pontos"],
+  "sections": [
+    { "heading": "Nome da seção", "content": "Conteúdo resumido da seção em 2-4 frases" },
+    ...até 5 seções
+  ]
+}
+
+Texto do PDF:
+---
+${truncated}
+---
+
+Retorne SOMENTE o JSON, sem texto antes ou depois.`;
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+            'x-api-key': key,
+            'anthropic-version': '2023-06-01',
+            'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+            model: 'claude-haiku-4-5-20251001',
+            max_tokens: 1024,
+            messages: [{ role: 'user', content: prompt }],
+        }),
+    });
+    if (!res.ok) {
+        const err = await res.text();
+        throw new https_1.HttpsError('internal', `Claude API error: ${err}`);
+    }
+    const data = await res.json();
+    const raw = (_c = (_b = (_a = data.content) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.text) !== null && _c !== void 0 ? _c : '';
+    let parsed;
+    try {
+        const jsonMatch = raw.match(/\{[\s\S]*\}/);
+        parsed = JSON.parse(jsonMatch ? jsonMatch[0] : raw);
+    }
+    catch (_e) {
+        parsed = {
+            title: (_d = fileName === null || fileName === void 0 ? void 0 : fileName.replace('.pdf', '')) !== null && _d !== void 0 ? _d : 'Aula processada',
+            summary: raw.slice(0, 300),
+            keyPoints: [],
+            sections: [],
+        };
+    }
+    return Object.assign(Object.assign({}, parsed), { rawText: text.slice(0, 500) });
 });
 //# sourceMappingURL=index.js.map

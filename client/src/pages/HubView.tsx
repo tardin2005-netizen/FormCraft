@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useHubsStore, type Semester, type Subject, type ClassItem, type HubContent } from '../store/hubsStore'
 import DeleteBtn from '../modules/DeleteBtn'
+import PdfProcessorModal from '../components/PdfProcessorModal'
 import s from './HubView.module.css'
 
 /* ─── helpers ─── */
@@ -41,6 +42,7 @@ function FaculdadeView({ hubId }: { hubId: string }) {
   const [subjModal,    setSubjModal]    = useState(false)
   const [classModal,   setClassModal]   = useState(false)
   const [contentModal, setContentModal] = useState(false)
+  const [pdfModal,     setPdfModal]     = useState(false)
 
   // Forms
   const [semForm,  setSemForm]  = useState({ year: CURRENT_YEAR, period: '1' as '1'|'2', name: '' })
@@ -149,6 +151,7 @@ function FaculdadeView({ hubId }: { hubId: string }) {
                       <div className={s.mainActions}>
                         <button className={s.actionBtn} onClick={() => setContentModal(true)}>+ Material</button>
                         <button className={s.actionBtn} onClick={() => setClassModal(true)}>+ Aula</button>
+                        <button className={s.actionBtnPdf} onClick={() => setPdfModal(true)}>📄 PDF</button>
                       </div>
                     </div>
 
@@ -289,6 +292,28 @@ function FaculdadeView({ hubId }: { hubId: string }) {
             </div>
           </Modal>
         )}
+
+        {pdfModal && (() => {
+          const subj = subjects.find(x => x.id === selSubj)
+          return (
+            <PdfProcessorModal
+              subjectName={subj?.name ?? ''}
+              onClose={() => setPdfModal(false)}
+              onSave={(title, content) => {
+                addContent({
+                  hubId,
+                  semesterId: selSem ?? undefined,
+                  subjectId: selSubj ?? undefined,
+                  classId: selClass ?? undefined,
+                  type: 'note',
+                  title,
+                  content,
+                })
+                setPdfModal(false)
+              }}
+            />
+          )
+        })()}
 
         {contentModal && (
           <Modal title="Adicionar Material" onClose={() => setContentModal(false)} onSave={createContent} saveLabel="Salvar" disabled={!ctxForm.title.trim()}>
