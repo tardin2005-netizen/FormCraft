@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useLinksStore } from '../store/linksStore'
@@ -81,10 +81,39 @@ function Lightbox({ src, onClose }: { src: string; onClose: () => void }) {
   )
 }
 
+/* ── Shared delete confirm hook ── */
+function useDeleteConfirm(onDelete: () => void) {
+  const [confirming, setConfirming] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  function requestDelete(e: React.MouseEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    if (confirming) {
+      if (timerRef.current) clearTimeout(timerRef.current)
+      setConfirming(false)
+      onDelete()
+    } else {
+      setConfirming(true)
+      timerRef.current = setTimeout(() => setConfirming(false), 3000)
+    }
+  }
+
+  function cancelDelete(e: React.MouseEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    if (timerRef.current) clearTimeout(timerRef.current)
+    setConfirming(false)
+  }
+
+  return { confirming, requestDelete, cancelDelete }
+}
+
 /* ── Grid card ── */
 function GridCard({ item, onDelete }: { item: SavedLink; onDelete: () => void }) {
   const [hovered,   setHovered]   = useState(false)
   const [lightbox,  setLightbox]  = useState(false)
+  const { confirming, requestDelete, cancelDelete } = useDeleteConfirm(onDelete)
   const isImage = item.type === 'imagem'
   const imgSrc  = item.ogImage ?? ''
   const fallbackEmoji = item.type === 'nota' ? '📝' : item.type === 'pdf' ? '📄' : item.type === 'prompt' ? '🤖' : '🔗'
@@ -100,13 +129,22 @@ function GridCard({ item, onDelete }: { item: SavedLink; onDelete: () => void })
           : <span className={s.cardThumbEmoji}>{fallbackEmoji}</span>
         }
         <AnimatePresence>
-          {hovered && (
-            <motion.button
-              className={s.deleteBtn}
+          {(hovered || confirming) && (
+            <motion.div
+              className={`${s.deleteBtn} ${confirming ? s.deleteBtnConfirm : ''}`}
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={e => { e.preventDefault(); e.stopPropagation(); onDelete() }}
-              title="Remover"
-            >✕</motion.button>
+              style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+            >
+              {confirming ? (
+                <>
+                  <span style={{ fontSize: 10, whiteSpace: 'nowrap' }}>Apagar?</span>
+                  <button onClick={requestDelete} title="Confirmar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: 13, padding: '0 2px' }}>✓</button>
+                  <button onClick={cancelDelete} title="Cancelar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: 13, padding: '0 2px' }}>✕</button>
+                </>
+              ) : (
+                <button onClick={requestDelete} title="Remover" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: 13, width: '100%', height: '100%' }}>✕</button>
+              )}
+            </motion.div>
           )}
         </AnimatePresence>
         {isImage && hovered && (
@@ -181,6 +219,7 @@ function GridCard({ item, onDelete }: { item: SavedLink; onDelete: () => void })
 
 /* ── List row ── */
 function ListRow({ item, onDelete }: { item: SavedLink; onDelete: () => void }) {
+  const { confirming, requestDelete, cancelDelete } = useDeleteConfirm(onDelete)
   return (
     <motion.div
       className={s.listRow}
@@ -200,7 +239,15 @@ function ListRow({ item, onDelete }: { item: SavedLink; onDelete: () => void }) 
         {item.tags.slice(0, 3).map(t => <TagChip key={t} tag={t} />)}
         <TypeBadge type={item.type} />
         <span className={s.listTime}>{timeAgo(item.savedAt)}</span>
-        <button className={s.listDeleteBtn} onClick={onDelete} title="Remover">✕</button>
+        {confirming ? (
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--danger, #f43f5e)' }}>
+            <span>Apagar?</span>
+            <button className={s.listDeleteBtn} onClick={requestDelete} title="Confirmar" style={{ color: 'var(--danger, #f43f5e)' }}>✓</button>
+            <button className={s.listDeleteBtn} onClick={cancelDelete} title="Cancelar">✕</button>
+          </span>
+        ) : (
+          <button className={s.listDeleteBtn} onClick={requestDelete} title="Remover">✕</button>
+        )}
       </div>
     </motion.div>
   )
@@ -208,6 +255,7 @@ function ListRow({ item, onDelete }: { item: SavedLink; onDelete: () => void }) 
 
 /* ── Compact row ── */
 function CompactRow({ item, onDelete }: { item: SavedLink; onDelete: () => void }) {
+  const { confirming, requestDelete, cancelDelete } = useDeleteConfirm(onDelete)
   return (
     <motion.div
       className={s.compactRow}
@@ -220,7 +268,15 @@ function CompactRow({ item, onDelete }: { item: SavedLink; onDelete: () => void 
       <span className={s.compactTitle}>{item.title}</span>
       <span className={s.compactTags}>{item.tags.slice(0, 2).join(', ')}</span>
       <span className={s.compactTime}>{timeAgo(item.savedAt)}</span>
-      <button className={s.compactDelete} onClick={onDelete} title="Remover">✕</button>
+      {confirming ? (
+        <span style={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 11, color: 'var(--danger, #f43f5e)' }}>
+          <span>Apagar?</span>
+          <button className={s.compactDelete} onClick={requestDelete} title="Confirmar" style={{ color: 'var(--danger, #f43f5e)' }}>✓</button>
+          <button className={s.compactDelete} onClick={cancelDelete} title="Cancelar">✕</button>
+        </span>
+      ) : (
+        <button className={s.compactDelete} onClick={requestDelete} title="Remover">✕</button>
+      )}
     </motion.div>
   )
 }

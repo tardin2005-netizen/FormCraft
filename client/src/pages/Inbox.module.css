@@ -197,6 +197,7 @@
   transition: background .15s;
 }
 .deleteBtn:hover { background: #f43f5e; }
+.deleteBtnConfirm { background: #f43f5e; padding: 4px 8px; }
 
 /* Card body */
 .cardBody { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 4px; flex: 1; }

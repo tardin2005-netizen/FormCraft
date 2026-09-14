@@ -31,7 +31,7 @@ export const useLinksStore = create<LinksStore>()(
     (set) => ({
       links: [],
       addLink: (link) => {
-        const newLink: SavedLink = { ...link, id: Date.now().toString(), savedAt: Date.now() }
+        const newLink: SavedLink = { ...link, id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), savedAt: Date.now() }
         set(s => ({ links: [newLink, ...s.links] }))
         const uid = auth.currentUser?.uid
         if (uid) setDoc(d(uid, newLink.id), newLink).catch(() => {})
