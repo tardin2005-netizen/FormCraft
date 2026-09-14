@@ -8,6 +8,7 @@ import s from './AreaView.module.css'
 
 const TYPE_ICON: Record<AreaItemType, string> = { link: '🔗', note: '📝', file: '📄', chat: '💬' }
 const TYPE_LABEL: Record<AreaItemType, string> = { link: 'Link', note: 'Nota', file: 'Arquivo', chat: 'Chat' }
+const AREA_ITEM_TYPES: AreaItemType[] = ['link', 'note', 'file']
 
 function AddItemModal({ areaId, onClose }: { areaId: string; onClose: () => void }) {
   const { addItem } = useAreaItemsStore()
@@ -38,7 +39,7 @@ function AddItemModal({ areaId, onClose }: { areaId: string; onClose: () => void
         </div>
         <div className={s.modalBody}>
           <div className={s.typeRow}>
-            {(['link', 'note', 'file', 'chat'] as AreaItemType[]).map(t => (
+            {AREA_ITEM_TYPES.map(t => (
               <button
                 key={t}
                 className={`${s.typeBtn} ${type === t ? s.typeBtnActive : ''}`}
@@ -85,29 +86,6 @@ function AddItemModal({ areaId, onClose }: { areaId: string; onClose: () => void
             </div>
           )}
 
-          {type === 'chat' && (
-            <>
-              <div className={s.field}>
-                <label className={s.label}>Link do chat <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(ChatGPT, Claude, etc.)</span></label>
-                <input
-                  className={s.input}
-                  placeholder="https://chatgpt.com/c/... ou https://claude.ai/..."
-                  value={url}
-                  onChange={e => setUrl(e.target.value)}
-                />
-              </div>
-              <div className={s.field}>
-                <label className={s.label}>Resumo / contexto</label>
-                <textarea
-                  className={`${s.input} ${s.textarea}`}
-                  placeholder="Do que se trata esse chat? Ex: Estratégia de marketing para lançamento..."
-                  value={content}
-                  onChange={e => setContent(e.target.value)}
-                  rows={3}
-                />
-              </div>
-            </>
-          )}
         </div>
         <div className={s.modalFooter}>
           <button className={s.cancelBtn} onClick={onClose}>Cancelar</button>
@@ -125,7 +103,9 @@ export default function AreaView() {
   const { getByArea, removeItem } = useAreaItemsStore()
   const [addOpen, setAddOpen] = useState(false)
   const area = areas.find(a => a.id === id)
-  const items = id ? getByArea(id) : []
+  const allItems = id ? getByArea(id) : []
+  const items = allItems.filter(i => i.type !== 'chat')
+  const chatCount = allItems.filter(i => i.type === 'chat').length
 
   useEffect(() => {
     if (!area && areas.length > 0) navigate('/', { replace: true })
@@ -165,8 +145,13 @@ export default function AreaView() {
         {items.length === 0 && (
           <div className={s.empty}>
             <div className={s.emptyIcon}>📭</div>
-            <div>Nenhum item ainda.</div>
-            <button className={s.emptyAddBtn} onClick={() => setAddOpen(true)}>+ Adicionar primeiro item</button>
+            <div>Nenhum link, nota ou arquivo ainda.</div>
+            {chatCount > 0 && (
+              <div style={{ fontSize: 12, color: 'var(--accent)', marginTop: 4 }}>
+                💬 {chatCount} canal{chatCount !== 1 ? 'is' : ''} disponível{chatCount !== 1 ? 's' : ''} na sidebar
+              </div>
+            )}
+            <button className={s.emptyAddBtn} onClick={() => setAddOpen(true)}>+ Adicionar item</button>
           </div>
         )}
 

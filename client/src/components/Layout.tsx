@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Hexagon, Inbox, BookMarked, Wrench, Settings,
@@ -38,13 +38,21 @@ const RIGHT_W = { expanded: 264, compact: 48, hidden: 0 }
 export default function Layout() {
   const { theme, toggle, accent, setAccent } = useThemeStore()
   const { areas } = useAreasStore()
-  const { items: areaItems } = useAreaItemsStore()
+  const { items: areaItems, addItem: addAreaItem } = useAreaItemsStore()
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+
+  const areaMatch = location.pathname.match(/^\/area\/([^/]+)/)
+  const activeAreaId = areaMatch ? areaMatch[1] : null
+  const activeArea = activeAreaId ? areas.find(a => a.id === activeAreaId) : null
+  const areaChats = activeAreaId ? areaItems.filter(i => i.areaId === activeAreaId && i.type === 'chat') : []
 
   const { leftState, rightState, cycleLeft, cycleRight, setLeft, setRight } = useSidebarStore()
   const { saved: savedToolNames, isSaved, saveTool, unsaveTool } = useSavedToolsStore()
 
+  const [newChatOpen,   setNewChatOpen]   = useState(false)
+  const [newChatTitle,  setNewChatTitle]  = useState('')
   const [searchOpen,    setSearchOpen]    = useState(false)
   const [saveLinkOpen,  setSaveLinkOpen]  = useState(false)
   const [settingsOpen,  setSettingsOpen]  = useState(false)
@@ -95,6 +103,13 @@ export default function Layout() {
     const rest  = matches.filter(t => !isSaved(t.name))
     return [...saved, ...rest]
   })()
+
+  function handleAddChat() {
+    if (!newChatTitle.trim() || !activeAreaId) return
+    addAreaItem({ areaId: activeAreaId, type: 'chat', title: newChatTitle.trim() })
+    setNewChatTitle('')
+    setNewChatOpen(false)
+  }
 
   const leftW  = LEFT_W[leftState]
   const rightW = RIGHT_W[rightState]
@@ -174,41 +189,94 @@ export default function Layout() {
                   exit={{ opacity: 0 }}
                   transition={{ duration: .15 }}
                 >
-                  <div className={s.areasLabel}>Áreas</div>
-                  {areas.map((a, i) => (
-                    <motion.div
-                      key={a.id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * .04, duration: .2 }}
-                    >
-                      <NavLink
-                        to={`/area/${a.id}`}
-                        className={({ isActive }) => `${s.areaItem} ${isActive ? s.navActive : ''}`}
-                      >
-                        <span>{a.emoji}</span>
-                        <span className={s.areaItemTitle}>{a.title}</span>
-                        <span className={s.areaItemCount}>{areaItems.filter(i => i.areaId === a.id).length}</span>
+                  {activeArea ? (
+                    <>
+                      <NavLink to={`/area/${activeArea.id}`} className={s.areaBackLink}>
+                        <span className={s.areaBackArrow}>←</span>
+                        <span className={s.areaBackEmoji}>{activeArea.emoji}</span>
+                        <span className={s.areaBackTitle}>{activeArea.title}</span>
                       </NavLink>
-                    </motion.div>
-                  ))}
-                  <button className={s.addAreaBtn} onClick={() => navigate('/?nova-area=1')}>
-                    + Nova área
-                  </button>
+                      <div className={s.areasLabel} style={{ marginTop: 10 }}>Canais</div>
+                      {areaChats.length === 0 && (
+                        <div className={s.noChannels}>Nenhum canal ainda</div>
+                      )}
+                      {areaChats.map((chat, i) => (
+                        <motion.div
+                          key={chat.id}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * .04, duration: .2 }}
+                        >
+                          <NavLink
+                            to={`/area/${activeArea.id}/chat/${chat.id}`}
+                            className={({ isActive }) => `${s.channelItem} ${isActive ? s.navActive : ''}`}
+                          >
+                            <span className={s.channelHash}>#</span>
+                            <span className={s.channelTitle}>{chat.title}</span>
+                          </NavLink>
+                        </motion.div>
+                      ))}
+                      <button className={s.addAreaBtn} onClick={() => setNewChatOpen(true)}>
+                        + Novo canal
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <div className={s.areasLabel}>Áreas</div>
+                      {areas.map((a, i) => (
+                        <motion.div
+                          key={a.id}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * .04, duration: .2 }}
+                        >
+                          <NavLink
+                            to={`/area/${a.id}`}
+                            className={({ isActive }) => `${s.areaItem} ${isActive ? s.navActive : ''}`}
+                          >
+                            <span>{a.emoji}</span>
+                            <span className={s.areaItemTitle}>{a.title}</span>
+                            <span className={s.areaItemCount}>{areaItems.filter(i => i.areaId === a.id).length}</span>
+                          </NavLink>
+                        </motion.div>
+                      ))}
+                      <button className={s.addAreaBtn} onClick={() => navigate('/?nova-area=1')}>
+                        + Nova área
+                      </button>
+                    </>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
 
             {leftState === 'compact' && (
               <div className={s.areasIconsOnly}>
-                {areas.map(a => (
-                  <NavLink
-                    key={a.id}
-                    to={`/area/${a.id}`}
-                    className={({ isActive }) => `${s.areaIconItem} ${isActive ? s.navActive : ''}`}
-                    title={a.title}
-                  >{a.emoji}</NavLink>
-                ))}
+                {activeArea ? (
+                  <>
+                    <NavLink
+                      to={`/area/${activeArea.id}`}
+                      className={s.areaIconItem}
+                      title={`← ${activeArea.title}`}
+                    >{activeArea.emoji}</NavLink>
+                    {areaChats.map(chat => (
+                      <NavLink
+                        key={chat.id}
+                        to={`/area/${activeArea.id}/chat/${chat.id}`}
+                        className={({ isActive }) => `${s.channelIconItem} ${isActive ? s.navActive : ''}`}
+                        title={`#${chat.title}`}
+                      >#</NavLink>
+                    ))}
+                  </>
+                ) : (
+                  areas.map(a => (
+                    <NavLink
+                      key={a.id}
+                      to={`/area/${a.id}`}
+                      className={({ isActive }) => `${s.areaIconItem} ${isActive ? s.navActive : ''}`}
+                      title={a.title}
+                    >{a.emoji}</NavLink>
+                  ))
+                )}
               </div>
             )}
 
@@ -535,6 +603,26 @@ export default function Layout() {
       {saveLinkOpen  && <SaveLinkModal onClose={() => setSaveLinkOpen(false)} />}
       <AnimatePresence>{quickNoteOpen && <QuickNote onClose={() => setQuickNoteOpen(false)} />}</AnimatePresence>
       <FormCraftChat open={aiChatOpen} onClose={() => setAiChatOpen(false)} />
+
+      {newChatOpen && (
+        <div className={s.newChatBackdrop} onClick={() => setNewChatOpen(false)}>
+          <div className={s.newChatModal} onClick={e => e.stopPropagation()}>
+            <div className={s.newChatTitle}>Novo canal</div>
+            <input
+              className={s.newChatInput}
+              placeholder="Nome do canal..."
+              value={newChatTitle}
+              onChange={e => setNewChatTitle(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleAddChat(); if (e.key === 'Escape') setNewChatOpen(false) }}
+              autoFocus
+            />
+            <div className={s.newChatFooter}>
+              <button className={s.newChatCancel} onClick={() => setNewChatOpen(false)}>Cancelar</button>
+              <button className={s.newChatSave} onClick={handleAddChat} disabled={!newChatTitle.trim()}>Criar</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

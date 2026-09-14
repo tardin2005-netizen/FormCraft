@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard'
 import Inbox from './pages/Inbox'
 import Collections from './pages/Collections'
 import AreaView from './pages/AreaView'
+import ChatView from './pages/ChatView'
 import Settings from './pages/Settings'
 import Hubs from './pages/Hubs'
 import HubView from './pages/HubView'
@@ -38,7 +39,8 @@ function AppRoutes() {
           <Route path="/"              element={<Dashboard />} />
           <Route path="/inbox"         element={<Inbox />} />
           <Route path="/colecoes"      element={<Collections />} />
-          <Route path="/area/:id"      element={<AreaView />} />
+          <Route path="/area/:id"                    element={<AreaView />} />
+          <Route path="/area/:id/chat/:chatId"      element={<ChatView />} />
           <Route path="/hubs"          element={<Hubs />} />
           <Route path="/hub/:id"       element={<HubView />} />
           <Route path="/ferramentas"        element={<ToolLibrary />} />
