@@ -124,7 +124,8 @@ export default function SaveLinkModal({ onClose }: Props) {
 
   function handleSave() {
     const hasContent = url.trim().startsWith('http') || type === 'nota' || type === 'prompt' || !!pastedImage
-    if (!hasContent) return
+    const parsedTags = tags.split(',').map(t => t.trim()).filter(Boolean)
+    if (!hasContent || parsedTags.length === 0) return
     addLink({
       url: url.trim() || '#',
       title: title.trim() || url.trim() || 'Sem título',
@@ -134,7 +135,7 @@ export default function SaveLinkModal({ onClose }: Props) {
         : TYPE_ICONS[type],
       ogImage: pastedImage || ogImage || undefined,
       areaId,
-      tags: tags.split(',').map(t => t.trim()).filter(Boolean),
+      tags: parsedTags,
       type,
     })
     setSaved(true)
@@ -142,7 +143,8 @@ export default function SaveLinkModal({ onClose }: Props) {
   }
 
   const domain = getDomain(url)
-  const canSave = (url.trim().startsWith('http') || type === 'nota' || type === 'prompt' || !!pastedImage) && !saved
+  const parsedTagsCount = tags.split(',').map(t => t.trim()).filter(Boolean).length
+  const canSave = (url.trim().startsWith('http') || type === 'nota' || type === 'prompt' || !!pastedImage) && parsedTagsCount > 0 && !saved
 
   // Drag
   const [pos, setPos] = useState({ x: 0, y: 0 })
@@ -220,25 +222,27 @@ export default function SaveLinkModal({ onClose }: Props) {
             )}
           </AnimatePresence>
 
-          {/* URL */}
-          <div className={s.field}>
-            <label className={s.label}>
-              URL
-              {fetchDone && !fetching && (
-                <span className={s.fetchedBadge} style={{ marginLeft: 8 }}>✓ Análise completa</span>
-              )}
-            </label>
-            <input
-              ref={inputRef}
-              className={s.input}
-              placeholder="Cole a URL aqui..."
-              value={url}
-              onChange={e => handleUrlChange(e.target.value)}
-              onPaste={handlePaste}
-              onBlur={handleBlur}
-            />
-            {domain && <span className={s.domainHint}>{domain}</span>}
-          </div>
+          {/* URL — hidden for nota/prompt */}
+          {type !== 'nota' && type !== 'prompt' && (
+            <div className={s.field}>
+              <label className={s.label}>
+                URL
+                {fetchDone && !fetching && (
+                  <span className={s.fetchedBadge} style={{ marginLeft: 8 }}>✓ Análise completa</span>
+                )}
+              </label>
+              <input
+                ref={inputRef}
+                className={s.input}
+                placeholder="Cole a URL aqui..."
+                value={url}
+                onChange={e => handleUrlChange(e.target.value)}
+                onPaste={handlePaste}
+                onBlur={handleBlur}
+              />
+              {domain && <span className={s.domainHint}>{domain}</span>}
+            </div>
+          )}
 
           {/* Tipo */}
           <div className={s.field}>
@@ -270,15 +274,22 @@ export default function SaveLinkModal({ onClose }: Props) {
           {/* Desc */}
           <div className={s.field}>
             <label className={s.label}>
-              Descrição <span className={s.optional}>(opcional)</span>
+              {type === 'prompt' ? 'Prompt / Contexto' : 'Descrição'}
+              {type !== 'prompt' && <span className={s.optional}> (opcional)</span>}
               {fetching && <span className={s.fetchingBadge} style={{ marginLeft: 8 }}>⬡ IA analisando...</span>}
             </label>
             <textarea
               className={`${s.input} ${s.textarea}`}
-              placeholder={fetching ? 'Gerando descrição...' : 'Descrição gerada automaticamente ou escreva sua anotação...'}
+              placeholder={
+                type === 'prompt'
+                  ? 'Cole seu prompt aqui...'
+                  : fetching
+                    ? 'Gerando descrição...'
+                    : 'Descrição ou anotação...'
+              }
               value={desc}
               onChange={e => setDesc(e.target.value)}
-              rows={2}
+              rows={type === 'prompt' ? 5 : 2}
             />
           </div>
 
@@ -294,13 +305,19 @@ export default function SaveLinkModal({ onClose }: Props) {
               </div>
             )}
             <div className={s.field} style={areas.length === 0 ? { gridColumn: '1 / -1' } : {}}>
-              <label className={s.label}>Tags <span className={s.optional}>(vírgula)</span></label>
+              <label className={s.label}>
+                Tags <span className={s.required}>*</span>
+                <span className={s.optional} style={{ marginLeft: 4 }}>(vírgula, obrigatório)</span>
+              </label>
               <input
-                className={s.input}
-                placeholder="design, ux, ref..."
+                className={`${s.input} ${parsedTagsCount === 0 && tags.length > 0 ? s.inputError : ''}`}
+                placeholder="#prompt, #curso, #ref..."
                 value={tags}
                 onChange={e => setTags(e.target.value)}
               />
+              {parsedTagsCount === 0 && (
+                <span className={s.fieldHint}>Adicione ao menos 1 tag para salvar</span>
+              )}
             </div>
           </div>
         </div>

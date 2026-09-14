@@ -8,10 +8,9 @@ import s from './Inbox.module.css'
 type OutletCtx = { onOpenSearch: () => void; onOpenSaveLink: () => void }
 
 type View    = 'grid' | 'list' | 'compact'
-type Filter  = 'todos' | 'link' | 'pdf' | 'nota' | 'imagem' | 'prompt'
+type Filter  = 'link' | 'pdf' | 'nota' | 'imagem' | 'prompt'
 
 const FILTERS: { key: Filter; label: string; icon: string }[] = [
-  { key: 'todos',   label: 'Todos',    icon: '✦' },
   { key: 'link',    label: 'Links',    icon: '🔗' },
   { key: 'pdf',     label: 'PDFs',     icon: '📄' },
   { key: 'nota',    label: 'Notas',    icon: '📝' },
@@ -52,7 +51,49 @@ function TypeBadge({ type }: { type: string }) {
 }
 
 function TagChip({ tag }: { tag: string }) {
-  return <span className={s.tagChip}>{tag}</span>
+  return <span className={s.tagChip}>#{tag}</span>
+}
+
+function FullContentModal({ item, onClose }: { item: SavedLink; onClose: () => void }) {
+  const [copied, setCopied] = useState(false)
+  function copy() {
+    navigator.clipboard.writeText(item.desc || item.title).catch(() => {})
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+  return (
+    <motion.div
+      className={s.lightbox}
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      onClick={onClose}
+    >
+      <motion.div
+        className={s.fullModal}
+        initial={{ scale: .94, opacity: 0, y: 16 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: .94, opacity: 0 }}
+        transition={{ type: 'spring', stiffness: 340, damping: 28 }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div className={s.fullModalHeader}>
+          <TypeBadge type={item.type} />
+          <span className={s.fullModalTitle}>{item.title}</span>
+          <button className={s.lightboxClose} onClick={onClose}>✕</button>
+        </div>
+        <div className={s.fullModalBody}>
+          <div className={s.fullModalContent}>{item.desc || '—'}</div>
+        </div>
+        <div className={s.fullModalFooter}>
+          <div className={s.fullModalTags}>
+            {item.tags.map(t => <TagChip key={t} tag={t} />)}
+          </div>
+          <button className={s.fullModalCopy} onClick={copy}>
+            {copied ? '✓ Copiado!' : '📋 Copiar'}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  )
 }
 
 function getDomain(url: string) {
@@ -113,7 +154,9 @@ function useDeleteConfirm(onDelete: () => void) {
 function GridCard({ item, onDelete }: { item: SavedLink; onDelete: () => void }) {
   const [hovered,   setHovered]   = useState(false)
   const [lightbox,  setLightbox]  = useState(false)
+  const [showFull,  setShowFull]  = useState(false)
   const { confirming, requestDelete, cancelDelete } = useDeleteConfirm(onDelete)
+  const isExpandable = item.type === 'prompt' || item.type === 'nota'
   const isImage = item.type === 'imagem'
   const imgSrc  = item.ogImage ?? ''
   const fallbackEmoji = item.type === 'nota' ? '📝' : item.type === 'pdf' ? '📄' : item.type === 'prompt' ? '🤖' : '🔗'
@@ -169,7 +212,16 @@ function GridCard({ item, onDelete }: { item: SavedLink; onDelete: () => void })
           <div className={s.cardTags}>
             {item.tags.slice(0, 2).map(t => <TagChip key={t} tag={t} />)}
           </div>
-          <span className={s.cardTime}>{timeAgo(item.savedAt)}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {isExpandable && item.desc && (
+              <button
+                className={s.expandBtn}
+                onClick={e => { e.preventDefault(); e.stopPropagation(); setShowFull(true) }}
+                title="Ver conteúdo completo"
+              >↗ ver tudo</button>
+            )}
+            <span className={s.cardTime}>{timeAgo(item.savedAt)}</span>
+          </div>
         </div>
       </div>
     </>
@@ -223,6 +275,7 @@ function GridCard({ item, onDelete }: { item: SavedLink; onDelete: () => void })
       </motion.a>
       <AnimatePresence>
         {lightbox && imgSrc && <Lightbox src={imgSrc} onClose={() => setLightbox(false)} />}
+        {showFull && <FullContentModal item={item} onClose={() => setShowFull(false)} />}
       </AnimatePresence>
     </>
   )
@@ -231,36 +284,76 @@ function GridCard({ item, onDelete }: { item: SavedLink; onDelete: () => void })
 /* ── List row ── */
 function ListRow({ item, onDelete }: { item: SavedLink; onDelete: () => void }) {
   const { confirming, requestDelete, cancelDelete } = useDeleteConfirm(onDelete)
+  const [expanded, setExpanded] = useState(false)
+  const [showFull, setShowFull] = useState(false)
+  const hasUrl = item.url && item.url !== '#'
+  const isExpandable = item.type === 'prompt' || item.type === 'nota'
+
+  function handleRowClick(e: React.MouseEvent) {
+    if ((e.target as HTMLElement).closest('button')) return
+    if (hasUrl) window.open(item.url, '_blank', 'noopener,noreferrer')
+    else if (isExpandable) setExpanded(v => !v)
+  }
+
+  const fallback = item.type === 'nota' ? '📝' : item.type === 'pdf' ? '📄' : item.type === 'prompt' ? '🤖' : '🔗'
+
   return (
-    <motion.div
-      className={s.listRow}
-      initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}
-      transition={{ duration: .18 }}
-      whileHover={{ backgroundColor: 'var(--surface2)' }}
-    >
-      <div className={s.listLeft}>
-        <span className={s.listColorDot} style={{ background: item.color ?? '#7c6ef7' }} />
-        <FaviconImg src={item.favicon} fallback={item.type === 'nota' ? '📝' : item.type === 'pdf' ? '📄' : item.type === 'prompt' ? '🤖' : '🔗'} />
-        <div className={s.listMid}>
-          <div className={s.listTitle}>{item.title}</div>
-          {item.desc && <div className={s.listDesc}>{item.desc}</div>}
+    <>
+      <motion.div
+        className={`${s.listRow} ${(hasUrl || isExpandable) ? s.listRowClickable : ''}`}
+        initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}
+        transition={{ duration: .18 }}
+        whileHover={{ backgroundColor: 'var(--surface2)' }}
+        onClick={handleRowClick}
+      >
+        <div className={s.listLeft}>
+          <span className={s.listColorDot} style={{ background: item.color ?? '#7c6ef7' }} />
+          <FaviconImg src={item.favicon} fallback={fallback} />
+          <div className={s.listMid}>
+            <div className={s.listTitle}>
+              {item.title}
+              {hasUrl && <span className={s.listLinkIcon}>↗</span>}
+              {isExpandable && !hasUrl && <span className={s.listExpandChevron}>{expanded ? '↑' : '↓'}</span>}
+            </div>
+            {item.desc && !expanded && (
+              <div className={s.listDesc}>{item.desc.length > 100 ? item.desc.slice(0, 100) + '…' : item.desc}</div>
+            )}
+            {expanded && (
+              <div className={s.listExpandedContent}>
+                <div className={s.listFullText}>{item.desc}</div>
+                <button className={s.listCopyBtn} onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(item.desc || '').catch(() => {}); }}>
+                  📋 Copiar
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-      <div className={s.listRight}>
-        {item.tags.slice(0, 3).map(t => <TagChip key={t} tag={t} />)}
-        <TypeBadge type={item.type} />
-        <span className={s.listTime}>{timeAgo(item.savedAt)}</span>
-        {confirming ? (
-          <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--danger, #f43f5e)' }}>
-            <span style={{ whiteSpace: 'nowrap' }}>Apagar?</span>
-            <button onClick={requestDelete} title="Confirmar" style={{ background: '#f43f5e', border: 'none', cursor: 'pointer', color: '#fff', fontSize: 14, fontWeight: 700, padding: '5px 12px', borderRadius: 6, lineHeight: 1 }}>✓</button>
-            <button onClick={cancelDelete} title="Cancelar" style={{ background: 'var(--surface2)', border: '1px solid var(--border)', cursor: 'pointer', color: 'var(--text2)', fontSize: 14, padding: '5px 12px', borderRadius: 6, lineHeight: 1 }}>✕</button>
-          </span>
-        ) : (
-          <button className={s.listDeleteBtn} onClick={requestDelete} title="Remover">✕</button>
-        )}
-      </div>
-    </motion.div>
+        <div className={s.listRight}>
+          {item.tags.slice(0, 3).map(t => <TagChip key={t} tag={t} />)}
+          <TypeBadge type={item.type} />
+          <span className={s.listTime}>{timeAgo(item.savedAt)}</span>
+          {isExpandable && item.desc && item.desc.length > 100 && !expanded && (
+            <button
+              className={s.expandBtn}
+              onClick={e => { e.stopPropagation(); setShowFull(true) }}
+              title="Ver conteúdo completo"
+            >↗ ver tudo</button>
+          )}
+          {confirming ? (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--danger, #f43f5e)' }}>
+              <span style={{ whiteSpace: 'nowrap' }}>Apagar?</span>
+              <button onClick={requestDelete} title="Confirmar" style={{ background: '#f43f5e', border: 'none', cursor: 'pointer', color: '#fff', fontSize: 14, fontWeight: 700, padding: '5px 12px', borderRadius: 6, lineHeight: 1 }}>✓</button>
+              <button onClick={cancelDelete} title="Cancelar" style={{ background: 'var(--surface2)', border: '1px solid var(--border)', cursor: 'pointer', color: 'var(--text2)', fontSize: 14, padding: '5px 12px', borderRadius: 6, lineHeight: 1 }}>✕</button>
+            </span>
+          ) : (
+            <button className={s.listDeleteBtn} onClick={requestDelete} title="Remover">✕</button>
+          )}
+        </div>
+      </motion.div>
+      <AnimatePresence>
+        {showFull && <FullContentModal item={item} onClose={() => setShowFull(false)} />}
+      </AnimatePresence>
+    </>
   )
 }
 
@@ -296,15 +389,17 @@ export default function Inbox() {
   const { onOpenSaveLink } = useOutletContext<OutletCtx>()
   const { links, removeLink } = useLinksStore()
   const [view,   setView]   = useState<View>('grid')
-  const [filter, setFilter] = useState<Filter>('todos')
+  const [filter, setFilter] = useState<Filter>('link')
   const [search, setSearch] = useState('')
 
+  const searchTerm = search.startsWith('#') ? search.slice(1) : search
+
   const filtered = links.filter(l =>
-    (filter === 'todos' || l.type === filter) &&
+    l.type === filter &&
     (
-      l.title.toLowerCase().includes(search.toLowerCase()) ||
-      l.desc.toLowerCase().includes(search.toLowerCase())  ||
-      l.tags.some(t => t.toLowerCase().includes(search.toLowerCase()))
+      l.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      l.desc.toLowerCase().includes(searchTerm.toLowerCase())  ||
+      l.tags.some(t => t.toLowerCase().includes(searchTerm.toLowerCase()))
     )
   )
 
@@ -359,11 +454,9 @@ export default function Inbox() {
             onClick={() => setFilter(f.key)}
           >
             {f.icon} {f.label}
-            {f.key !== 'todos' && (
-              <span className={s.filterCount}>
-                {links.filter(l => l.type === f.key).length}
-              </span>
-            )}
+            <span className={s.filterCount}>
+              {links.filter(l => l.type === f.key).length}
+            </span>
           </button>
         ))}
       </div>
