@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware'
 import { auth, db } from '../firebase'
 import { doc, setDoc, deleteDoc } from 'firebase/firestore'
 
-export type AreaItemType = 'link' | 'note' | 'file'
+export type AreaItemType = 'link' | 'note' | 'file' | 'chat'
 
 export interface AreaItem {
   id: string

@@ -6,8 +6,8 @@ import { useAreaItemsStore, type AreaItemType } from '../store/areaItemsStore'
 import DeleteBtn from '../modules/DeleteBtn'
 import s from './AreaView.module.css'
 
-const TYPE_ICON: Record<AreaItemType, string> = { link: '🔗', note: '📝', file: '📄' }
-const TYPE_LABEL: Record<AreaItemType, string> = { link: 'Link', note: 'Nota', file: 'Arquivo' }
+const TYPE_ICON: Record<AreaItemType, string> = { link: '🔗', note: '📝', file: '📄', chat: '💬' }
+const TYPE_LABEL: Record<AreaItemType, string> = { link: 'Link', note: 'Nota', file: 'Arquivo', chat: 'Chat' }
 
 function AddItemModal({ areaId, onClose }: { areaId: string; onClose: () => void }) {
   const { addItem } = useAreaItemsStore()
@@ -38,7 +38,7 @@ function AddItemModal({ areaId, onClose }: { areaId: string; onClose: () => void
         </div>
         <div className={s.modalBody}>
           <div className={s.typeRow}>
-            {(['link', 'note', 'file'] as AreaItemType[]).map(t => (
+            {(['link', 'note', 'file', 'chat'] as AreaItemType[]).map(t => (
               <button
                 key={t}
                 className={`${s.typeBtn} ${type === t ? s.typeBtnActive : ''}`}
@@ -83,6 +83,30 @@ function AddItemModal({ areaId, onClose }: { areaId: string; onClose: () => void
                 rows={4}
               />
             </div>
+          )}
+
+          {type === 'chat' && (
+            <>
+              <div className={s.field}>
+                <label className={s.label}>Link do chat <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(ChatGPT, Claude, etc.)</span></label>
+                <input
+                  className={s.input}
+                  placeholder="https://chatgpt.com/c/... ou https://claude.ai/..."
+                  value={url}
+                  onChange={e => setUrl(e.target.value)}
+                />
+              </div>
+              <div className={s.field}>
+                <label className={s.label}>Resumo / contexto</label>
+                <textarea
+                  className={`${s.input} ${s.textarea}`}
+                  placeholder="Do que se trata esse chat? Ex: Estratégia de marketing para lançamento..."
+                  value={content}
+                  onChange={e => setContent(e.target.value)}
+                  rows={3}
+                />
+              </div>
+            </>
           )}
         </div>
         <div className={s.modalFooter}>
@@ -164,7 +188,12 @@ export default function AreaView() {
                   ) : item.title}
                 </div>
                 {item.content && <div className={s.itemContent}>{item.content}</div>}
-                {item.url && <div className={s.itemUrl}>{item.url}</div>}
+                {item.url && item.type !== 'chat' && <div className={s.itemUrl}>{item.url}</div>}
+                {item.type === 'chat' && item.url && (
+                  <a href={item.url} target="_blank" rel="noopener noreferrer" className={s.itemUrl} style={{ color: 'var(--accent)' }}>
+                    Abrir conversa ↗
+                  </a>
+                )}
               </div>
               <span className={s.itemType}>{TYPE_LABEL[item.type]}</span>
               <DeleteBtn onConfirm={() => removeItem(item.id)} />
