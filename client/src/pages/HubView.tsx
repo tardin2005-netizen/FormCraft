@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useHubsStore, type Semester, type Subject, type ClassItem, type HubContent } from '../store/hubsStore'
@@ -475,12 +475,248 @@ function Modal({
   )
 }
 
+/* ─── Chats (Discord-like) ─── */
+const CHAT_EMOJIS = ['💬','🔥','📌','🛠','📚','⚡','🎯','🧩','💡','🌐']
+
+function ChatsView({ hubId }: { hubId: string }) {
+  const {
+    hubChats, hubChatMessages, subjects,
+    addChat, removeChat, addChatMessage, removeChatMessage, addContent,
+  } = useHubsStore()
+
+  const chats = hubChats.filter(c => c.hubId === hubId)
+  const hubSubjects = subjects.filter(s => s.hubId === hubId)
+
+  const [selChat, setSelChat] = useState<string | null>(null)
+  const [newChatName, setNewChatName] = useState('')
+  const [newChatEmoji, setNewChatEmoji] = useState('💬')
+  const [addChatOpen, setAddChatOpen] = useState(false)
+  const [msgText, setMsgText] = useState('')
+  const [msgUrl, setMsgUrl] = useState('')
+  const [msgSubjectId, setMsgSubjectId] = useState('')
+  const feedRef = useRef<HTMLDivElement>(null)
+
+  const messages = hubChatMessages.filter(m => m.chatId === selChat)
+
+  useEffect(() => {
+    if (feedRef.current) {
+      feedRef.current.scrollTop = feedRef.current.scrollHeight
+    }
+  }, [messages.length, selChat])
+
+  function createChat() {
+    if (!newChatName.trim()) return
+    const chat = { hubId, name: newChatName.trim(), emoji: newChatEmoji }
+    addChat(chat)
+    setNewChatName('')
+    setNewChatEmoji('💬')
+    setAddChatOpen(false)
+  }
+
+  function sendMessage() {
+    if (!msgText.trim() || !selChat) return
+    addChatMessage({
+      chatId: selChat,
+      hubId,
+      text: msgText.trim(),
+      url: msgUrl.trim() || undefined,
+      subjectId: msgSubjectId || undefined,
+    })
+    if (msgSubjectId) {
+      addContent({
+        hubId,
+        subjectId: msgSubjectId,
+        type: msgUrl.trim() ? 'link' : 'note',
+        title: msgText.trim().slice(0, 80),
+        url: msgUrl.trim() || undefined,
+        content: msgUrl.trim() ? undefined : msgText.trim(),
+      })
+    }
+    setMsgText('')
+    setMsgUrl('')
+    setMsgSubjectId('')
+  }
+
+  const currentChat = chats.find(c => c.id === selChat)
+
+  function formatTime(iso: string) {
+    const d = new Date(iso)
+    return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  }
+  function formatDate(iso: string) {
+    return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+  }
+
+  return (
+    <div className={s.chatsPage}>
+      {/* Left: channel list */}
+      <div className={s.channelList}>
+        <div className={s.channelHeader}>
+          <span>Conversas</span>
+          <button className={s.panelAdd} onClick={() => setAddChatOpen(true)} title="Novo canal">+</button>
+        </div>
+
+        {chats.length === 0 && (
+          <div className={s.channelEmpty}>
+            <div>Nenhum canal ainda</div>
+            <button className={s.channelEmptyBtn} onClick={() => setAddChatOpen(true)}>+ Criar canal</button>
+          </div>
+        )}
+
+        {chats.map(ch => (
+          <div
+            key={ch.id}
+            className={`${s.channelItem} ${selChat === ch.id ? s.channelActive : ''}`}
+            onClick={() => setSelChat(ch.id)}
+          >
+            <span className={s.channelHash}>{ch.emoji}</span>
+            <span className={s.channelName}>{ch.name}</span>
+            <button
+              className={s.channelDel}
+              onClick={e => { e.stopPropagation(); removeChat(ch.id) }}
+            >✕</button>
+          </div>
+        ))}
+
+        <AnimatePresence>
+          {addChatOpen && (
+            <motion.div
+              className={s.addChatPanel}
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+            >
+              <div className={s.chatEmojiRow}>
+                {CHAT_EMOJIS.map(e => (
+                  <button
+                    key={e}
+                    className={`${s.chatEmojiBtn} ${newChatEmoji === e ? s.chatEmojiActive : ''}`}
+                    onClick={() => setNewChatEmoji(e)}
+                  >{e}</button>
+                ))}
+              </div>
+              <input
+                className={s.input}
+                placeholder="Nome do canal..."
+                value={newChatName}
+                onChange={e => setNewChatName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && createChat()}
+                autoFocus
+              />
+              <div className={s.addChatBtns}>
+                <button className={s.cancelBtn} onClick={() => setAddChatOpen(false)}>Cancelar</button>
+                <button className={s.saveBtn} disabled={!newChatName.trim()} onClick={createChat}>Criar</button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Right: message feed */}
+      <div className={s.chatMain}>
+        {!selChat ? (
+          <div className={s.chatEmpty}>
+            <div className={s.chatEmptyIcon}>💬</div>
+            <div>Selecione um canal para começar</div>
+          </div>
+        ) : (
+          <>
+            <div className={s.chatTopBar}>
+              <span className={s.chatTopEmoji}>{currentChat?.emoji}</span>
+              <span className={s.chatTopName}>{currentChat?.name}</span>
+              <span className={s.chatTopCount}>{messages.length} msgs</span>
+            </div>
+
+            <div className={s.msgFeed} ref={feedRef}>
+              {messages.length === 0 && (
+                <div className={s.feedEmpty}>Nenhuma mensagem ainda. Comece a conversa!</div>
+              )}
+              <AnimatePresence initial={false}>
+                {messages.map(msg => {
+                  const sub = msg.subjectId ? hubSubjects.find(x => x.id === msg.subjectId) : null
+                  return (
+                    <motion.div
+                      key={msg.id}
+                      className={s.msgRow}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                    >
+                      <div className={s.msgMeta}>
+                        <span className={s.msgTime}>{formatDate(msg.createdAt)} · {formatTime(msg.createdAt)}</span>
+                        {sub && (
+                          <span className={s.msgTag} style={{ borderColor: sub.color, color: sub.color }}>
+                            {sub.emoji} {sub.name}
+                          </span>
+                        )}
+                      </div>
+                      <div className={s.msgText}>{msg.text}</div>
+                      {msg.url && (
+                        <a href={msg.url} target="_blank" rel="noopener noreferrer" className={s.msgLink}>
+                          🔗 {msg.url}
+                        </a>
+                      )}
+                      <button className={s.msgDel} onClick={() => removeChatMessage(msg.id)}>✕</button>
+                    </motion.div>
+                  )
+                })}
+              </AnimatePresence>
+            </div>
+
+            <div className={s.msgInputArea}>
+              {hubSubjects.length > 0 && (
+                <select
+                  className={s.msgSelect}
+                  value={msgSubjectId}
+                  onChange={e => setMsgSubjectId(e.target.value)}
+                >
+                  <option value="">Sem categoria</option>
+                  {hubSubjects.map(sub => (
+                    <option key={sub.id} value={sub.id}>{sub.emoji} {sub.name}</option>
+                  ))}
+                </select>
+              )}
+              <input
+                className={s.msgUrlInput}
+                placeholder="URL (opcional)"
+                value={msgUrl}
+                onChange={e => setMsgUrl(e.target.value)}
+              />
+              <div className={s.msgTextRow}>
+                <textarea
+                  className={s.msgTextarea}
+                  placeholder={`Mensagem em ${currentChat?.name}...`}
+                  value={msgText}
+                  onChange={e => setMsgText(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault()
+                      sendMessage()
+                    }
+                  }}
+                  rows={2}
+                />
+                <button
+                  className={s.msgSendBtn}
+                  disabled={!msgText.trim()}
+                  onClick={sendMessage}
+                >↑</button>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
 /* ─── Main HubView ─── */
 export default function HubView() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { hubs, removeHub } = useHubsStore()
   const hub = hubs.find(h => h.id === id)
+  const [activeTab, setActiveTab] = useState<'content' | 'chats'>('content')
 
   if (!hub) {
     return (
@@ -501,21 +737,36 @@ export default function HubView() {
           <h1 className={s.hubTitle}>{hub.name}</h1>
           <div className={s.hubBar} style={{ background: hub.color }} />
         </div>
-        <button
-          className={s.deleteHubBtn}
-          onClick={() => {
-            if (confirm(`Apagar o hub "${hub.name}"?`)) {
-              removeHub(hub.id)
-              navigate('/hubs')
-            }
-          }}
-        >🗑 Apagar hub</button>
+        <div className={s.hubHeaderRight}>
+          <div className={s.hubTabs}>
+            <button
+              className={`${s.hubTab} ${activeTab === 'content' ? s.hubTabActive : ''}`}
+              onClick={() => setActiveTab('content')}
+            >📁 Conteúdo</button>
+            <button
+              className={`${s.hubTab} ${activeTab === 'chats' ? s.hubTabActive : ''}`}
+              onClick={() => setActiveTab('chats')}
+            >💬 Conversas</button>
+          </div>
+          <button
+            className={s.deleteHubBtn}
+            onClick={() => {
+              if (confirm(`Apagar o hub "${hub.name}"?`)) {
+                removeHub(hub.id)
+                navigate('/hubs')
+              }
+            }}
+          >🗑</button>
+        </div>
       </div>
 
-      {hub.type === 'faculdade'
-        ? <FaculdadeView hubId={hub.id} />
-        : <GenericHubView hubId={hub.id} />
-      }
+      {activeTab === 'chats' ? (
+        <ChatsView hubId={hub.id} />
+      ) : hub.type === 'faculdade' ? (
+        <FaculdadeView hubId={hub.id} />
+      ) : (
+        <GenericHubView hubId={hub.id} />
+      )}
     </div>
   )
 }

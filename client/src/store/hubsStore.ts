@@ -5,6 +5,24 @@ import { doc, setDoc, deleteDoc, collection } from 'firebase/firestore'
 
 export type HubType = 'faculdade' | 'personal' | 'projects' | 'custom'
 
+export interface HubChat {
+  id: string
+  hubId: string
+  name: string
+  emoji: string
+  createdAt: string
+}
+
+export interface HubChatMessage {
+  id: string
+  chatId: string
+  hubId: string
+  text: string
+  url?: string
+  subjectId?: string
+  createdAt: string
+}
+
 export interface Hub {
   id: string
   type: HubType
@@ -63,6 +81,8 @@ interface HubsStore {
   subjects: Subject[]
   classes: ClassItem[]
   contents: HubContent[]
+  hubChats: HubChat[]
+  hubChatMessages: HubChatMessage[]
 
   addHub: (h: Omit<Hub, 'id' | 'createdAt'>) => void
   removeHub: (id: string) => void
@@ -79,11 +99,19 @@ interface HubsStore {
   addContent: (c: Omit<HubContent, 'id' | 'createdAt'>) => void
   removeContent: (id: string) => void
 
+  addChat: (c: Omit<HubChat, 'id' | 'createdAt'>) => void
+  removeChat: (id: string) => void
+
+  addChatMessage: (m: Omit<HubChatMessage, 'id' | 'createdAt'>) => void
+  removeChatMessage: (id: string) => void
+
   hydrateHubs: (hubs: Hub[]) => void
   hydrateSemesters: (s: Semester[]) => void
   hydrateSubjects: (s: Subject[]) => void
   hydrateClasses: (c: ClassItem[]) => void
   hydrateContents: (c: HubContent[]) => void
+  hydrateChats: (c: HubChat[]) => void
+  hydrateChatMessages: (c: HubChatMessage[]) => void
 }
 
 function d(uid: string, col: string, id: string) {
@@ -107,6 +135,8 @@ export const useHubsStore = create<HubsStore>()(
       subjects: [],
       classes: [],
       contents: [],
+      hubChats: [],
+      hubChatMessages: [],
 
       addHub: (h) => {
         const hub: Hub = { ...h, id: crypto.randomUUID(), createdAt: new Date().toISOString() }
@@ -158,11 +188,33 @@ export const useHubsStore = create<HubsStore>()(
         fsDel('hubContents', id)
       },
 
+      addChat: (c) => {
+        const chat: HubChat = { ...c, id: crypto.randomUUID(), createdAt: new Date().toISOString() }
+        set(s => ({ hubChats: [...s.hubChats, chat] }))
+        fs('hubChats', chat)
+      },
+      removeChat: (id) => {
+        set(s => ({ hubChats: s.hubChats.filter(x => x.id !== id) }))
+        fsDel('hubChats', id)
+      },
+
+      addChatMessage: (m) => {
+        const msg: HubChatMessage = { ...m, id: crypto.randomUUID(), createdAt: new Date().toISOString() }
+        set(s => ({ hubChatMessages: [...s.hubChatMessages, msg] }))
+        fs('hubChatMessages', msg)
+      },
+      removeChatMessage: (id) => {
+        set(s => ({ hubChatMessages: s.hubChatMessages.filter(x => x.id !== id) }))
+        fsDel('hubChatMessages', id)
+      },
+
       hydrateHubs: (hubs) => set({ hubs }),
       hydrateSemesters: (semesters) => set({ semesters }),
       hydrateSubjects: (subjects) => set({ subjects }),
       hydrateClasses: (classes) => set({ classes }),
       hydrateContents: (contents) => set({ contents }),
+      hydrateChats: (hubChats) => set({ hubChats }),
+      hydrateChatMessages: (hubChatMessages) => set({ hubChatMessages }),
     }),
     { name: 'formcraft-hubs' }
   )
