@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { useThemeStore, ACCENT_COLORS } from '../store/themeStore'
 import { useAreasStore } from '../store/areasStore'
+import { useAreaItemsStore } from '../store/areaItemsStore'
 import { useSidebarStore } from '../store/sidebarStore'
 import { useSavedToolsStore } from '../store/savedToolsStore'
 import type { Accent } from '../store/themeStore'
@@ -37,6 +38,7 @@ const RIGHT_W = { expanded: 264, compact: 48, hidden: 0 }
 export default function Layout() {
   const { theme, toggle, accent, setAccent } = useThemeStore()
   const { areas } = useAreasStore()
+  const { items: areaItems } = useAreaItemsStore()
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
 
@@ -186,7 +188,7 @@ export default function Layout() {
                       >
                         <span>{a.emoji}</span>
                         <span className={s.areaItemTitle}>{a.title}</span>
-                        <span className={s.areaItemCount}>{a.count}</span>
+                        <span className={s.areaItemCount}>{areaItems.filter(i => i.areaId === a.id).length}</span>
                       </NavLink>
                     </motion.div>
                   ))}
