@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAreasStore } from '../store/areasStore'
 import { useAreaItemsStore, type AreaItemType } from '../store/areaItemsStore'
+import DeleteBtn from '../modules/DeleteBtn'
 import s from './AreaView.module.css'
 
 const TYPE_ICON: Record<AreaItemType, string> = { link: '🔗', note: '📝', file: '📄' }
@@ -166,11 +167,7 @@ export default function AreaView() {
                 {item.url && <div className={s.itemUrl}>{item.url}</div>}
               </div>
               <span className={s.itemType}>{TYPE_LABEL[item.type]}</span>
-              <button
-                className={s.itemDelete}
-                onClick={() => removeItem(item.id)}
-                title="Remover"
-              >✕</button>
+              <DeleteBtn onConfirm={() => removeItem(item.id)} />
             </motion.div>
           ))}
         </AnimatePresence>

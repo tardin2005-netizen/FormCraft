@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useHubsStore, type Semester, type Subject, type ClassItem, type HubContent } from '../store/hubsStore'
+import DeleteBtn from '../modules/DeleteBtn'
 import s from './HubView.module.css'
 
 /* ─── helpers ─── */
@@ -124,10 +125,7 @@ function FaculdadeView({ hubId }: { hubId: string }) {
                   <div className={s.subjDot} style={{ background: subj.color }} />
                   <span className={s.subjEmoji}>{subj.emoji}</span>
                   <span className={s.subjName}>{subj.name}</span>
-                  <button
-                    className={s.itemDelBtn}
-                    onClick={e => { e.stopPropagation(); if (confirm(`Apagar "${subj.name}"?`)) removeSubject(subj.id) }}
-                  >✕</button>
+                  <DeleteBtn onConfirm={() => removeSubject(subj.id)} />
                 </div>
               ))
             }
@@ -168,10 +166,7 @@ function FaculdadeView({ hubId }: { hubId: string }) {
                           >{CLASS_TYPE_LABEL[cl.type]}</span>
                           <span className={s.classTitle}>{cl.title}</span>
                           <span className={s.classDate}>{cl.date}</span>
-                          <button
-                            className={s.itemDelBtn}
-                            onClick={e => { e.stopPropagation(); removeClassItem(cl.id) }}
-                          >✕</button>
+                          <DeleteBtn onConfirm={() => removeClassItem(cl.id)} />
                         </div>
                       ))}
                     </div>
@@ -196,7 +191,7 @@ function FaculdadeView({ hubId }: { hubId: string }) {
                             </div>
                             {c.content && <div className={s.contentBody}>{c.content}</div>}
                           </div>
-                          <button className={s.itemDelBtn} onClick={() => removeContent(c.id)}>✕</button>
+                          <DeleteBtn onConfirm={() => removeContent(c.id)} />
                         </div>
                       ))}
                     </div>
