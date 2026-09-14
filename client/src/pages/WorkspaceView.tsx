@@ -19,6 +19,11 @@ import MetricsModule from '../modules/MetricsModule'
 import ScriptsModule from '../modules/ScriptsModule'
 import TroubleshootingModule from '../modules/TroubleshootingModule'
 import ToolsDbModule from '../modules/ToolsDbModule'
+import UserFlowsModule from '../modules/UserFlowsModule'
+import DesignSystemsModule from '../modules/DesignSystemsModule'
+import ComponentsModule from '../modules/ComponentsModule'
+import AccessibilityModule from '../modules/AccessibilityModule'
+import HeuristicsModule from '../modules/HeuristicsModule'
 import GenericModule from '../modules/GenericModule'
 import s from './WorkspaceView.module.css'
 
@@ -52,6 +57,11 @@ function ModuleContent({ module, workspaceId }: { module: WorkspaceModule; works
     case 'scripts':          return <ScriptsModule {...props} />
     case 'troubleshooting':  return <TroubleshootingModule {...props} />
     case 'tools-db':         return <ToolsDbModule {...props} />
+    case 'user-flows':       return <UserFlowsModule {...props} />
+    case 'design-systems':   return <DesignSystemsModule {...props} />
+    case 'components':       return <ComponentsModule {...props} />
+    case 'accessibility':    return <AccessibilityModule {...props} />
+    case 'heuristics':       return <HeuristicsModule {...props} />
     default:                 return <GenericModule {...props} />
   }
 }
