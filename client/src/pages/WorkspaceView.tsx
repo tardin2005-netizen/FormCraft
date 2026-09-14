@@ -8,6 +8,9 @@ import ColorLibrary from '../modules/ColorLibrary'
 import ReferenceGallery from '../modules/ReferenceGallery'
 import AnimationLibrary from '../modules/AnimationLibrary'
 import PromptLibrary from '../modules/PromptLibrary'
+import DisciplinesModule from '../modules/DisciplinesModule'
+import AssignmentsModule from '../modules/AssignmentsModule'
+import ExamsModule from '../modules/ExamsModule'
 import GenericModule from '../modules/GenericModule'
 import s from './WorkspaceView.module.css'
 
@@ -30,6 +33,9 @@ function ModuleContent({ module, workspaceId }: { module: WorkspaceModule; works
     case 'ui-inspiration': return <ReferenceGallery {...props} />
     case 'animations':     return <AnimationLibrary {...props} />
     case 'prompts':        return <PromptLibrary {...props} />
+    case 'disciplines':    return <DisciplinesModule {...props} />
+    case 'assignments':    return <AssignmentsModule {...props} />
+    case 'exams':          return <ExamsModule {...props} />
     default:               return <GenericModule {...props} />
   }
 }

@@ -1,0 +1,191 @@
+.kanban {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  align-items: start;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+@media (max-width: 900px) {
+  .kanban { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 560px) {
+  .kanban { grid-template-columns: 1fr; }
+}
+
+.column {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 120px;
+  transition: border-color .15s, background .15s;
+}
+
+.dropTarget {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 5%, var(--surface2));
+}
+
+.colHeader {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+
+.colDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.colLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--text2);
+  flex: 1;
+}
+
+.colCount {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text2);
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 1px 7px;
+  font-variant-numeric: tabular-nums;
+}
+
+.colItems {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: grab;
+  transition: border-color .12s, box-shadow .12s;
+}
+
+.card:hover {
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+
+.card:active { cursor: grabbing; }
+
+.starred {
+  border-left: 3px solid #f59e0b;
+}
+
+.cardTitle {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.cardMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.disciplinaChip {
+  padding: 2px 7px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.tipoChip {
+  padding: 2px 7px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  font-size: 10px;
+  color: var(--text2);
+}
+
+.dueRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dueDate {
+  font-size: 11px;
+  color: var(--text2);
+  font-variant-numeric: tabular-nums;
+}
+
+.dueBadge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--surface2);
+  color: var(--text2);
+}
+
+.dueBadge.urgent {
+  background: color-mix(in srgb, #f59e0b 15%, transparent);
+  color: #f59e0b;
+}
+
+.dueBadge.overdue {
+  background: color-mix(in srgb, #f43f5e 12%, transparent);
+  color: #f43f5e;
+}
+
+.cardFooter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.peso {
+  font-size: 10px;
+  color: var(--text2);
+}
+
+.nota {
+  font-size: 11px;
+  font-weight: 700;
+  color: #10b981;
+  margin-left: auto;
+}
+
+.cardActions {
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.cardDesc {
+  font-size: 11px;
+  color: var(--text2);
+  line-height: 1.5;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
