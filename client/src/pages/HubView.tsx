@@ -31,6 +31,29 @@ interface ContentBlock {
   items?: string[]
 }
 
+function PdfViewer({ url, title }: { url: string; title: string }) {
+  const [expanded, setExpanded] = useState(true)
+  return (
+    <div className={s.pdfContainer}>
+      <div className={s.pdfHeader}>
+        <button className={s.pdfToggle} onClick={() => setExpanded(v => !v)}>
+          {expanded ? '▲ Recolher slides' : '▼ Ver slides'}
+        </button>
+        <a href={url} target="_blank" rel="noopener noreferrer" className={s.pdfOpenLink}>
+          Abrir PDF ↗
+        </a>
+      </div>
+      {expanded && (
+        <iframe
+          src={url + '#toolbar=0&navpanes=0&scrollbar=1'}
+          className={s.pdfFrame}
+          title={title}
+        />
+      )}
+    </div>
+  )
+}
+
 function parseContent(raw: string): ContentBlock[] {
   const blocks: ContentBlock[] = []
   const sections = raw.split('\n\n').filter(Boolean)
@@ -93,13 +116,14 @@ function ContextMenu({ state, onClose }: { state: CtxMenuState; onClose: () => v
 function ContentCard({ c, onDelete }: { c: HubContent; onDelete: () => void }) {
   const [collapsed, setCollapsed] = useState(false)
   const blocks = c.content ? parseContent(c.content) : null
+  const isPdf = c.type === 'pdf' && !!c.url
 
   return (
     <div className={s.contentCard}>
       <div className={s.contentCardHead}>
         <span className={s.cardTypeIcon}>{CONTENT_ICON[c.type]}</span>
         <span className={s.cardTitle}>
-          {c.url
+          {c.url && !isPdf
             ? <a href={c.url} target="_blank" rel="noopener noreferrer">{c.title}</a>
             : c.title}
         </span>
@@ -110,6 +134,8 @@ function ContentCard({ c, onDelete }: { c: HubContent; onDelete: () => void }) {
         )}
         <DeleteBtn onConfirm={onDelete} />
       </div>
+
+      {isPdf && <PdfViewer url={c.url!} title={c.title} />}
 
       {blocks && !collapsed && (
         <div className={s.cardBlocks}>
@@ -128,7 +154,7 @@ function ContentCard({ c, onDelete }: { c: HubContent; onDelete: () => void }) {
         </div>
       )}
 
-      {c.url && !c.content && (
+      {c.url && !c.content && !isPdf && (
         <div className={s.cardLinkBar}>
           <span className={s.cardLinkDomain}>{getDomain(c.url)}</span>
         </div>
