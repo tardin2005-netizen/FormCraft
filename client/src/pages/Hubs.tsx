@@ -94,10 +94,18 @@ export default function Hubs() {
                 transition={{ delay: i * .04 }}
               >
                 <Link to={`/hub/${hub.id}`} className={s.hubCard}>
-                  <div className={s.hubCardBar} style={{ background: hub.color }} />
-                  <div className={s.hubCardEmoji}>{hub.emoji}</div>
-                  <div className={s.hubCardName}>{hub.name}</div>
-                  <div className={s.hubCardType}>{info?.label}</div>
+                  <div className={s.hubCardCover}>
+                    <div
+                      className={s.hubCardCoverBg}
+                      style={{ background: `linear-gradient(135deg, ${hub.color}ee 0%, ${hub.color}99 60%, ${hub.color}55 100%)` }}
+                    />
+                    <span className={s.hubCardCoverEmoji}>{hub.emoji}</span>
+                    <span className={s.hubCardCoverTitle}>{hub.name}</span>
+                  </div>
+                  <div className={s.hubCardMeta}>
+                    <span className={s.hubCardMetaName}>{hub.name}</span>
+                    <span className={s.hubCardMetaType}>{info?.label}</span>
+                  </div>
                 </Link>
                 <button
                   className={s.deleteBtn}

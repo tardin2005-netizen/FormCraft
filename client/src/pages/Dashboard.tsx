@@ -185,19 +185,25 @@ export default function Dashboard() {
             <span className={s.wsEmptyDesc}>Organize faculdade, estudos ou projetos longos com estrutura de semestres e matérias.</span>
           </Link>
         ) : (
-          <div className={s.wsGrid}>
+          <div className={s.hubGallery}>
             {hubs.map(hub => (
-              <Link key={hub.id} to={`/hub/${hub.id}`} className={s.wsCard}>
-                <div className={s.wsCardBar} style={{ background: hub.color }} />
-                <div className={s.wsCardBody}>
-                  <div className={s.wsCardIcon}>{hub.emoji}</div>
-                  <div className={s.wsCardName}>{hub.name}</div>
-                  <div className={s.wsCardModules}>{hub.type === 'faculdade' ? 'Faculdade' : 'Hub pessoal'}</div>
+              <Link key={hub.id} to={`/hub/${hub.id}`} className={s.hubGalleryCard}>
+                <div className={s.hubGalleryCover}>
+                  <div
+                    className={s.hubGalleryCoverBg}
+                    style={{ background: `linear-gradient(135deg, ${hub.color}ee 0%, ${hub.color}88 100%)` }}
+                  />
+                  <span className={s.hubGalleryEmoji}>{hub.emoji}</span>
+                  <span className={s.hubGalleryTitle}>{hub.name}</span>
+                </div>
+                <div className={s.hubGalleryMeta}>
+                  <span className={s.hubGalleryMetaName}>{hub.name}</span>
+                  <span className={s.hubGalleryMetaType}>{hub.type === 'faculdade' ? 'Faculdade' : 'Hub'}</span>
                 </div>
               </Link>
             ))}
-            <Link to="/hubs" className={s.areaCardAdd}>
-              <span className={s.addPlusIcon}>+</span>
+            <Link to="/hubs" className={s.hubGalleryAdd}>
+              <span>+</span>
               <span>Novo Hub</span>
             </Link>
           </div>

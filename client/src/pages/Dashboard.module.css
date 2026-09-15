@@ -307,3 +307,63 @@
 .wsEmptyTitle { font-size: 14px; font-weight: 700; color: var(--text); }
 
 .wsEmptyDesc { font-size: 12px; color: var(--text2); max-width: 280px; line-height: 1.5; }
+
+/* ── Hub gallery cards (Notion-style) ──────────────────────────── */
+.hubGallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.hubGalleryCard {
+  display: flex; flex-direction: column;
+  text-decoration: none; border-radius: 12px; overflow: hidden;
+  border: 1px solid var(--border);
+  transition: transform .18s, box-shadow .18s;
+  background: var(--surface);
+}
+.hubGalleryCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(0,0,0,.16);
+}
+
+.hubGalleryCover {
+  position: relative; height: 130px;
+  display: flex; align-items: flex-end; overflow: hidden;
+}
+.hubGalleryCoverBg { position: absolute; inset: 0; }
+.hubGalleryEmoji {
+  position: absolute; right: -8px; bottom: -6px;
+  font-size: 80px; opacity: .22; line-height: 1;
+  pointer-events: none; user-select: none;
+}
+.hubGalleryTitle {
+  position: relative; z-index: 1;
+  padding: 10px 12px;
+  font-size: 14px; font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 6px rgba(0,0,0,.4);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  line-height: 1.2;
+}
+
+.hubGalleryMeta {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border);
+}
+.hubGalleryMetaName {
+  font-size: 12px; font-weight: 500; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.hubGalleryMetaType { font-size: 10px; color: var(--text2); flex-shrink: 0; margin-left: 6px; }
+
+.hubGalleryAdd {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px; background: transparent; border: 2px dashed var(--border);
+  border-radius: 12px; min-height: 162px; color: var(--text2); font-size: 12px;
+  text-decoration: none; transition: border-color .15s, color .15s;
+}
+.hubGalleryAdd:hover { border-color: var(--accent); color: var(--accent); }
+.hubGalleryAdd span:first-child { font-size: 22px; }
