@@ -81,15 +81,14 @@
 .panelEmpty { padding: 12px; font-size: 12px; color: var(--text2); }
 
 .subjItem {
-  display: flex; align-items: center; gap: 6px; padding: 8px 12px;
+  display: flex; align-items: flex-start; gap: 6px; padding: 8px 12px;
   cursor: pointer; transition: background .12s; font-size: 12px;
-  overflow: hidden;
 }
 .subjItem:hover { background: var(--surface2); }
 .subjActive { background: var(--accent-muted) !important; }
-.subjDot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.subjDot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
 .subjEmoji { font-size: 14px; flex-shrink: 0; }
-.subjName { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+.subjName { flex: 1; color: var(--text); word-break: break-word; line-height: 1.4; }
 
 .itemDelBtn {
   background: transparent; border: none; color: transparent; font-size: 10px;
@@ -436,3 +435,24 @@
 }
 .saveBtn:disabled { opacity: .4; cursor: not-allowed; }
 .saveBtn:not(:disabled):hover { opacity: .85; }
+
+/* ── Context menu ── */
+.ctxMenu {
+  position: fixed; z-index: 200;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 9px; box-shadow: 0 8px 24px rgba(0,0,0,.14);
+  min-width: 172px; overflow: hidden;
+  display: flex; flex-direction: column;
+}
+.ctxMenuLabel {
+  padding: 8px 12px 6px;
+  font-size: 11px; font-weight: 600; color: var(--text2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  border-bottom: 1px solid var(--border);
+}
+.ctxMenuDelete {
+  padding: 9px 12px; background: transparent; border: none;
+  text-align: left; font-size: 13px; color: #f43f5e;
+  cursor: pointer; transition: background .1s;
+}
+.ctxMenuDelete:hover { background: rgba(244,63,94,.08); }

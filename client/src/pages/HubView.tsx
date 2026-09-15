@@ -54,6 +54,42 @@ function parseContent(raw: string): ContentBlock[] {
   return blocks
 }
 
+/* ─── Right-click context menu ─── */
+type CtxMenuState = { x: number; y: number; label: string; onDelete: () => void }
+
+function ContextMenu({ state, onClose }: { state: CtxMenuState; onClose: () => void }) {
+  useEffect(() => {
+    const close = () => onClose()
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('click', close)
+    window.addEventListener('contextmenu', close)
+    window.addEventListener('keydown', key)
+    return () => {
+      window.removeEventListener('click', close)
+      window.removeEventListener('contextmenu', close)
+      window.removeEventListener('keydown', key)
+    }
+  }, [onClose])
+
+  const menuW = 172, menuH = 68
+  const left = Math.min(state.x, window.innerWidth - menuW - 8)
+  const top  = Math.min(state.y, window.innerHeight - menuH - 8)
+
+  return (
+    <div className={s.ctxMenu} style={{ left, top }} onClick={e => e.stopPropagation()}>
+      <div className={s.ctxMenuLabel}>{state.label}</div>
+      <button
+        className={s.ctxMenuDelete}
+        onClick={e => {
+          e.stopPropagation()
+          if (confirm(`Excluir "${state.label}"?`)) state.onDelete()
+          onClose()
+        }}
+      >🗑 Excluir</button>
+    </div>
+  )
+}
+
 function ContentCard({ c, onDelete }: { c: HubContent; onDelete: () => void }) {
   const [collapsed, setCollapsed] = useState(false)
   const blocks = c.content ? parseContent(c.content) : null
@@ -131,6 +167,9 @@ function FaculdadeView({ hubId }: { hubId: string }) {
   const [clsForm,  setClsForm]  = useState({ title: '', type: 'aula' as ClassItem['type'], date: '', notes: '' })
   const [ctxForm,  setCtxForm]  = useState({ type: 'link' as HubContent['type'], title: '', url: '', content: '' })
 
+  const [ctxMenu, setCtxMenu] = useState<CtxMenuState | null>(null)
+  const closeCtx = useCallback(() => setCtxMenu(null), [])
+
   const curSubjects = subjects.filter(x => x.semesterId === selSem)
   const curClasses  = classes.filter(x => x.subjectId === selSubj).sort((a, b) => a.date.localeCompare(b.date))
   const curContents = contents.filter(x =>
@@ -204,11 +243,11 @@ function FaculdadeView({ hubId }: { hubId: string }) {
               : curSubjects.map(subj => (
                 <div key={subj.id} className={`${s.subjItem} ${selSubj === subj.id ? s.subjActive : ''}`}
                   onClick={() => { setSelSubj(subj.id); setSelClass(null) }}
+                  onContextMenu={e => { e.preventDefault(); setCtxMenu({ x: e.clientX, y: e.clientY, label: subj.name, onDelete: () => removeSubject(subj.id) }) }}
                 >
                   <div className={s.subjDot} style={{ background: subj.color }} />
                   <span className={s.subjEmoji}>{subj.emoji}</span>
                   <span className={s.subjName}>{subj.name}</span>
-                  <DeleteBtn onConfirm={() => removeSubject(subj.id)} />
                 </div>
               ))
             }
@@ -243,6 +282,7 @@ function FaculdadeView({ hubId }: { hubId: string }) {
                           key={cl.id}
                           className={`${s.classRow} ${selClass === cl.id ? s.classActive : ''}`}
                           onClick={() => setSelClass(selClass === cl.id ? null : cl.id)}
+                          onContextMenu={e => { e.preventDefault(); setCtxMenu({ x: e.clientX, y: e.clientY, label: cl.title, onDelete: () => removeClassItem(cl.id) }) }}
                         >
                           <span
                             className={s.classType}
@@ -250,7 +290,6 @@ function FaculdadeView({ hubId }: { hubId: string }) {
                           >{CLASS_TYPE_LABEL[cl.type]}</span>
                           <span className={s.classTitle}>{cl.title}</span>
                           <span className={s.classDate}>{cl.date}</span>
-                          <DeleteBtn onConfirm={() => removeClassItem(cl.id)} />
                         </div>
                       ))}
                     </div>
@@ -419,6 +458,8 @@ function FaculdadeView({ hubId }: { hubId: string }) {
           </Modal>
         )}
       </AnimatePresence>
+
+      {ctxMenu && <ContextMenu state={ctxMenu} onClose={closeCtx} />}
     </div>
   )
 }
@@ -570,6 +611,8 @@ function ChatsView({ hubId }: { hubId: string }) {
   const hubSubjects = subjects.filter(s => s.hubId === hubId)
 
   const [selChat, setSelChat] = useState<string | null>(null)
+  const [ctxMenu, setCtxMenu] = useState<CtxMenuState | null>(null)
+  const closeCtx = useCallback(() => setCtxMenu(null), [])
   const [newChatName, setNewChatName] = useState('')
   const [newChatEmoji, setNewChatEmoji] = useState('💬')
   const [addChatOpen, setAddChatOpen] = useState(false)
@@ -647,13 +690,10 @@ function ChatsView({ hubId }: { hubId: string }) {
             key={ch.id}
             className={`${s.channelItem} ${selChat === ch.id ? s.channelActive : ''}`}
             onClick={() => setSelChat(ch.id)}
+            onContextMenu={e => { e.preventDefault(); setCtxMenu({ x: e.clientX, y: e.clientY, label: ch.name, onDelete: () => removeChat(ch.id) }) }}
           >
             <span className={s.channelHash}>{ch.emoji}</span>
             <span className={s.channelName}>{ch.name}</span>
-            <button
-              className={s.channelDel}
-              onClick={e => { e.stopPropagation(); removeChat(ch.id) }}
-            >✕</button>
           </div>
         ))}
 
@@ -690,6 +730,8 @@ function ChatsView({ hubId }: { hubId: string }) {
           )}
         </AnimatePresence>
       </div>
+
+      {ctxMenu && <ContextMenu state={ctxMenu} onClose={closeCtx} />}
 
       {/* Right: message feed */}
       <div className={s.chatMain}>
