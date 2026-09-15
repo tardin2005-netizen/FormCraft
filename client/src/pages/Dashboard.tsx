@@ -5,6 +5,7 @@ import { useCollectionsStore } from '../store/collectionsStore'
 import { useAreaItemsStore } from '../store/areaItemsStore'
 import { useWorkspacesStore } from '../store/workspacesStore'
 import { useLinksStore } from '../store/linksStore'
+import { useHubsStore } from '../store/hubsStore'
 import WorkspaceCreator from '../components/WorkspaceCreator'
 import VoiceSearch from '../components/VoiceSearch'
 import s from './Dashboard.module.css'
@@ -90,6 +91,7 @@ export default function Dashboard() {
   const { items } = useAreaItemsStore()
   const { workspaces } = useWorkspacesStore()
   const { links } = useLinksStore()
+  const { hubs } = useHubsStore()
   const [showWorkspaceCreator, setShowWorkspaceCreator] = useState(false)
 
   const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
@@ -167,10 +169,48 @@ export default function Dashboard() {
         </section>
       )}
 
+      {/* Meus Hubs */}
+      <section className={s.section}>
+        <div className={s.sectionRow}>
+          <div>
+            <h2 className={s.sectionTitle}>Meus Hubs</h2>
+            <p className={s.sectionDesc}>Espaços estruturados para projetos longos — faculdade, estudos ou qualquer projeto com semestres, matérias e materiais organizados.</p>
+          </div>
+          <Link to="/hubs" className={s.sectionLink}>Ver todos →</Link>
+        </div>
+        {hubs.length === 0 ? (
+          <Link to="/hubs" className={s.wsEmptyCard}>
+            <span className={s.wsEmptyPlus}>+</span>
+            <span className={s.wsEmptyTitle}>Criar primeiro Hub</span>
+            <span className={s.wsEmptyDesc}>Organize faculdade, estudos ou projetos longos com estrutura de semestres e matérias.</span>
+          </Link>
+        ) : (
+          <div className={s.wsGrid}>
+            {hubs.map(hub => (
+              <Link key={hub.id} to={`/hub/${hub.id}`} className={s.wsCard}>
+                <div className={s.wsCardBar} style={{ background: hub.color }} />
+                <div className={s.wsCardBody}>
+                  <div className={s.wsCardIcon}>{hub.emoji}</div>
+                  <div className={s.wsCardName}>{hub.name}</div>
+                  <div className={s.wsCardModules}>{hub.type === 'faculdade' ? 'Faculdade' : 'Hub pessoal'}</div>
+                </div>
+              </Link>
+            ))}
+            <Link to="/hubs" className={s.areaCardAdd}>
+              <span className={s.addPlusIcon}>+</span>
+              <span>Novo Hub</span>
+            </Link>
+          </div>
+        )}
+      </section>
+
       {/* Workspaces adaptativos */}
       <section className={s.section}>
         <div className={s.sectionRow}>
-          <h2 className={s.sectionTitle}>Workspaces</h2>
+          <div>
+            <h2 className={s.sectionTitle}>Workspaces</h2>
+            <p className={s.sectionDesc}>Ambientes de trabalho personalizados com módulos — ferramentas, tarefas, notas e fluxos reunidos num só lugar.</p>
+          </div>
           <button className={s.newAreaBtn} onClick={() => setShowWorkspaceCreator(true)}>+ Novo espaço</button>
         </div>
         {workspaces.length === 0 ? (
@@ -202,7 +242,10 @@ export default function Dashboard() {
       {/* Áreas */}
       <section className={s.section}>
         <div className={s.sectionRow}>
-          <h2 className={s.sectionTitle}>Suas áreas</h2>
+          <div>
+            <h2 className={s.sectionTitle}>Suas áreas</h2>
+            <p className={s.sectionDesc}>Coleções temáticas para guardar links, notas, PDFs e prompts por assunto — Faculdade, Finanças, Marketing e o que mais precisar.</p>
+          </div>
           <div className={s.sectionActions}>
             <button className={s.ghToggleBtn} onClick={() => setShowGH(v => !v)}>
               <svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor">
