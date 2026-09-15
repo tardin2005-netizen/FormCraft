@@ -219,3 +219,6 @@ export const useHubsStore = create<HubsStore>()(
     { name: 'formcraft-hubs' }
   )
 )
+
+// Exposto temporariamente para importação de estrutura via console
+;(window as unknown as Record<string, unknown>).__hubsStore = useHubsStore
