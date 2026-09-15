@@ -91,6 +91,7 @@ interface HubsStore {
   removeSemester: (id: string) => void
 
   addSubject: (s: Omit<Subject, 'id'>) => void
+  updateSubject: (id: string, updates: Partial<Omit<Subject, 'id'>>) => void
   removeSubject: (id: string) => void
 
   addClassItem: (c: Omit<ClassItem, 'id'>) => void
@@ -162,6 +163,14 @@ export const useHubsStore = create<HubsStore>()(
         const subject: Subject = { ...sub, id: crypto.randomUUID() }
         set(s => ({ subjects: [...s.subjects, subject] }))
         fs('hubSubjects', subject)
+      },
+      updateSubject: (id, updates) => {
+        set(s => {
+          const subjects = s.subjects.map(x => x.id === id ? { ...x, ...updates } : x)
+          const updated = subjects.find(x => x.id === id)
+          if (updated) fs('hubSubjects', updated)
+          return { subjects }
+        })
       },
       removeSubject: (id) => {
         set(s => ({ subjects: s.subjects.filter(x => x.id !== id) }))

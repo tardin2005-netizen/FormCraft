@@ -2,6 +2,7 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import Layout from './components/Layout'
 import FirestoreSync from './components/FirestoreSync'
+import { useMigrateFaculdadeHub } from './hooks/useMigrateFaculdadeHub'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Inbox from './pages/Inbox'
@@ -27,6 +28,7 @@ function LoadingScreen() {
 
 function AppRoutes() {
   const { user, loading } = useAuth()
+  useMigrateFaculdadeHub()
 
   if (loading) return <LoadingScreen />
 
