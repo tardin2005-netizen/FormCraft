@@ -20,6 +20,87 @@ const EMOJIS = ['📚','💡','🔬','🎨','🖥️','📐','📊','⚗️','�
 const COLORS  = ['#7c6ef7','#4f8ef7','#3ecf8e','#f78c4f','#e46ef7','#facc15','#f43f5e']
 const CURRENT_YEAR = new Date().getFullYear()
 
+function getDomain(url: string) {
+  try { return new URL(url).hostname.replace('www.', '') } catch { return '' }
+}
+
+interface ContentBlock {
+  type: 'text' | 'bullets'
+  heading?: string
+  text?: string
+  items?: string[]
+}
+
+function parseContent(raw: string): ContentBlock[] {
+  const blocks: ContentBlock[] = []
+  const sections = raw.split('\n\n').filter(Boolean)
+  for (const section of sections) {
+    const lines = section.split('\n')
+    const first = lines[0]
+    const rest = lines.slice(1).join('\n').trim()
+    const isHeader = /^[📋🎯📌]/.test(first)
+    if (isHeader && rest) {
+      const hasBullets = rest.startsWith('• ') || rest.includes('\n• ')
+      if (hasBullets) {
+        const items = rest.split('\n').filter(l => l.startsWith('• ')).map(l => l.slice(2).trim())
+        blocks.push({ type: 'bullets', heading: first, items })
+      } else {
+        blocks.push({ type: 'text', heading: first, text: rest })
+      }
+    } else {
+      blocks.push({ type: 'text', text: section })
+    }
+  }
+  return blocks
+}
+
+function ContentCard({ c, onDelete }: { c: HubContent; onDelete: () => void }) {
+  const [collapsed, setCollapsed] = useState(false)
+  const blocks = c.content ? parseContent(c.content) : null
+
+  return (
+    <div className={s.contentCard}>
+      <div className={s.contentCardHead}>
+        <span className={s.cardTypeIcon}>{CONTENT_ICON[c.type]}</span>
+        <span className={s.cardTitle}>
+          {c.url
+            ? <a href={c.url} target="_blank" rel="noopener noreferrer">{c.title}</a>
+            : c.title}
+        </span>
+        {blocks && blocks.length > 1 && (
+          <button className={s.collapseBtn} onClick={() => setCollapsed(v => !v)}>
+            {collapsed ? '▼' : '▲'}
+          </button>
+        )}
+        <DeleteBtn onConfirm={onDelete} />
+      </div>
+
+      {blocks && !collapsed && (
+        <div className={s.cardBlocks}>
+          {blocks.map((block, i) => (
+            <div key={i} className={s.cardBlock}>
+              {block.heading && <div className={s.blockLabel}>{block.heading}</div>}
+              {block.type === 'bullets' && block.items ? (
+                <ul className={s.blockList}>
+                  {block.items.map((item, j) => <li key={j}>{item}</li>)}
+                </ul>
+              ) : (
+                <p className={s.blockText}>{block.text}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {c.url && !c.content && (
+        <div className={s.cardLinkBar}>
+          <span className={s.cardLinkDomain}>{getDomain(c.url)}</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
 /* ─── Faculdade template ─── */
 function FaculdadeView({ hubId }: { hubId: string }) {
   const {
@@ -180,22 +261,10 @@ function FaculdadeView({ hubId }: { hubId: string }) {
                         {selClass ? `Materiais da aula` : 'Materiais da matéria'}
                       </div>
                       {curContents.length === 0 && (
-                        <div className={s.panelEmpty}>Nenhum material</div>
+                        <div className={s.panelEmpty}>Nenhum material adicionado</div>
                       )}
                       {curContents.map(c => (
-                        <div key={c.id} className={s.contentRow}>
-                          <span className={s.contentIcon}>{CONTENT_ICON[c.type]}</span>
-                          <div className={s.contentInfo}>
-                            <div className={s.contentTitle}>
-                              {c.url
-                                ? <a href={c.url} target="_blank" rel="noopener noreferrer">{c.title}</a>
-                                : c.title
-                              }
-                            </div>
-                            {c.content && <div className={s.contentBody}>{c.content}</div>}
-                          </div>
-                          <DeleteBtn onConfirm={() => removeContent(c.id)} />
-                        </div>
+                        <ContentCard key={c.id} c={c} onDelete={() => removeContent(c.id)} />
                       ))}
                     </div>
                   </>
@@ -385,19 +454,7 @@ function GenericHubView({ hubId }: { hubId: string }) {
 
       <div className={s.contentList}>
         {items.map(c => (
-          <div key={c.id} className={s.contentRow}>
-            <span className={s.contentIcon}>{CONTENT_ICON[c.type]}</span>
-            <div className={s.contentInfo}>
-              <div className={s.contentTitle}>
-                {c.url
-                  ? <a href={c.url} target="_blank" rel="noopener noreferrer">{c.title}</a>
-                  : c.title
-                }
-              </div>
-              {c.content && <div className={s.contentBody}>{c.content}</div>}
-            </div>
-            <button className={s.itemDelBtn} onClick={() => removeContent(c.id)}>✕</button>
-          </div>
+          <ContentCard key={c.id} c={c} onDelete={() => removeContent(c.id)} />
         ))}
       </div>
 
