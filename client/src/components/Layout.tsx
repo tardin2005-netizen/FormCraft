@@ -3,7 +3,7 @@ import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Hexagon, Inbox, BookMarked, Wrench, Settings,
-  LogOut, Search, Link2, Sun, Moon, PanelLeft, Grid2X2,
+  LogOut, Search, Link2, Sun, Moon, PanelLeft, Grid2X2, CheckSquare,
 } from 'lucide-react'
 import { useThemeStore, ACCENT_COLORS } from '../store/themeStore'
 import { useAreasStore } from '../store/areasStore'
@@ -26,6 +26,7 @@ const ACCENT_LABELS: Record<Accent, string> = {
 const NAV_ITEMS = [
   { to: '/',            Icon: LayoutDashboard, label: 'Início' },
   { to: '/hubs',        Icon: Hexagon,         label: 'Meus Hubs' },
+  { to: '/tarefas',     Icon: CheckSquare,     label: 'Tarefas' },
   { to: '/inbox',       Icon: Inbox,           label: 'Inbox' },
   { to: '/colecoes',    Icon: BookMarked,      label: 'Coleções' },
   { to: '/ferramentas', Icon: Wrench,          label: 'Ferramentas' },

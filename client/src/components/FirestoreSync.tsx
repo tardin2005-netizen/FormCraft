@@ -10,6 +10,7 @@ import { useHubsStore } from '../store/hubsStore'
 import { useSavedToolsStore } from '../store/savedToolsStore'
 import { useWorkspacesStore } from '../store/workspacesStore'
 import { useContentItemsStore } from '../store/contentItemsStore'
+import { useTasksStore } from '../store/tasksStore'
 
 export default function FirestoreSync() {
   const { user } = useAuth()
@@ -91,6 +92,10 @@ export default function FirestoreSync() {
       onSnapshot(
         collection(db, 'users', uid, 'contentItems'),
         snap => safe('contentItems', snap.docs.map(d => d.data() as any), d => useContentItemsStore.getState().hydrate(d))
+      ),
+      onSnapshot(
+        collection(db, 'users', uid, 'tasks'),
+        snap => safe('tasks', snap.docs.map(d => d.data() as any), d => useTasksStore.getState().hydrate(d))
       ),
     ]
 

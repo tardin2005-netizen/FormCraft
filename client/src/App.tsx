@@ -12,6 +12,7 @@ import ChatView from './pages/ChatView'
 import Settings from './pages/Settings'
 import Hubs from './pages/Hubs'
 import HubView from './pages/HubView'
+import Tarefas from './pages/Tarefas'
 import ToolLibrary from './pages/ToolLibrary'
 import WorkspaceView from './pages/WorkspaceView'
 
@@ -45,6 +46,7 @@ function AppRoutes() {
           <Route path="/area/:id/chat/:chatId"      element={<ChatView />} />
           <Route path="/hubs"          element={<Hubs />} />
           <Route path="/hub/:id"       element={<HubView />} />
+          <Route path="/tarefas"       element={<Tarefas />} />
           <Route path="/ferramentas"        element={<ToolLibrary />} />
           <Route path="/settings"           element={<Settings />} />
           <Route path="/workspace/:id"      element={<WorkspaceView />} />
