@@ -220,5 +220,3 @@ export const useHubsStore = create<HubsStore>()(
   )
 )
 
-// Exposto temporariamente para importação de estrutura via console
-;(window as unknown as Record<string, unknown>).__hubsStore = useHubsStore
