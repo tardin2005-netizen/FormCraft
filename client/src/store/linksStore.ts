@@ -46,3 +46,6 @@ export const useLinksStore = create<LinksStore>()(
     { name: 'formcraft-links' }
   )
 )
+
+// Exposto temporariamente para importação de dados via console
+;(window as unknown as Record<string, unknown>).__linksStore = useLinksStore
