@@ -55,12 +55,37 @@
   display: flex; align-items: center; gap: 10px; padding: 8px 10px;
   border-radius: 8px; color: var(--text2); font-size: 13px; text-decoration: none;
   transition: background .15s, color .15s; white-space: nowrap; overflow: hidden;
+  position: relative;
 }
 .navItem:hover { background: var(--surface2); color: var(--text); }
 .navActive  { background: var(--accent-muted) !important; color: var(--accent) !important; font-weight: 500; }
-.navCompact { justify-content: center; padding: 10px; }
+.navCompact { justify-content: center; padding: 10px; overflow: visible; }
 .navIcon  { font-size: 15px; flex-shrink: 0; }
 .navLabel { font-size: 13px; overflow: hidden; text-overflow: ellipsis; }
+
+/* Tooltip for compact mode */
+.navCompact::after {
+  content: attr(data-label);
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%; transform: translateY(-50%);
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 5px 10px;
+  font-size: 12px; font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(0,0,0,.2);
+  opacity: 0; pointer-events: none;
+  transition: opacity .12s, transform .12s;
+  transform: translateY(-50%) translateX(-4px);
+  z-index: 200;
+}
+.navCompact:hover::after {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
 
 /* Global scrollbar hide */
 * { scrollbar-width: none; }

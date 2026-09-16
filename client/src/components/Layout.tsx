@@ -145,7 +145,7 @@ export default function Layout() {
               <button
                 className={s.collapseBtn}
                 onClick={cycleLeft}
-                title={leftState === 'expanded' ? 'Compactar (⌘\\)' : 'Ocultar'}
+                title={leftState === 'expanded' ? 'Compactar (⌘\\)' : 'Expandir (⌘\\)'}
               >
                 <motion.span
                   animate={{ rotate: leftState === 'expanded' ? 180 : 0 }}
@@ -163,7 +163,7 @@ export default function Layout() {
                   className={({ isActive }) =>
                     `${s.navItem} ${isActive ? s.navActive : ''} ${leftState === 'compact' ? s.navCompact : ''}`
                   }
-                  title={leftState === 'compact' ? label : undefined}
+                  {...(leftState === 'compact' ? { 'data-label': label } : {})}
                 >
                   <Icon size={16} className={s.navIcon} />
                   <AnimatePresence initial={false}>
