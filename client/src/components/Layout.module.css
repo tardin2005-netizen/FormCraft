@@ -99,14 +99,26 @@
 }
 .areaItem {
   display: flex; align-items: center; gap: 8px; padding: 6px 10px;
-  border-radius: 7px; font-size: 12px; color: var(--text2); text-decoration: none;
-  transition: background .15s, color .15s;
+  border-radius: 7px; font-size: 12px; color: var(--text2);
+  transition: background .15s, color .15s; cursor: pointer;
 }
 .areaItem:hover { background: var(--surface2); color: var(--text); }
 .areaItemTitle { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .areaItemCount {
   font-size: 10px; background: var(--surface2); padding: 1px 6px; border-radius: 10px; flex-shrink: 0;
 }
+.areaChevron {
+  background: transparent; border: none; color: var(--text2); font-size: 14px; font-weight: 600;
+  cursor: pointer; padding: 0 2px; line-height: 1; flex-shrink: 0;
+  transition: color .15s; display: flex; align-items: center;
+}
+.areaChevron:hover { color: var(--text); }
+.addChannelBtn {
+  width: 100%; text-align: left; padding: 4px 10px 4px 28px;
+  background: transparent; border: none; color: var(--text2); font-size: 11px;
+  cursor: pointer; border-radius: 6px; transition: background .15s, color .15s; margin-bottom: 2px;
+}
+.addChannelBtn:hover { background: var(--surface2); color: var(--accent); }
 .addAreaBtn {
   width: 100%; text-align: left; padding: 6px 10px;
   background: transparent; border: none; color: var(--text2); font-size: 12px;
@@ -129,7 +141,7 @@
 .noChannels { font-size: 11px; color: var(--text2); padding: 6px 10px; font-style: italic; }
 
 .channelItem {
-  display: flex; align-items: center; gap: 6px; padding: 6px 10px;
+  display: flex; align-items: center; gap: 6px; padding: 5px 10px 5px 26px;
   border-radius: 7px; font-size: 12px; color: var(--text2); text-decoration: none;
   transition: background .15s, color .15s;
 }

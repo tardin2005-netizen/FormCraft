@@ -46,8 +46,23 @@ export default function Layout() {
 
   const areaMatch = location.pathname.match(/^\/area\/([^/]+)/)
   const activeAreaId = areaMatch ? areaMatch[1] : null
-  const activeArea = activeAreaId ? areas.find(a => a.id === activeAreaId) : null
-  const areaChats = activeAreaId ? areaItems.filter(i => i.areaId === activeAreaId && i.type === 'chat') : []
+
+  const [expandedAreaIds, setExpandedAreaIds] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    if (activeAreaId) {
+      setExpandedAreaIds(prev => new Set([...prev, activeAreaId]))
+    }
+  }, [activeAreaId])
+
+  function toggleArea(id: string) {
+    setExpandedAreaIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
   const { leftState, rightState, cycleLeft, cycleRight, setLeft, setRight } = useSidebarStore()
   const { saved: savedToolNames, isSaved, saveTool, unsaveTool } = useSavedToolsStore()
@@ -190,94 +205,102 @@ export default function Layout() {
                   exit={{ opacity: 0 }}
                   transition={{ duration: .15 }}
                 >
-                  {activeArea ? (
-                    <>
-                      <NavLink to={`/area/${activeArea.id}`} className={s.areaBackLink}>
-                        <span className={s.areaBackArrow}>←</span>
-                        <span className={s.areaBackEmoji}>{activeArea.emoji}</span>
-                        <span className={s.areaBackTitle}>{activeArea.title}</span>
-                      </NavLink>
-                      <div className={s.areasLabel} style={{ marginTop: 10 }}>Canais</div>
-                      {areaChats.length === 0 && (
-                        <div className={s.noChannels}>Nenhum canal ainda</div>
-                      )}
-                      {areaChats.map((chat, i) => (
-                        <motion.div
-                          key={chat.id}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: i * .04, duration: .2 }}
+                  <div className={s.areasLabel}>Áreas</div>
+                  {areas.map((a, i) => {
+                    const chats = areaItems.filter(item => item.areaId === a.id && item.type === 'chat')
+                    const isExpanded = expandedAreaIds.has(a.id)
+                    const isActive = activeAreaId === a.id
+                    return (
+                      <motion.div
+                        key={a.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * .04, duration: .2 }}
+                      >
+                        <div
+                          className={`${s.areaItem} ${isActive ? s.navActive : ''}`}
+                          onClick={() => { navigate(`/area/${a.id}`); setExpandedAreaIds(prev => new Set([...prev, a.id])) }}
                         >
-                          <NavLink
-                            to={`/area/${activeArea.id}/chat/${chat.id}`}
-                            className={({ isActive }) => `${s.channelItem} ${isActive ? s.navActive : ''}`}
+                          <span>{a.emoji}</span>
+                          <span className={s.areaItemTitle}>{a.title}</span>
+                          <span className={s.areaItemCount}>{areaItems.filter(item => item.areaId === a.id).length}</span>
+                          <button
+                            className={s.areaChevron}
+                            onClick={e => { e.stopPropagation(); toggleArea(a.id) }}
+                            title={isExpanded ? 'Recolher' : 'Expandir canais'}
                           >
-                            <span className={s.channelHash}>#</span>
-                            <span className={s.channelTitle}>{chat.title}</span>
-                          </NavLink>
-                        </motion.div>
-                      ))}
-                      <button className={s.addAreaBtn} onClick={() => setNewChatOpen(true)}>
-                        + Novo canal
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <div className={s.areasLabel}>Áreas</div>
-                      {areas.map((a, i) => (
-                        <motion.div
-                          key={a.id}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: i * .04, duration: .2 }}
-                        >
-                          <NavLink
-                            to={`/area/${a.id}`}
-                            className={({ isActive }) => `${s.areaItem} ${isActive ? s.navActive : ''}`}
-                          >
-                            <span>{a.emoji}</span>
-                            <span className={s.areaItemTitle}>{a.title}</span>
-                            <span className={s.areaItemCount}>{areaItems.filter(i => i.areaId === a.id).length}</span>
-                          </NavLink>
-                        </motion.div>
-                      ))}
-                      <button className={s.addAreaBtn} onClick={() => navigate('/?nova-area=1')}>
-                        + Nova área
-                      </button>
-                    </>
-                  )}
+                            <motion.span
+                              animate={{ rotate: isExpanded ? 90 : 0 }}
+                              transition={{ duration: .15 }}
+                              style={{ display: 'inline-block' }}
+                            >›</motion.span>
+                          </button>
+                        </div>
+                        <AnimatePresence initial={false}>
+                          {isExpanded && (
+                            <motion.div
+                              key="channels"
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: .18 }}
+                              style={{ overflow: 'hidden' }}
+                            >
+                              {chats.length === 0 && (
+                                <div className={s.noChannels}>Nenhum canal ainda</div>
+                              )}
+                              {chats.map(chat => (
+                                <NavLink
+                                  key={chat.id}
+                                  to={`/area/${a.id}/chat/${chat.id}`}
+                                  className={({ isActive: ca }) => `${s.channelItem} ${ca ? s.navActive : ''}`}
+                                >
+                                  <span className={s.channelHash}>#</span>
+                                  <span className={s.channelTitle}>{chat.title}</span>
+                                </NavLink>
+                              ))}
+                              {isActive && (
+                                <button className={s.addChannelBtn} onClick={() => setNewChatOpen(true)}>
+                                  + Novo canal
+                                </button>
+                              )}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </motion.div>
+                    )
+                  })}
+                  <button className={s.addAreaBtn} onClick={() => navigate('/?nova-area=1')}>
+                    + Nova área
+                  </button>
                 </motion.div>
               )}
             </AnimatePresence>
 
             {leftState === 'compact' && (
               <div className={s.areasIconsOnly}>
-                {activeArea ? (
-                  <>
-                    <NavLink
-                      to={`/area/${activeArea.id}`}
-                      className={s.areaIconItem}
-                      title={`← ${activeArea.title}`}
-                    >{activeArea.emoji}</NavLink>
-                    {areaChats.map(chat => (
+                {areas.map(a => {
+                  const chats = areaItems.filter(item => item.areaId === a.id && item.type === 'chat')
+                  const isExpanded = expandedAreaIds.has(a.id)
+                  return (
+                    <div key={a.id} style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                       <NavLink
-                        key={chat.id}
-                        to={`/area/${activeArea.id}/chat/${chat.id}`}
-                        className={({ isActive }) => `${s.channelIconItem} ${isActive ? s.navActive : ''}`}
-                        title={`#${chat.title}`}
-                      >#</NavLink>
-                    ))}
-                  </>
-                ) : (
-                  areas.map(a => (
-                    <NavLink
-                      key={a.id}
-                      to={`/area/${a.id}`}
-                      className={({ isActive }) => `${s.areaIconItem} ${isActive ? s.navActive : ''}`}
-                      title={a.title}
-                    >{a.emoji}</NavLink>
-                  ))
-                )}
+                        to={`/area/${a.id}`}
+                        className={({ isActive }) => `${s.areaIconItem} ${isActive ? s.navActive : ''}`}
+                        title={a.title}
+                        onClick={() => setExpandedAreaIds(prev => new Set([...prev, a.id]))}
+                      >{a.emoji}</NavLink>
+                      {isExpanded && chats.map(chat => (
+                        <NavLink
+                          key={chat.id}
+                          to={`/area/${a.id}/chat/${chat.id}`}
+                          className={({ isActive }) => `${s.channelIconItem} ${isActive ? s.navActive : ''}`}
+                          title={`#${chat.title}`}
+                        >#</NavLink>
+                      ))}
+                    </div>
+                  )
+                })}
               </div>
             )}
 
