@@ -226,27 +226,35 @@
 .msgFileName { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
 .msgFileDown { color: var(--text2); flex-shrink: 0; }
 
-.msgDelete {
-  background: transparent;
-  border: none;
-  color: transparent;
-  font-size: 10px;
-  cursor: pointer;
-  padding: 3px 6px;
-  border-radius: 4px;
-  transition: color .1s, background .1s;
+/* Message actions (pin, bookmark, delete) */
+.msgActions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
   position: absolute;
   right: 8px;
-  top: 6px;
-  flex-shrink: 0;
+  top: 4px;
+  opacity: 0;
+  transition: opacity .1s;
 }
+.message:hover .msgActions { opacity: 1; }
 
-.message:hover .msgDelete { color: var(--text2); }
-.msgDelete:hover { color: #f43f5e !important; background: var(--surface); }
+.msgActionBtn {
+  background: transparent;
+  border: none;
+  color: var(--text2);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 3px 5px;
+  border-radius: 5px;
+  transition: color .1s, background .1s;
+  line-height: 1;
+}
+.msgActionBtn:hover { background: var(--surface); color: var(--text); }
+.msgActionActive { color: var(--accent) !important; }
 
 /* Delete confirmation */
 .deleteConfirm {
-  position: absolute; right: 8px; top: 4px;
   display: flex; align-items: center; gap: 5px;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -255,9 +263,7 @@
   box-shadow: 0 2px 12px rgba(0,0,0,.2);
   z-index: 10;
 }
-.deleteConfirmLabel {
-  font-size: 11px; color: var(--text2); white-space: nowrap;
-}
+.deleteConfirmLabel { font-size: 11px; color: var(--text2); white-space: nowrap; }
 .deleteConfirmYes {
   background: #f43f5e; border: none; border-radius: 5px;
   color: #fff; font-size: 12px; font-weight: 700;
@@ -269,6 +275,60 @@
   padding: 3px 9px; cursor: pointer; line-height: 1;
 }
 .deleteConfirmNo:hover { color: var(--text); }
+
+/* Pinned banner */
+.pinnedBanner {
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+  flex-shrink: 0;
+}
+.pinnedBannerRow {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; padding: 7px 16px;
+  background: transparent; border: none; color: var(--text2);
+  font-size: 12px; cursor: pointer; text-align: left;
+  transition: color .1s;
+}
+.pinnedBannerRow:hover { color: var(--text); }
+.pinnedBannerLabel { flex: 1; }
+.pinnedChevron { font-size: 10px; color: var(--text2); }
+.pinnedList { padding: 4px 16px 10px; display: flex; flex-direction: column; gap: 4px; }
+.pinnedItem {
+  display: flex; align-items: flex-start; gap: 8px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 7px; padding: 6px 10px;
+}
+.pinnedItemText { flex: 1; font-size: 12px; color: var(--text); line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+.pinnedUnpin {
+  background: transparent; border: none; color: var(--text2);
+  cursor: pointer; font-size: 11px; padding: 2px 4px;
+  border-radius: 4px; transition: color .1s; flex-shrink: 0;
+}
+.pinnedUnpin:hover { color: #f43f5e; }
+
+/* Message pin/bookmark badges */
+.msgPinnedBadge { font-size: 10px; }
+
+/* Markdown styles */
+.mdList { margin: 4px 0; padding-left: 18px; }
+.mdItem { font-size: 13.5px; color: var(--text); line-height: 1.55; }
+.mdTodo { display: flex; align-items: flex-start; gap: 6px; margin: 2px 0; }
+.mdCheck { margin-top: 3px; flex-shrink: 0; accent-color: var(--accent); }
+.mdDone { text-decoration: line-through; color: var(--text2); }
+
+/* Format toolbar */
+.formatToolbar {
+  display: flex; align-items: center; gap: 2px;
+  padding: 4px 10px 4px;
+}
+.fmtBtn {
+  background: transparent; border: none; color: var(--text2);
+  font-size: 13px; cursor: pointer; padding: 3px 8px;
+  border-radius: 5px; transition: background .1s, color .1s;
+  line-height: 1;
+}
+.fmtBtn:hover { background: var(--surface2); color: var(--text); }
+.fmtSep { width: 1px; height: 14px; background: var(--border); margin: 0 4px; }
 
 /* ── Input ── */
 .inputArea {

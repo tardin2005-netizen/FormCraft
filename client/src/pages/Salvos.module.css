@@ -1,0 +1,68 @@
+.page { padding: 32px 28px; max-width: 720px; margin: 0 auto; }
+
+.header {
+  display: flex; align-items: center; gap: 16px;
+  margin-bottom: 32px;
+}
+.icon { font-size: 32px; }
+.title { font-size: 22px; font-weight: 800; color: var(--text); margin: 0 0 2px; }
+.sub { font-size: 13px; color: var(--text2); margin: 0; }
+
+.empty {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 10px; padding: 64px 16px; text-align: center;
+}
+.emptyIcon { font-size: 40px; }
+.emptyTitle { font-size: 16px; font-weight: 700; color: var(--text); }
+.emptySub { font-size: 13px; color: var(--text2); max-width: 340px; line-height: 1.6; }
+
+.groups { display: flex; flex-direction: column; gap: 28px; }
+
+.group {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.groupHeader {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.groupEmoji { font-size: 16px; }
+.groupName { font-size: 13px; font-weight: 700; color: var(--text); flex: 1; }
+.groupLink {
+  font-size: 11px; color: var(--accent); text-decoration: none;
+  transition: opacity .15s;
+}
+.groupLink:hover { opacity: .7; }
+
+.msgList { display: flex; flex-direction: column; }
+
+.msgCard {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  transition: background .1s;
+}
+.msgCard:last-child { border-bottom: none; }
+.msgCard:hover { background: var(--surface); }
+
+.msgCardText {
+  font-size: 13px; color: var(--text); line-height: 1.6;
+  white-space: pre-wrap; word-break: break-word;
+  margin-bottom: 6px;
+}
+.msgFile { color: var(--accent); }
+
+.msgCardMeta {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.msgCardDate { font-size: 11px; color: var(--text2); }
+.unsaveBtn {
+  background: transparent; border: none; color: var(--text2);
+  font-size: 11px; cursor: pointer; padding: 2px 6px;
+  border-radius: 4px; transition: color .1s, background .1s;
+}
+.unsaveBtn:hover { color: #f43f5e; background: var(--surface2); }

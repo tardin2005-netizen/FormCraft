@@ -15,7 +15,6 @@ function formatDate(iso: string) {
   const today = new Date()
   const yesterday = new Date(today)
   yesterday.setDate(yesterday.getDate() - 1)
-
   if (d.toDateString() === today.toDateString()) return 'Hoje'
   if (d.toDateString() === yesterday.toDateString()) return 'Ontem'
   return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
@@ -24,6 +23,65 @@ function formatDate(iso: string) {
 function getInitials(name: string | null | undefined) {
   if (!name) return '?'
   return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
+}
+
+function renderInline(text: string): React.ReactNode[] {
+  const parts = text.split(/(\*\*[^*\n]+\*\*|\*[^*\n]+\*)/g)
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**'))
+      return <strong key={i}>{part.slice(2, -2)}</strong>
+    if (part.startsWith('*') && part.endsWith('*'))
+      return <em key={i}>{part.slice(1, -1)}</em>
+    return part
+  })
+}
+
+function renderMarkdown(text: string): React.ReactNode {
+  const lines = text.split('\n')
+  const nodes: React.ReactNode[] = []
+  let bulletBuffer: React.ReactNode[] = []
+
+  function flushBullets() {
+    if (bulletBuffer.length) {
+      nodes.push(<ul key={`ul-${nodes.length}`} className={s.mdList}>{bulletBuffer}</ul>)
+      bulletBuffer = []
+    }
+  }
+
+  lines.forEach((line, i) => {
+    const bullet = line.match(/^[-*] (.*)$/)
+    const todoUnchecked = line.match(/^\[ \] (.*)$/)
+    const todoChecked = line.match(/^\[x\] (.*)/i)
+
+    if (bullet) {
+      bulletBuffer.push(
+        <li key={i} className={s.mdItem}>{renderInline(bullet[1])}</li>
+      )
+    } else {
+      flushBullets()
+      if (todoUnchecked) {
+        nodes.push(
+          <div key={i} className={s.mdTodo}>
+            <input type="checkbox" disabled className={s.mdCheck} />
+            <span>{renderInline(todoUnchecked[1])}</span>
+          </div>
+        )
+      } else if (todoChecked) {
+        nodes.push(
+          <div key={i} className={s.mdTodo}>
+            <input type="checkbox" disabled checked className={s.mdCheck} />
+            <span className={s.mdDone}>{renderInline(todoChecked[1])}</span>
+          </div>
+        )
+      } else {
+        nodes.push(
+          <span key={i}>{renderInline(line)}{i < lines.length - 1 ? '\n' : ''}</span>
+        )
+      }
+    }
+  })
+  flushBullets()
+  return <>{nodes}</>
 }
 
 function useDeleteConfirm(onDelete: () => void) {
@@ -60,7 +118,7 @@ function DeleteMsgBtn({ onDelete }: { onDelete: () => void }) {
       <button className={s.deleteConfirmNo}  onClick={cancel}  title="Cancelar">✕</button>
     </span>
   ) : (
-    <button className={s.msgDelete} onClick={request} title="Apagar mensagem">✕</button>
+    <button className={s.msgActionBtn} onClick={request} title="Apagar mensagem">✕</button>
   )
 }
 
@@ -68,15 +126,18 @@ export default function ChatView() {
   const { id: areaId, chatId } = useParams<{ id: string; chatId: string }>()
   const { areas } = useAreasStore()
   const { items } = useAreaItemsStore()
-  const { messages, addMessage, deleteMessage } = useChatMessagesStore()
+  const { messages, addMessage, deleteMessage, pinMessage, bookmarkMessage } = useChatMessagesStore()
   const { user } = useAuth()
 
   const area = areas.find(a => a.id === areaId)
   const chat = items.find(i => i.id === chatId)
   const chatMessages = chatId ? messages.filter(m => m.chatId === chatId) : []
+  const pinnedMsgs = chatMessages.filter(m => m.pinned)
 
   const [text, setText] = useState('')
   const [file, setFile] = useState<{ data: string; name: string; type: string } | null>(null)
+  const [showPinned, setShowPinned] = useState(false)
+  const [inputFocused, setInputFocused] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -88,14 +149,9 @@ export default function ChatView() {
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]
     if (!f) return
-    if (f.size > 5 * 1024 * 1024) {
-      alert('Arquivo muito grande. Limite: 5MB.')
-      return
-    }
+    if (f.size > 5 * 1024 * 1024) { alert('Arquivo muito grande. Limite: 5MB.'); return }
     const reader = new FileReader()
-    reader.onload = ev => {
-      setFile({ data: ev.target!.result as string, name: f.name, type: f.type })
-    }
+    reader.onload = ev => setFile({ data: ev.target!.result as string, name: f.name, type: f.type })
     reader.readAsDataURL(f)
     e.target.value = ''
   }
@@ -106,9 +162,7 @@ export default function ChatView() {
     if (!f) return
     if (f.size > 5 * 1024 * 1024) { alert('Arquivo muito grande. Limite: 5MB.'); return }
     const reader = new FileReader()
-    reader.onload = ev => {
-      setFile({ data: ev.target!.result as string, name: f.name, type: f.type })
-    }
+    reader.onload = ev => setFile({ data: ev.target!.result as string, name: f.name, type: f.type })
     reader.readAsDataURL(f)
   }
 
@@ -116,23 +170,14 @@ export default function ChatView() {
     if (!chatId) return
     const trimmed = text.trim()
     if (!trimmed && !file) return
-    addMessage({
-      chatId,
-      text: trimmed,
-      fileData: file?.data,
-      fileName: file?.name,
-      fileType: file?.type,
-    })
+    addMessage({ chatId, text: trimmed, fileData: file?.data, fileName: file?.name, fileType: file?.type })
     setText('')
     setFile(null)
     textareaRef.current?.focus()
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      send()
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() }
   }
 
   function handleTextareaInput(e: React.ChangeEvent<HTMLTextAreaElement>) {
@@ -140,6 +185,41 @@ export default function ChatView() {
     const el = e.target
     el.style.height = 'auto'
     el.style.height = Math.min(el.scrollHeight, 120) + 'px'
+  }
+
+  function insertFormat(type: 'bold' | 'italic' | 'bullet' | 'todo') {
+    const ta = textareaRef.current
+    if (!ta) return
+    const start = ta.selectionStart
+    const end = ta.selectionEnd
+    const val = text
+    let newText = val
+    let newCursor = start
+
+    if (type === 'bold') {
+      newText = val.slice(0, start) + '**' + val.slice(start, end) + '**' + val.slice(end)
+      newCursor = end === start ? start + 2 : end + 4
+    } else if (type === 'italic') {
+      newText = val.slice(0, start) + '*' + val.slice(start, end) + '*' + val.slice(end)
+      newCursor = end === start ? start + 1 : end + 2
+    } else if (type === 'bullet') {
+      const lineStart = val.lastIndexOf('\n', start - 1) + 1
+      newText = val.slice(0, lineStart) + '- ' + val.slice(lineStart)
+      newCursor = start + 2
+    } else if (type === 'todo') {
+      const lineStart = val.lastIndexOf('\n', start - 1) + 1
+      newText = val.slice(0, lineStart) + '[ ] ' + val.slice(lineStart)
+      newCursor = start + 4
+    }
+
+    setText(newText)
+    setTimeout(() => {
+      if (ta) {
+        ta.selectionStart = newCursor
+        ta.selectionEnd = newCursor
+        ta.focus()
+      }
+    }, 0)
   }
 
   if (!area || !chat) return null
@@ -156,11 +236,7 @@ export default function ChatView() {
   const initials = getInitials(user?.displayName)
 
   return (
-    <div
-      className={s.page}
-      onDragOver={e => e.preventDefault()}
-      onDrop={handleDrop}
-    >
+    <div className={s.page} onDragOver={e => e.preventDefault()} onDrop={handleDrop}>
       <div className={s.chatHeader}>
         <span className={s.chatHashIcon}>#</span>
         <div className={s.chatInfo}>
@@ -170,14 +246,33 @@ export default function ChatView() {
         <span className={s.msgCount}>{chatMessages.length} {chatMessages.length === 1 ? 'mensagem' : 'mensagens'}</span>
       </div>
 
+      {/* Pinned banner */}
+      {pinnedMsgs.length > 0 && (
+        <div className={s.pinnedBanner}>
+          <button className={s.pinnedBannerRow} onClick={() => setShowPinned(v => !v)}>
+            <span>📌</span>
+            <span className={s.pinnedBannerLabel}>{pinnedMsgs.length} mensagem{pinnedMsgs.length > 1 ? 's' : ''} fixada{pinnedMsgs.length > 1 ? 's' : ''}</span>
+            <span className={s.pinnedChevron}>{showPinned ? '∧' : '∨'}</span>
+          </button>
+          {showPinned && (
+            <div className={s.pinnedList}>
+              {pinnedMsgs.map(m => (
+                <div key={m.id} className={s.pinnedItem}>
+                  <span className={s.pinnedItemText}>{m.text?.slice(0, 120)}{(m.text?.length ?? 0) > 120 ? '…' : ''}</span>
+                  <button className={s.pinnedUnpin} onClick={() => pinMessage(m.id)} title="Desafixar">✕</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       <div className={s.messages}>
         {chatMessages.length === 0 && (
           <div className={s.emptyChat}>
             <div className={s.emptyChatIcon}>#</div>
             <div className={s.emptyChatTitle}>Início de #{chat.title}</div>
-            <div className={s.emptyChatDesc}>
-              Este é o começo do canal. Envie uma mensagem ou arraste um arquivo para começar.
-            </div>
+            <div className={s.emptyChatDesc}>Este é o começo do canal. Envie uma mensagem ou arraste um arquivo para começar.</div>
           </div>
         )}
 
@@ -209,9 +304,11 @@ export default function ChatView() {
                       <div className={s.msgMeta}>
                         <span className={s.msgSender}>{user?.displayName ?? 'Você'}</span>
                         <span className={s.msgTime}>{formatTime(msg.timestamp)}</span>
+                        {msg.pinned && <span className={s.msgPinnedBadge}>📌</span>}
+                        {msg.bookmarked && <span className={s.msgPinnedBadge}>🔖</span>}
                       </div>
                     )}
-                    {msg.text && <div className={s.msgText}>{msg.text}</div>}
+                    {msg.text && <div className={s.msgText}>{renderMarkdown(msg.text)}</div>}
                     {msg.fileData && msg.fileType?.startsWith('image/') && (
                       <div className={s.msgImgWrap}>
                         <img className={s.msgImg} src={msg.fileData} alt={msg.fileName} />
@@ -225,7 +322,19 @@ export default function ChatView() {
                       </a>
                     )}
                   </div>
-                  <DeleteMsgBtn onDelete={() => deleteMessage(msg.id)} />
+                  <div className={s.msgActions}>
+                    <button
+                      className={`${s.msgActionBtn} ${msg.pinned ? s.msgActionActive : ''}`}
+                      onClick={() => pinMessage(msg.id)}
+                      title={msg.pinned ? 'Desafixar' : 'Fixar mensagem'}
+                    >📌</button>
+                    <button
+                      className={`${s.msgActionBtn} ${msg.bookmarked ? s.msgActionActive : ''}`}
+                      onClick={() => bookmarkMessage(msg.id)}
+                      title={msg.bookmarked ? 'Remover dos salvos' : 'Salvar mensagem'}
+                    >🔖</button>
+                    <DeleteMsgBtn onDelete={() => deleteMessage(msg.id)} />
+                  </div>
                 </div>
               )
             })}
@@ -237,27 +346,27 @@ export default function ChatView() {
       <div className={s.inputArea}>
         {file && (
           <div className={s.filePreview}>
-            {file.type.startsWith('image/') && (
-              <img className={s.fileThumb} src={file.data} alt={file.name} />
-            )}
+            {file.type.startsWith('image/') && <img className={s.fileThumb} src={file.data} alt={file.name} />}
             {!file.type.startsWith('image/') && <span className={s.fileIcon}>📎</span>}
             <span className={s.fileName}>{file.name}</span>
             <button className={s.fileRemove} onClick={() => setFile(null)} title="Remover">✕</button>
           </div>
         )}
+
+        {inputFocused && (
+          <div className={s.formatToolbar}>
+            <button className={s.fmtBtn} onMouseDown={e => { e.preventDefault(); insertFormat('bold') }} title="Negrito (**texto**)"><strong>B</strong></button>
+            <button className={s.fmtBtn} onMouseDown={e => { e.preventDefault(); insertFormat('italic') }} title="Itálico (*texto*)"><em>I</em></button>
+            <span className={s.fmtSep} />
+            <button className={s.fmtBtn} onMouseDown={e => { e.preventDefault(); insertFormat('bullet') }} title="Lista (- item)">•</button>
+            <button className={s.fmtBtn} onMouseDown={e => { e.preventDefault(); insertFormat('todo') }} title="Checklist ([ ] item)">☑</button>
+          </div>
+        )}
+
         <div className={s.inputBox}>
-          <button
-            className={s.attachBtn}
-            onClick={() => fileInputRef.current?.click()}
-            title="Anexar arquivo"
-          >+</button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            hidden
-            onChange={handleFileChange}
-            accept="image/*,.pdf,.doc,.docx,.txt,.zip,.csv,.xlsx,.pptx"
-          />
+          <button className={s.attachBtn} onClick={() => fileInputRef.current?.click()} title="Anexar arquivo">+</button>
+          <input ref={fileInputRef} type="file" hidden onChange={handleFileChange}
+            accept="image/*,.pdf,.doc,.docx,.txt,.zip,.csv,.xlsx,.pptx" />
           <textarea
             ref={textareaRef}
             className={s.textInput}
@@ -265,16 +374,13 @@ export default function ChatView() {
             value={text}
             onChange={handleTextareaInput}
             onKeyDown={handleKeyDown}
+            onFocus={() => setInputFocused(true)}
+            onBlur={() => setInputFocused(false)}
             rows={1}
           />
-          <button
-            className={s.sendBtn}
-            onClick={send}
-            disabled={!text.trim() && !file}
-            title="Enviar (Enter)"
-          >↑</button>
+          <button className={s.sendBtn} onClick={send} disabled={!text.trim() && !file} title="Enviar (Enter)">↑</button>
         </div>
-        <div className={s.inputHint}>Enter para enviar · Shift+Enter para nova linha · Arraste arquivos para anexar</div>
+        <div className={s.inputHint}>Enter para enviar · Shift+Enter para nova linha · **negrito** *itálico* - lista [ ] todo</div>
       </div>
     </div>
   )

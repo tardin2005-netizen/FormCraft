@@ -11,12 +11,16 @@ export interface ChatMessage {
   fileName?: string
   fileType?: string
   timestamp: string
+  pinned?: boolean
+  bookmarked?: boolean
 }
 
 interface ChatMessagesStore {
   messages: ChatMessage[]
   addMessage: (msg: Omit<ChatMessage, 'id' | 'timestamp'>) => void
   deleteMessage: (id: string) => void
+  pinMessage: (id: string) => void
+  bookmarkMessage: (id: string) => void
   getByChat: (chatId: string) => ChatMessage[]
 }
 
@@ -42,6 +46,22 @@ export const useChatMessagesStore = create<ChatMessagesStore>()(
         set(s => ({ messages: s.messages.filter(m => m.id !== id) }))
         const uid = auth.currentUser?.uid
         if (uid) deleteDoc(docRef(uid, id)).catch(() => {})
+      },
+      pinMessage: (id) => {
+        set(s => ({ messages: s.messages.map(m => m.id === id ? { ...m, pinned: !m.pinned } : m) }))
+        const uid = auth.currentUser?.uid
+        if (uid) {
+          const msg = get().messages.find(m => m.id === id)
+          if (msg) setDoc(docRef(uid, id), msg).catch(() => {})
+        }
+      },
+      bookmarkMessage: (id) => {
+        set(s => ({ messages: s.messages.map(m => m.id === id ? { ...m, bookmarked: !m.bookmarked } : m) }))
+        const uid = auth.currentUser?.uid
+        if (uid) {
+          const msg = get().messages.find(m => m.id === id)
+          if (msg) setDoc(docRef(uid, id), msg).catch(() => {})
+        }
       },
       getByChat: (chatId) => get().messages.filter(m => m.chatId === chatId),
     }),
