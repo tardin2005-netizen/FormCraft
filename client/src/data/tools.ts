@@ -109,6 +109,7 @@ export const ALL_TOOLS: Tool[] = [
   { name: 'Visual Studio Code', cat: 'Produtividade',  pricing: 'GRATUITO',   color: '#007ACC', letter: 'V', url: 'https://code.visualstudio.com/',         desc: 'Editor de código da Microsoft, gratuito e mais usado do mercado. Para HTML/CSS, scripts e automações' },
   { name: 'Node.js',          cat: 'Produtividade',    pricing: 'GRATUITO',   color: '#339933', letter: 'N', url: 'https://nodejs.org/',                    desc: 'Ambiente JavaScript fora do navegador. Pré-requisito de muitas ferramentas modernas e projetos de IA' },
   { name: 'Padlet',           cat: 'Produtividade',    pricing: 'FREEMIUM',   color: '#FF4A6B', letter: 'P', url: 'https://padlet.com/',                    desc: 'Mural digital colaborativo: post-its com texto, imagens, vídeos e links editados em tempo real' },
+  { name: 'MultCloud',        cat: 'Produtividade',    pricing: 'FREEMIUM',   color: '#2D8CFF', letter: 'M', url: 'https://www.multcloud.com/',             desc: 'Transfere e sincroniza arquivos entre nuvens (Google Drive, OneDrive, Dropbox e +30 serviços) sem baixar nada' },
   // Banco de Imagens
   { name: 'Unsplash',         cat: 'Banco de Imagens', pricing: 'GRATUITO',   color: '#111111', letter: 'U', url: 'https://unsplash.com',                   desc: 'Banco de fotos gratuito de alta qualidade' },
   { name: 'Pexels',           cat: 'Banco de Imagens', pricing: 'GRATUITO',   color: '#05A081', letter: 'P', url: 'https://pexels.com',                     desc: 'Fotos e vídeos gratuitos para projetos web' },
