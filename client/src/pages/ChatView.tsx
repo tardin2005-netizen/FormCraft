@@ -26,6 +26,44 @@ function getInitials(name: string | null | undefined) {
   return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
 }
 
+function useDeleteConfirm(onDelete: () => void) {
+  const [confirming, setConfirming] = useState(false)
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  function request(e: React.MouseEvent) {
+    e.stopPropagation()
+    if (confirming) {
+      if (timer.current) clearTimeout(timer.current)
+      setConfirming(false)
+      onDelete()
+    } else {
+      setConfirming(true)
+      timer.current = setTimeout(() => setConfirming(false), 3000)
+    }
+  }
+
+  function cancel(e: React.MouseEvent) {
+    e.stopPropagation()
+    if (timer.current) clearTimeout(timer.current)
+    setConfirming(false)
+  }
+
+  return { confirming, request, cancel }
+}
+
+function DeleteMsgBtn({ onDelete }: { onDelete: () => void }) {
+  const { confirming, request, cancel } = useDeleteConfirm(onDelete)
+  return confirming ? (
+    <span className={s.deleteConfirm}>
+      <span className={s.deleteConfirmLabel}>Apagar?</span>
+      <button className={s.deleteConfirmYes} onClick={request} title="Confirmar">✓</button>
+      <button className={s.deleteConfirmNo}  onClick={cancel}  title="Cancelar">✕</button>
+    </span>
+  ) : (
+    <button className={s.msgDelete} onClick={request} title="Apagar mensagem">✕</button>
+  )
+}
+
 export default function ChatView() {
   const { id: areaId, chatId } = useParams<{ id: string; chatId: string }>()
   const { areas } = useAreasStore()
@@ -187,11 +225,7 @@ export default function ChatView() {
                       </a>
                     )}
                   </div>
-                  <button
-                    className={s.msgDelete}
-                    onClick={() => deleteMessage(msg.id)}
-                    title="Apagar mensagem"
-                  >✕</button>
+                  <DeleteMsgBtn onDelete={() => deleteMessage(msg.id)} />
                 </div>
               )
             })}

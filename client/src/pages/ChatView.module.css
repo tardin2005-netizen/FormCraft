@@ -244,6 +244,32 @@
 .message:hover .msgDelete { color: var(--text2); }
 .msgDelete:hover { color: #f43f5e !important; background: var(--surface); }
 
+/* Delete confirmation */
+.deleteConfirm {
+  position: absolute; right: 8px; top: 4px;
+  display: flex; align-items: center; gap: 5px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px 8px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.2);
+  z-index: 10;
+}
+.deleteConfirmLabel {
+  font-size: 11px; color: var(--text2); white-space: nowrap;
+}
+.deleteConfirmYes {
+  background: #f43f5e; border: none; border-radius: 5px;
+  color: #fff; font-size: 12px; font-weight: 700;
+  padding: 3px 9px; cursor: pointer; line-height: 1;
+}
+.deleteConfirmNo {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 5px; color: var(--text2); font-size: 12px;
+  padding: 3px 9px; cursor: pointer; line-height: 1;
+}
+.deleteConfirmNo:hover { color: var(--text); }
+
 /* ── Input ── */
 .inputArea {
   flex-shrink: 0;
