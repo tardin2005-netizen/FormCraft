@@ -5,6 +5,70 @@ import { useLinksStore } from '../store/linksStore'
 import type { SavedLink } from '../store/linksStore'
 import s from './Inbox.module.css'
 
+function EditModal({ item, onClose, onSave }: {
+  item: SavedLink
+  onClose: () => void
+  onSave: (patch: Partial<Omit<SavedLink, 'id' | 'savedAt'>>) => void
+}) {
+  const [title, setTitle] = useState(item.title)
+  const [desc,  setDesc]  = useState(item.desc)
+  const [tags,  setTags]  = useState(item.tags.join(', '))
+
+  function save() {
+    onSave({ title: title.trim(), desc: desc.trim(), tags: tags.split(',').map(t => t.trim()).filter(Boolean) })
+    onClose()
+  }
+
+  return (
+    <motion.div className={s.lightbox} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
+      <motion.div
+        className={s.fullModal}
+        initial={{ scale: .94, opacity: 0, y: 16 }} animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: .94, opacity: 0 }} transition={{ type: 'spring', stiffness: 340, damping: 28 }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div className={s.fullModalHeader}>
+          <TypeBadge type={item.type} />
+          <span className={s.fullModalTitle}>Editar</span>
+          <button className={s.lightboxClose} onClick={onClose}>✕</button>
+        </div>
+        <div className={s.fullModalBody} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: '.06em', display: 'block', marginBottom: 4 }}>Título</label>
+            <input
+              value={title} onChange={e => setTitle(e.target.value)}
+              style={{ width: '100%', padding: '8px 10px', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none' }}
+              autoFocus
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: '.06em', display: 'block', marginBottom: 4 }}>Descrição</label>
+            <textarea
+              value={desc} onChange={e => setDesc(e.target.value)} rows={5}
+              style={{ width: '100%', padding: '8px 10px', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none', resize: 'vertical', fontFamily: 'inherit' }}
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: '.06em', display: 'block', marginBottom: 4 }}>Tags (separadas por vírgula)</label>
+            <input
+              value={tags} onChange={e => setTags(e.target.value)}
+              placeholder="faculdade, design, ..."
+              style={{ width: '100%', padding: '8px 10px', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none' }}
+            />
+          </div>
+        </div>
+        <div className={s.fullModalFooter}>
+          <div />
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={onClose} style={{ padding: '8px 16px', background: 'transparent', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text2)', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
+            <button onClick={save} disabled={!title.trim()} style={{ padding: '8px 20px', background: 'var(--accent)', border: 'none', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: title.trim() ? 1 : .4 }}>Salvar</button>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
 type OutletCtx = { onOpenSearch: () => void; onOpenSaveLink: () => void }
 
 type View    = 'grid' | 'list' | 'compact'
@@ -151,10 +215,11 @@ function useDeleteConfirm(onDelete: () => void) {
 }
 
 /* ── Grid card ── */
-function GridCard({ item, onDelete }: { item: SavedLink; onDelete: () => void }) {
+function GridCard({ item, onDelete, onUpdate }: { item: SavedLink; onDelete: () => void; onUpdate: (patch: Partial<Omit<SavedLink, 'id' | 'savedAt'>>) => void }) {
   const [hovered,   setHovered]   = useState(false)
   const [lightbox,  setLightbox]  = useState(false)
   const [showFull,  setShowFull]  = useState(false)
+  const [showEdit,  setShowEdit]  = useState(false)
   const { confirming, requestDelete, cancelDelete } = useDeleteConfirm(onDelete)
   const isExpandable = item.type === 'prompt' || item.type === 'nota'
   const isImage = item.type === 'imagem'
@@ -220,6 +285,11 @@ function GridCard({ item, onDelete }: { item: SavedLink; onDelete: () => void })
                 title="Ver conteúdo completo"
               >↗ ver tudo</button>
             )}
+            <button
+              className={s.expandBtn}
+              onClick={e => { e.preventDefault(); e.stopPropagation(); setShowEdit(true) }}
+              title="Editar"
+            >✎ editar</button>
             <span className={s.cardTime}>{timeAgo(item.savedAt)}</span>
           </div>
         </div>
@@ -250,6 +320,7 @@ function GridCard({ item, onDelete }: { item: SavedLink; onDelete: () => void })
         </motion.div>
         <AnimatePresence>
           {lightbox && imgSrc && <Lightbox src={imgSrc} onClose={() => setLightbox(false)} />}
+          {showEdit && <EditModal item={item} onClose={() => setShowEdit(false)} onSave={onUpdate} />}
         </AnimatePresence>
       </>
     )
@@ -276,6 +347,7 @@ function GridCard({ item, onDelete }: { item: SavedLink; onDelete: () => void })
       <AnimatePresence>
         {lightbox && imgSrc && <Lightbox src={imgSrc} onClose={() => setLightbox(false)} />}
         {showFull && <FullContentModal item={item} onClose={() => setShowFull(false)} />}
+        {showEdit && <EditModal item={item} onClose={() => setShowEdit(false)} onSave={onUpdate} />}
       </AnimatePresence>
     </>
   )
@@ -387,7 +459,7 @@ function CompactRow({ item, onDelete }: { item: SavedLink; onDelete: () => void 
 /* ── Main Inbox ── */
 export default function Inbox() {
   const { onOpenSaveLink } = useOutletContext<OutletCtx>()
-  const { links, removeLink } = useLinksStore()
+  const { links, removeLink, updateLink } = useLinksStore()
   const [view,   setView]   = useState<View>('grid')
   const [filter, setFilter] = useState<Filter>('link')
   const [search, setSearch] = useState('')
@@ -479,7 +551,7 @@ export default function Inbox() {
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               {filtered.map((item, i) => (
                 <motion.div key={item.id} transition={{ delay: i * .04 }}>
-                  <GridCard item={item} onDelete={() => removeLink(item.id)} />
+                  <GridCard item={item} onDelete={() => removeLink(item.id)} onUpdate={patch => updateLink(item.id, patch)} />
                 </motion.div>
               ))}
             </motion.div>

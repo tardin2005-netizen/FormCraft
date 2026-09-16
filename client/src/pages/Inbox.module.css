@@ -223,12 +223,9 @@
 .cardDesc {
   font-size: 11px;
   color: var(--text2);
-  line-height: 1.45;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  line-height: 1.5;
   margin-bottom: 10px;
+  word-break: break-word;
 }
 .cardFooter {
   display: flex;

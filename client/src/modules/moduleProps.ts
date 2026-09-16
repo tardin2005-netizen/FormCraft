@@ -6,6 +6,7 @@ export interface ModuleProps {
   workspaceId: string
   items: ContentItem[]
   addItem: (item: Omit<ContentItem, 'id' | 'createdAt' | 'updatedAt'>) => ContentItem
+  updateItem: (id: string, patch: Partial<Omit<ContentItem, 'id'>>) => void
   removeItem: (id: string) => void
   toggleStar: (id: string) => void
 }

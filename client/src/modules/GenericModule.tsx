@@ -1,281 +1,252 @@
-import { useState, useEffect, useRef } from 'react'
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
-import { storage, auth } from '../firebase'
+import { useState } from 'react'
 import type { ModuleProps } from './moduleProps'
-import s from './modules.module.css'
+import s from './GenericModule.module.css'
 import DeleteBtn from './DeleteBtn'
 
-interface GenericData {
+interface NoteData {
   title: string
   content: string
-  url: string
-  notes: string
+  color: string
   tags: string
-  imageData?: string
-  pdfUrl?: string
-  pdfName?: string
 }
 
-function PdfViewer({ url, name }: { url: string; name?: string }) {
-  const [open, setOpen] = useState(false)
+const KEEP_COLORS = [
+  { label: 'Padrão',    value: '' },
+  { label: 'Amarelo',   value: '#fff9c4' },
+  { label: 'Verde',     value: '#ccff90' },
+  { label: 'Verde água',value: '#a7ffeb' },
+  { label: 'Azul claro',value: '#cbf0f8' },
+  { label: 'Azul',      value: '#aecbfa' },
+  { label: 'Lavanda',   value: '#d7aefb' },
+  { label: 'Rosa',      value: '#fdcfe8' },
+  { label: 'Laranja',   value: '#fbbc04' },
+  { label: 'Vermelho',  value: '#f28b82' },
+  { label: 'Bege',      value: '#e6c9a8' },
+  { label: 'Cinza',     value: '#e8eaed' },
+]
+
+const EMPTY: NoteData = { title: '', content: '', color: '', tags: '' }
+
+function isLight(hex: string) {
+  if (!hex) return false
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16)
+  return (r*299+g*587+b*114)/1000 > 160
+}
+
+function NoteModal({
+  initial, title: modalTitle, onClose, onSave,
+}: {
+  initial: NoteData
+  title: string
+  onClose: () => void
+  onSave: (data: NoteData) => void
+}) {
+  const [form, setForm] = useState<NoteData>({ ...initial })
+  const light = isLight(form.color)
+  const textCss = light ? { color: '#202124' } : {}
+
+  function save() {
+    if (!form.title.trim() && !form.content.trim()) return
+    onSave(form)
+    onClose()
+  }
+
   return (
-    <div className={s.pdfBlock}>
-      <div className={s.pdfBar}>
-        <span className={s.pdfIcon}>📄</span>
-        <span className={s.pdfName}>{name ?? 'Arquivo PDF'}</span>
-        <div className={s.pdfActions}>
-          <button className={s.pdfToggle} onClick={() => setOpen(v => !v)}>
-            {open ? '▲ Minimizar' : '▼ Ver PDF'}
-          </button>
-          <a href={url} target="_blank" rel="noreferrer" className={s.pdfOpenBtn}>↗ Abrir</a>
+    <div className={s.backdrop} onClick={e => { if (e.target === e.currentTarget) { save(); } }}>
+      <div
+        className={s.modal}
+        style={{ background: form.color || 'var(--surface)', ...(form.color ? { border: 'none' } : {}) }}
+        onClick={e => e.stopPropagation()}
+      >
+        <input
+          className={s.modalTitle}
+          style={textCss}
+          placeholder="Título"
+          value={form.title}
+          onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
+          autoFocus
+        />
+        <textarea
+          className={s.modalContent}
+          style={textCss}
+          placeholder="Fazer anotação..."
+          value={form.content}
+          onChange={e => setForm(p => ({ ...p, content: e.target.value }))}
+          rows={6}
+        />
+        <input
+          className={s.modalTags}
+          style={textCss}
+          placeholder="Tags (separadas por vírgula)"
+          value={form.tags}
+          onChange={e => setForm(p => ({ ...p, tags: e.target.value }))}
+        />
+
+        <div className={s.modalFooter}>
+          <div className={s.colorRow}>
+            {KEEP_COLORS.map(c => (
+              <button
+                key={c.value}
+                className={`${s.colorDot} ${form.color === c.value ? s.colorDotActive : ''}`}
+                style={{ background: c.value || 'var(--surface2)', border: c.value ? 'none' : '1px solid var(--border)' }}
+                title={c.label}
+                onClick={() => setForm(p => ({ ...p, color: c.value }))}
+              />
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className={s.cancelBtn} onClick={() => { save(); }}>Fechar</button>
+            <button className={s.saveBtn} onClick={save} disabled={!form.title.trim() && !form.content.trim()}>
+              {modalTitle === 'Editar' ? 'Salvar' : 'Adicionar'}
+            </button>
+          </div>
         </div>
       </div>
-      {open && (
-        <iframe
-          src={url}
-          className={s.pdfFrame}
-          title={name ?? 'PDF'}
-          allow="fullscreen"
-        />
-      )}
     </div>
   )
 }
 
-export default function GenericModule({ module, workspaceId, items, addItem, removeItem, toggleStar }: ModuleProps) {
-  const [showForm, setShowForm]   = useState(false)
-  const [form, setForm]           = useState<GenericData>({ title: '', content: '', url: '', notes: '', tags: '', imageData: '', pdfUrl: '', pdfName: '' })
-  const [tab, setTab]             = useState<'text' | 'image' | 'pdf'>('text')
-  const [uploading, setUploading] = useState(false)
-  const [progress, setProgress]   = useState(0)
-  const [uploadErr, setUploadErr] = useState('')
-  const imgInputRef = useRef<HTMLInputElement>(null)
-  const pdfInputRef = useRef<HTMLInputElement>(null)
+export default function GenericModule({ module, workspaceId, items, addItem, updateItem, removeItem, toggleStar }: ModuleProps) {
+  const [addOpen,  setAddOpen]  = useState(false)
+  const [editItem, setEditItem] = useState<string | null>(null)
+  const [quickTitle, setQuickTitle] = useState('')
 
-  useEffect(() => {
-    if (!showForm) return
-    function onPaste(e: ClipboardEvent) {
-      const clipItems = e.clipboardData?.items
-      if (!clipItems) return
-      for (let i = 0; i < clipItems.length; i++) {
-        if (clipItems[i].type.startsWith('image/')) {
-          const file = clipItems[i].getAsFile()
-          if (!file) continue
-          const reader = new FileReader()
-          reader.onload = ev => { setForm(p => ({ ...p, imageData: ev.target?.result as string })); setTab('image') }
-          reader.readAsDataURL(file)
-          e.preventDefault()
-          return
-        }
-      }
-    }
-    window.addEventListener('paste', onPaste)
-    return () => window.removeEventListener('paste', onPaste)
-  }, [showForm])
-
-  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = ev => setForm(p => ({ ...p, imageData: ev.target?.result as string }))
-    reader.readAsDataURL(file)
-  }
-
-  async function handlePdfChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (file.type !== 'application/pdf') { setUploadErr('Selecione um arquivo PDF.'); return }
-    setUploadErr('')
-    setUploading(true)
-    setProgress(0)
-    const uid = auth.currentUser?.uid ?? 'anon'
-    const path = `users/${uid}/workspaces/${workspaceId}/${module.id}/${Date.now()}_${file.name}`
-    const storageRef = ref(storage, path)
-    const task = uploadBytesResumable(storageRef, file)
-    task.on(
-      'state_changed',
-      snap => setProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)),
-      () => { setUploadErr('Erro ao subir o PDF. Tente novamente.'); setUploading(false) },
-      async () => {
-        const url = await getDownloadURL(task.snapshot.ref)
-        setForm(p => ({ ...p, pdfUrl: url, pdfName: file.name }))
-        setUploading(false)
-        setProgress(100)
-      }
-    )
-  }
-
-  function handleAdd() {
-    if (!form.title.trim()) return
+  function handleAdd(data: NoteData) {
     addItem({
       workspaceId,
       moduleId: module.id,
       contentType: module.type as 'notes',
-      data: form as unknown as Record<string, unknown>,
-      tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
+      data: data as unknown as Record<string, unknown>,
+      tags: data.tags.split(',').map(t => t.trim()).filter(Boolean),
       starred: false,
     })
-    setShowForm(false)
-    resetForm()
   }
 
-  function resetForm() {
-    setForm({ title: '', content: '', url: '', notes: '', tags: '', imageData: '', pdfUrl: '', pdfName: '' })
-    setTab('text')
-    setProgress(0)
-    setUploadErr('')
+  function handleEdit(id: string, data: NoteData) {
+    updateItem(id, {
+      data: data as unknown as Record<string, unknown>,
+      tags: data.tags.split(',').map(t => t.trim()).filter(Boolean),
+    })
   }
+
+  function openEdit(id: string) { setEditItem(id) }
+
+  const pinnedItems = items.filter(i => i.starred)
+  const otherItems  = items.filter(i => !i.starred)
 
   return (
-    <div>
-      <div className={s.moduleHeader}>
-        <h2 className={s.moduleTitle}>{module.name}</h2>
-        <button className={s.addBtn} onClick={() => setShowForm(true)}>+ Adicionar</button>
+    <div className={s.page}>
+      {/* Quick-add bar */}
+      <div className={s.quickBar} onClick={() => { if (!addOpen) setAddOpen(true) }}>
+        <input
+          className={s.quickInput}
+          placeholder="Fazer anotação..."
+          value={quickTitle}
+          onChange={e => setQuickTitle(e.target.value)}
+          onFocus={() => setAddOpen(true)}
+          readOnly
+        />
+        <button className={s.addBtn} onClick={e => { e.stopPropagation(); setAddOpen(true) }}>+ Adicionar</button>
       </div>
 
-      {items.length === 0 ? (
+      {items.length === 0 && (
         <div className={s.empty}>
           <div className={s.emptyIcon}>{module.icon}</div>
-          <div className={s.emptyTitle}>Nenhum item ainda</div>
-          <div className={s.emptyDesc}>Adicione textos, imagens ou PDFs em {module.name.toLowerCase()}.</div>
-        </div>
-      ) : (
-        <div className={s.genericList}>
-          {items.map(item => {
-            const d = item.data as unknown as GenericData
-            return (
-              <div key={item.id} className={`${s.genericItem} ${item.starred ? s.starred : ''}`}>
-                {d.imageData && (
-                  <img src={d.imageData} alt={d.title} className={s.genericThumb} />
-                )}
-                <div className={s.genericLeft} style={{ flex: 1, minWidth: 0 }}>
-                  <div className={s.genericTitle}>{d.title}</div>
-                  {d.content && <div className={s.genericContent}>{d.content}</div>}
-                  {d.url && <a href={d.url} target="_blank" rel="noreferrer" className={s.genericUrl}>{d.url}</a>}
-                  {d.notes && <div className={s.notes}>"{d.notes}"</div>}
-                  {item.tags.length > 0 && (
-                    <div className={s.tags}>{item.tags.map(t => <span key={t} className={s.tag}>#{t}</span>)}</div>
-                  )}
-                  {d.pdfUrl && <PdfViewer url={d.pdfUrl} name={d.pdfName} />}
-                </div>
-                <div style={{ display: 'flex', gap: 4, flexShrink: 0, alignItems: 'flex-start' }}>
-                  <button className={`${s.starBtn} ${item.starred ? s.starActive : ''}`} onClick={() => toggleStar(item.id)}>{item.starred ? '★' : '☆'}</button>
-                  <DeleteBtn onConfirm={() => removeItem(item.id)} />
-                </div>
-              </div>
-            )
-          })}
+          <div className={s.emptyTitle}>Nenhuma nota ainda</div>
+          <div className={s.emptyDesc}>Clique em "+ Adicionar" para criar a primeira nota.</div>
         </div>
       )}
 
-      {showForm && (
-        <div className={s.backdrop} onClick={e => { if (e.target === e.currentTarget) { setShowForm(false); resetForm() } }}>
-          <div className={s.formModal}>
-            <h3 className={s.formTitle}>Adicionar em {module.name}</h3>
-
-            {/* Title always visible */}
-            <div className={s.formGrid}>
-              <div className={`${s.formGroup} ${s.fullWidth}`}>
-                <label className={s.label}>Título *</label>
-                <input className={s.input} placeholder="Nome do item..." value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} autoFocus />
-              </div>
-            </div>
-
-            {/* Content type tabs */}
-            <div className={s.contentTabs}>
-              {([
-                { id: 'text',  icon: '📝', label: 'Texto' },
-                { id: 'image', icon: '🖼️', label: 'Imagem' },
-                { id: 'pdf',   icon: '📄', label: 'PDF' },
-              ] as const).map(t => (
-                <button
-                  key={t.id}
-                  className={`${s.contentTab} ${tab === t.id ? s.contentTabActive : ''}`}
-                  onClick={() => setTab(t.id)}
+      {pinnedItems.length > 0 && (
+        <>
+          <div className={s.sectionLabel}>📌 Fixadas</div>
+          <div className={s.grid}>
+            {pinnedItems.map(item => {
+              const d = item.data as unknown as NoteData
+              const light = isLight(d.color)
+              const tc = light ? { color: '#202124' } : {}
+              return (
+                <div
+                  key={item.id}
+                  className={s.card}
+                  style={{ background: d.color || 'var(--surface)', ...(d.color ? { border: 'none' } : {}) }}
+                  onClick={() => openEdit(item.id)}
+                  title={`${d.title}${d.content ? ' — ' + d.content.slice(0, 80) : ''}`}
                 >
-                  {t.icon} {t.label}
-                </button>
-              ))}
-            </div>
-
-            {tab === 'text' && (
-              <div className={s.formGrid}>
-                <div className={`${s.formGroup} ${s.fullWidth}`}>
-                  <label className={s.label}>Conteúdo</label>
-                  <textarea className={s.textarea} placeholder="Texto, anotação, descrição..." value={form.content} onChange={e => setForm(p => ({ ...p, content: e.target.value }))} rows={5} />
-                </div>
-                <div className={s.formGroup}>
-                  <label className={s.label}>URL</label>
-                  <input className={s.input} placeholder="https://..." value={form.url} onChange={e => setForm(p => ({ ...p, url: e.target.value }))} />
-                </div>
-                <div className={s.formGroup}>
-                  <label className={s.label}>Tags</label>
-                  <input className={s.input} placeholder="tag1, tag2" value={form.tags} onChange={e => setForm(p => ({ ...p, tags: e.target.value }))} />
-                </div>
-                <div className={`${s.formGroup} ${s.fullWidth}`}>
-                  <label className={s.label}>Notas</label>
-                  <input className={s.input} placeholder="Observações rápidas..." value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} />
-                </div>
-              </div>
-            )}
-
-            {tab === 'image' && (
-              <div className={s.formGrid}>
-                <div className={`${s.formGroup} ${s.fullWidth}`}>
-                  <label className={s.label}>Imagem <span style={{ fontWeight: 400, textTransform: 'none' }}>(cole ⌘V ou selecione)</span></label>
-                  {form.imageData ? (
-                    <div style={{ position: 'relative', display: 'inline-block' }}>
-                      <img src={form.imageData} alt="" style={{ maxHeight: 200, maxWidth: '100%', borderRadius: 8, display: 'block', border: '1px solid var(--border)' }} />
-                      <button onClick={() => setForm(p => ({ ...p, imageData: '' }))}
-                        style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(0,0,0,.5)', border: 'none', color: '#fff', borderRadius: 4, cursor: 'pointer', padding: '2px 6px', fontSize: 11 }}>
-                        ✕ remover
-                      </button>
-                    </div>
-                  ) : (
-                    <div className={s.imageDrop} onClick={() => imgInputRef.current?.click()}>
-                      <span>📋 Cole com ⌘V ou clique para selecionar</span>
-                      <input ref={imgInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageChange} />
+                  {d.title && <div className={s.cardTitle} style={tc}>{d.title}</div>}
+                  {d.content && <div className={s.cardContent} style={tc}>{d.content}</div>}
+                  {item.tags.length > 0 && (
+                    <div className={s.cardTags}>
+                      {item.tags.map(t => <span key={t} className={s.tag} style={light ? { background: 'rgba(0,0,0,.08)', color: '#202124' } : {}}>#{t}</span>)}
                     </div>
                   )}
+                  <div className={s.cardActions} onClick={e => e.stopPropagation()}>
+                    <button className={s.pinBtn} onClick={() => toggleStar(item.id)} title="Desafixar">📌</button>
+                    <DeleteBtn onConfirm={() => removeItem(item.id)} />
+                  </div>
                 </div>
-              </div>
-            )}
-
-            {tab === 'pdf' && (
-              <div className={s.formGrid}>
-                <div className={`${s.formGroup} ${s.fullWidth}`}>
-                  <label className={s.label}>Arquivo PDF</label>
-                  {form.pdfUrl ? (
-                    <div className={s.pdfUploaded}>
-                      <span>✓ {form.pdfName}</span>
-                      <button onClick={() => setForm(p => ({ ...p, pdfUrl: '', pdfName: '' }))} className={s.pdfRemoveBtn}>✕ remover</button>
-                    </div>
-                  ) : uploading ? (
-                    <div className={s.pdfProgress}>
-                      <div className={s.pdfProgressBar} style={{ width: `${progress}%` }} />
-                      <span className={s.pdfProgressText}>Subindo PDF... {progress}%</span>
-                    </div>
-                  ) : (
-                    <div className={s.imageDrop} onClick={() => pdfInputRef.current?.click()}>
-                      <span>📄 Clique para selecionar um PDF</span>
-                      <span style={{ fontSize: 11, color: 'var(--text2)' }}>O arquivo será salvo no Firebase Storage</span>
-                      <input ref={pdfInputRef} type="file" accept="application/pdf" style={{ display: 'none' }} onChange={handlePdfChange} />
-                    </div>
-                  )}
-                  {uploadErr && <div style={{ color: '#f43f5e', fontSize: 12, marginTop: 6 }}>{uploadErr}</div>}
-                </div>
-              </div>
-            )}
-
-            <div className={s.formFooter}>
-              <button className={s.cancelBtn} onClick={() => { setShowForm(false); resetForm() }}>Cancelar</button>
-              <button className={s.saveBtn} onClick={handleAdd} disabled={!form.title.trim() || uploading}>
-                {uploading ? `Subindo ${progress}%...` : 'Salvar'}
-              </button>
-            </div>
+              )
+            })}
           </div>
-        </div>
+        </>
       )}
+
+      {otherItems.length > 0 && (
+        <>
+          {pinnedItems.length > 0 && <div className={s.sectionLabel}>Outras</div>}
+          <div className={s.grid}>
+            {otherItems.map(item => {
+              const d = item.data as unknown as NoteData
+              const light = isLight(d.color)
+              const tc = light ? { color: '#202124' } : {}
+              return (
+                <div
+                  key={item.id}
+                  className={s.card}
+                  style={{ background: d.color || 'var(--surface)', ...(d.color ? { border: 'none' } : {}) }}
+                  onClick={() => openEdit(item.id)}
+                  title={`${d.title}${d.content ? ' — ' + d.content.slice(0, 80) : ''}`}
+                >
+                  {d.title && <div className={s.cardTitle} style={tc}>{d.title}</div>}
+                  {d.content && <div className={s.cardContent} style={tc}>{d.content}</div>}
+                  {item.tags.length > 0 && (
+                    <div className={s.cardTags}>
+                      {item.tags.map(t => <span key={t} className={s.tag} style={light ? { background: 'rgba(0,0,0,.08)', color: '#202124' } : {}}>#{t}</span>)}
+                    </div>
+                  )}
+                  <div className={s.cardActions} onClick={e => e.stopPropagation()}>
+                    <button className={s.pinBtn} onClick={() => toggleStar(item.id)} title="Fixar">☆</button>
+                    <DeleteBtn onConfirm={() => removeItem(item.id)} />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </>
+      )}
+
+      {addOpen && (
+        <NoteModal
+          initial={{ ...EMPTY, title: quickTitle }}
+          title="Nova nota"
+          onClose={() => { setAddOpen(false); setQuickTitle('') }}
+          onSave={handleAdd}
+        />
+      )}
+
+      {editItem && (() => {
+        const item = items.find(i => i.id === editItem)
+        if (!item) return null
+        const d = item.data as unknown as NoteData
+        return (
+          <NoteModal
+            initial={{ title: d.title || '', content: d.content || '', color: d.color || '', tags: item.tags.join(', ') }}
+            title="Editar"
+            onClose={() => setEditItem(null)}
+            onSave={data => handleEdit(editItem, data)}
+          />
+        )
+      })()}
     </div>
   )
 }

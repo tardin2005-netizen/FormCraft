@@ -34,10 +34,10 @@ const CONTEXT_LABELS: Record<string, string> = {
 }
 
 function ModuleContent({ module, workspaceId }: { module: WorkspaceModule; workspaceId: string }) {
-  const { items, addItem, removeItem, toggleStar } = useContentItemsStore()
+  const { items, addItem, updateItem, removeItem, toggleStar } = useContentItemsStore()
   const moduleItems = items.filter(i => i.moduleId === module.id)
 
-  const props = { module, workspaceId, items: moduleItems, addItem, removeItem, toggleStar }
+  const props = { module, workspaceId, items: moduleItems, addItem, updateItem, removeItem, toggleStar }
 
   switch (module.type) {
     case 'fonts':          return <FontLibrary {...props} />

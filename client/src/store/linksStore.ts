@@ -20,6 +20,7 @@ export interface SavedLink {
 interface LinksStore {
   links: SavedLink[]
   addLink: (link: Omit<SavedLink, 'id' | 'savedAt'>) => void
+  updateLink: (id: string, patch: Partial<Omit<SavedLink, 'id' | 'savedAt'>>) => void
   removeLink: (id: string) => void
   hydrate: (links: SavedLink[]) => void
 }
@@ -28,13 +29,21 @@ function d(uid: string, id: string) { return doc(db, 'users', uid, 'links', id) 
 
 export const useLinksStore = create<LinksStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       links: [],
       addLink: (link) => {
         const newLink: SavedLink = { ...link, id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), savedAt: Date.now() }
         set(s => ({ links: [newLink, ...s.links] }))
         const uid = auth.currentUser?.uid
         if (uid) setDoc(d(uid, newLink.id), newLink).catch(() => {})
+      },
+      updateLink: (id, patch) => {
+        set(s => ({ links: s.links.map(l => l.id === id ? { ...l, ...patch } : l) }))
+        const uid = auth.currentUser?.uid
+        if (uid) {
+          const link = get().links.find(l => l.id === id)
+          if (link) setDoc(d(uid, id), { ...link, ...patch }).catch(() => {})
+        }
       },
       removeLink: (id) => {
         set(s => ({ links: s.links.filter(l => l.id !== id) }))
