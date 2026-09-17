@@ -37,7 +37,8 @@ export default function SaveLinkModal({ onClose }: Props) {
   const [pastedImage, setPastedImage] = useState<string>('')
   const [type,        setType]        = useState<ContentType>('link')
   const [areaId,      setAreaId]      = useState(areas[0]?.id ?? '')
-  const [tags,        setTags]        = useState('')
+  const [tags,        setTags]        = useState<string[]>([])
+  const [tagInput,    setTagInput]    = useState('')
   const [saved,       setSaved]       = useState(false)
   const [fetching,    setFetching]    = useState(false)
   const [fetchDone,   setFetchDone]   = useState(false)
@@ -58,7 +59,8 @@ export default function SaveLinkModal({ onClose }: Props) {
           reader.onload = ev => {
             const dataUrl = ev.target?.result as string
             setPastedImage(dataUrl)
-            setType('imagem')
+            // só muda o tipo para imagem se não há URL — se tiver URL, a imagem é só thumbnail
+            setType(prev => prev === 'link' || prev === 'pdf' ? prev : 'imagem')
           }
           reader.readAsDataURL(file)
           e.preventDefault()
@@ -78,6 +80,26 @@ export default function SaveLinkModal({ onClose }: Props) {
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
   }, [url, title, type, areaId, tags])
+
+  function commitTag(raw: string) {
+    const t = raw.replace(/^#+/, '').trim().toLowerCase()
+    if (t && !tags.includes(t)) setTags(prev => [...prev, t])
+    setTagInput('')
+  }
+
+  function onTagKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter' || e.key === ' ' || e.key === ',') {
+      e.preventDefault()
+      commitTag(tagInput)
+    }
+    if (e.key === 'Backspace' && !tagInput && tags.length > 0) {
+      setTags(prev => prev.slice(0, -1))
+    }
+  }
+
+  function onTagBlur() {
+    if (tagInput.trim()) commitTag(tagInput)
+  }
 
   const triggerFetch = useCallback(async (rawUrl: string) => {
     const u = rawUrl.trim()
@@ -124,8 +146,8 @@ export default function SaveLinkModal({ onClose }: Props) {
 
   function handleSave() {
     const hasContent = url.trim().startsWith('http') || type === 'nota' || type === 'prompt' || !!pastedImage
-    const parsedTags = tags.split(',').map(t => t.trim()).filter(Boolean)
-    if (!hasContent || parsedTags.length === 0) return
+    const finalTags = tagInput.trim() ? [...tags, tagInput.replace(/^#+/, '').trim().toLowerCase()].filter(Boolean) : tags
+    if (!hasContent || finalTags.length === 0) return
     addLink({
       url: url.trim() || '#',
       title: title.trim() || url.trim() || 'Sem título',
@@ -135,7 +157,7 @@ export default function SaveLinkModal({ onClose }: Props) {
         : TYPE_ICONS[type],
       ogImage: pastedImage || ogImage || undefined,
       areaId,
-      tags: parsedTags,
+      tags: finalTags,
       type,
     })
     setSaved(true)
@@ -143,8 +165,8 @@ export default function SaveLinkModal({ onClose }: Props) {
   }
 
   const domain = getDomain(url)
-  const parsedTagsCount = tags.split(',').map(t => t.trim()).filter(Boolean).length
-  const canSave = (url.trim().startsWith('http') || type === 'nota' || type === 'prompt' || !!pastedImage) && parsedTagsCount > 0 && !saved
+  const effectiveTags = tagInput.trim() ? [...tags, tagInput.replace(/^#+/, '').trim().toLowerCase()].filter(Boolean) : tags
+  const canSave = (url.trim().startsWith('http') || type === 'nota' || type === 'prompt' || !!pastedImage) && effectiveTags.length > 0 && !saved
 
   // Drag
   const [pos, setPos] = useState({ x: 0, y: 0 })
@@ -307,16 +329,25 @@ export default function SaveLinkModal({ onClose }: Props) {
             <div className={s.field} style={areas.length === 0 ? { gridColumn: '1 / -1' } : {}}>
               <label className={s.label}>
                 Tags <span className={s.required}>*</span>
-                <span className={s.optional} style={{ marginLeft: 4 }}>(vírgula, obrigatório)</span>
               </label>
-              <input
-                className={`${s.input} ${parsedTagsCount === 0 && tags.length > 0 ? s.inputError : ''}`}
-                placeholder="#prompt, #curso, #ref..."
-                value={tags}
-                onChange={e => setTags(e.target.value)}
-              />
-              {parsedTagsCount === 0 && (
-                <span className={s.fieldHint}>Adicione ao menos 1 tag para salvar</span>
+              <div className={`${s.tagBox} ${effectiveTags.length === 0 && tagInput.length > 0 ? '' : ''}`}>
+                {tags.map(t => (
+                  <span key={t} className={s.tagChip}>
+                    #{t}
+                    <button className={s.tagChipRemove} onClick={() => setTags(prev => prev.filter(x => x !== t))}>✕</button>
+                  </span>
+                ))}
+                <input
+                  className={s.tagInput}
+                  placeholder={tags.length === 0 ? '#prompt #curso...' : ''}
+                  value={tagInput}
+                  onChange={e => setTagInput(e.target.value)}
+                  onKeyDown={onTagKeyDown}
+                  onBlur={onTagBlur}
+                />
+              </div>
+              {effectiveTags.length === 0 && (
+                <span className={s.fieldHint}>Espaço, Enter ou vírgula para criar tag</span>
               )}
             </div>
           </div>

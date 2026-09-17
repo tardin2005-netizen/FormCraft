@@ -71,6 +71,7 @@ export default function Layout() {
   const [newChatOpen,   setNewChatOpen]   = useState(false)
   const [newChatTitle,  setNewChatTitle]  = useState('')
   const [searchOpen,    setSearchOpen]    = useState(false)
+  const [searchQuery,   setSearchQuery]   = useState('')
   const [saveLinkOpen,  setSaveLinkOpen]  = useState(false)
   const [settingsOpen,  setSettingsOpen]  = useState(false)
   const [quickNoteOpen, setQuickNoteOpen] = useState(false)
@@ -495,7 +496,7 @@ export default function Layout() {
         </header>
 
         <main className={s.content}>
-          <Outlet context={{ onOpenSearch: () => setSearchOpen(true), onOpenSaveLink: () => setSaveLinkOpen(true) }} />
+          <Outlet context={{ onOpenSearch: (q?: string) => { setSearchQuery(q ?? ''); setSearchOpen(true) }, onOpenSaveLink: () => setSaveLinkOpen(true) }} />
         </main>
       </div>
 
@@ -624,7 +625,7 @@ export default function Layout() {
         ))}
       </nav>
 
-      {searchOpen    && <SearchPalette onClose={() => setSearchOpen(false)} />}
+      {searchOpen    && <SearchPalette onClose={() => { setSearchOpen(false); setSearchQuery('') }} initialQuery={searchQuery} />}
       {saveLinkOpen  && <SaveLinkModal onClose={() => setSaveLinkOpen(false)} />}
       <AnimatePresence>{quickNoteOpen && <QuickNote onClose={() => setQuickNoteOpen(false)} />}</AnimatePresence>
       <FormCraftChat open={aiChatOpen} onClose={() => setAiChatOpen(false)} />

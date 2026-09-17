@@ -69,12 +69,13 @@ function EditModal({ item, onClose, onSave }: {
   )
 }
 
-type OutletCtx = { onOpenSearch: () => void; onOpenSaveLink: () => void }
+type OutletCtx = { onOpenSearch: (q?: string) => void; onOpenSaveLink: () => void }
 
 type View    = 'grid' | 'list' | 'compact'
-type Filter  = 'link' | 'pdf' | 'nota' | 'imagem' | 'prompt'
+type Filter  = 'todos' | 'link' | 'pdf' | 'nota' | 'imagem' | 'prompt'
 
 const FILTERS: { key: Filter; label: string; icon: string }[] = [
+  { key: 'todos',   label: 'Todos',    icon: '📋' },
   { key: 'link',    label: 'Links',    icon: '🔗' },
   { key: 'pdf',     label: 'PDFs',     icon: '📄' },
   { key: 'nota',    label: 'Notas',    icon: '📝' },
@@ -114,11 +115,22 @@ function TypeBadge({ type }: { type: string }) {
   )
 }
 
-function TagChip({ tag }: { tag: string }) {
-  return <span className={s.tagChip}>#{tag}</span>
+function TagChip({ tag, onSearch }: { tag: string; onSearch?: (t: string) => void }) {
+  const display = tag.startsWith('#') ? tag : `#${tag}`
+  const clean   = tag.replace(/^#+/, '')
+  return (
+    <span
+      className={s.tagChip}
+      style={onSearch ? { cursor: 'pointer' } : undefined}
+      onClick={onSearch ? (e) => { e.stopPropagation(); onSearch(`#${clean}`) } : undefined}
+      title={onSearch ? `Buscar por ${display}` : undefined}
+    >
+      {display}
+    </span>
+  )
 }
 
-function FullContentModal({ item, onClose }: { item: SavedLink; onClose: () => void }) {
+function FullContentModal({ item, onClose, onTagSearch }: { item: SavedLink; onClose: () => void; onTagSearch?: (t: string) => void }) {
   const [copied, setCopied] = useState(false)
   function copy() {
     navigator.clipboard.writeText(item.desc || item.title).catch(() => {})
@@ -149,7 +161,7 @@ function FullContentModal({ item, onClose }: { item: SavedLink; onClose: () => v
         </div>
         <div className={s.fullModalFooter}>
           <div className={s.fullModalTags}>
-            {item.tags.map(t => <TagChip key={t} tag={t} />)}
+            {item.tags.map(t => <TagChip key={t} tag={t} onSearch={onTagSearch} />)}
           </div>
           <button className={s.fullModalCopy} onClick={copy}>
             {copied ? '✓ Copiado!' : '📋 Copiar'}
@@ -215,7 +227,7 @@ function useDeleteConfirm(onDelete: () => void) {
 }
 
 /* ── Grid card ── */
-function GridCard({ item, onDelete, onUpdate }: { item: SavedLink; onDelete: () => void; onUpdate: (patch: Partial<Omit<SavedLink, 'id' | 'savedAt'>>) => void }) {
+function GridCard({ item, onDelete, onUpdate, onTagSearch }: { item: SavedLink; onDelete: () => void; onUpdate: (patch: Partial<Omit<SavedLink, 'id' | 'savedAt'>>) => void; onTagSearch?: (t: string) => void }) {
   const [hovered,   setHovered]   = useState(false)
   const [lightbox,  setLightbox]  = useState(false)
   const [showFull,  setShowFull]  = useState(false)
@@ -275,7 +287,7 @@ function GridCard({ item, onDelete, onUpdate }: { item: SavedLink; onDelete: () 
         {item.desc && <div className={s.cardDesc}>{item.desc}</div>}
         <div className={s.cardFooter}>
           <div className={s.cardTags}>
-            {item.tags.slice(0, 2).map(t => <TagChip key={t} tag={t} />)}
+            {item.tags.slice(0, 2).map(t => <TagChip key={t} tag={t} onSearch={onTagSearch} />)}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             {isExpandable && item.desc && (
@@ -346,7 +358,7 @@ function GridCard({ item, onDelete, onUpdate }: { item: SavedLink; onDelete: () 
       </motion.a>
       <AnimatePresence>
         {lightbox && imgSrc && <Lightbox src={imgSrc} onClose={() => setLightbox(false)} />}
-        {showFull && <FullContentModal item={item} onClose={() => setShowFull(false)} />}
+        {showFull && <FullContentModal item={item} onClose={() => setShowFull(false)} onTagSearch={onTagSearch} />}
         {showEdit && <EditModal item={item} onClose={() => setShowEdit(false)} onSave={onUpdate} />}
       </AnimatePresence>
     </>
@@ -354,7 +366,7 @@ function GridCard({ item, onDelete, onUpdate }: { item: SavedLink; onDelete: () 
 }
 
 /* ── List row ── */
-function ListRow({ item, onDelete }: { item: SavedLink; onDelete: () => void }) {
+function ListRow({ item, onDelete, onTagSearch }: { item: SavedLink; onDelete: () => void; onTagSearch?: (t: string) => void }) {
   const { confirming, requestDelete, cancelDelete } = useDeleteConfirm(onDelete)
   const [expanded, setExpanded] = useState(false)
   const [showFull, setShowFull] = useState(false)
@@ -401,7 +413,7 @@ function ListRow({ item, onDelete }: { item: SavedLink; onDelete: () => void }) 
           </div>
         </div>
         <div className={s.listRight}>
-          {item.tags.slice(0, 3).map(t => <TagChip key={t} tag={t} />)}
+          {item.tags.slice(0, 3).map(t => <TagChip key={t} tag={t} onSearch={onTagSearch} />)}
           <TypeBadge type={item.type} />
           <span className={s.listTime}>{timeAgo(item.savedAt)}</span>
           {isExpandable && item.desc && item.desc.length > 100 && !expanded && (
@@ -423,7 +435,7 @@ function ListRow({ item, onDelete }: { item: SavedLink; onDelete: () => void }) 
         </div>
       </motion.div>
       <AnimatePresence>
-        {showFull && <FullContentModal item={item} onClose={() => setShowFull(false)} />}
+        {showFull && <FullContentModal item={item} onClose={() => setShowFull(false)} onTagSearch={onTagSearch} />}
       </AnimatePresence>
     </>
   )
@@ -458,16 +470,17 @@ function CompactRow({ item, onDelete }: { item: SavedLink; onDelete: () => void 
 
 /* ── Main Inbox ── */
 export default function Inbox() {
-  const { onOpenSaveLink } = useOutletContext<OutletCtx>()
+  const { onOpenSaveLink, onOpenSearch } = useOutletContext<OutletCtx>()
+
   const { links, removeLink, updateLink } = useLinksStore()
   const [view,   setView]   = useState<View>('grid')
-  const [filter, setFilter] = useState<Filter>('link')
+  const [filter, setFilter] = useState<Filter>('todos')
   const [search, setSearch] = useState('')
 
   const searchTerm = search.startsWith('#') ? search.slice(1) : search
 
   const filtered = links.filter(l =>
-    l.type === filter &&
+    (filter === 'todos' || l.type === filter) &&
     (
       l.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       l.desc.toLowerCase().includes(searchTerm.toLowerCase())  ||
@@ -527,7 +540,7 @@ export default function Inbox() {
           >
             {f.icon} {f.label}
             <span className={s.filterCount}>
-              {links.filter(l => l.type === f.key).length}
+              {f.key === 'todos' ? links.length : links.filter(l => l.type === f.key).length}
             </span>
           </button>
         ))}
@@ -551,7 +564,7 @@ export default function Inbox() {
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               {filtered.map((item, i) => (
                 <motion.div key={item.id} transition={{ delay: i * .04 }}>
-                  <GridCard item={item} onDelete={() => removeLink(item.id)} onUpdate={patch => updateLink(item.id, patch)} />
+                  <GridCard item={item} onDelete={() => removeLink(item.id)} onUpdate={patch => updateLink(item.id, patch)} onTagSearch={onOpenSearch} />
                 </motion.div>
               ))}
             </motion.div>
@@ -561,7 +574,7 @@ export default function Inbox() {
             <motion.div className={s.listView} key="list"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               {filtered.map(item => (
-                <ListRow key={item.id} item={item} onDelete={() => removeLink(item.id)} />
+                <ListRow key={item.id} item={item} onDelete={() => removeLink(item.id)} onTagSearch={onOpenSearch} />
               ))}
             </motion.div>
           )}

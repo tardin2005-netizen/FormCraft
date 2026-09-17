@@ -5,16 +5,16 @@ import { useLinksStore } from '../store/linksStore'
 import { useCollectionsStore } from '../store/collectionsStore'
 import s from './SearchPalette.module.css'
 
-interface Props { onClose: () => void }
+interface Props { onClose: () => void; initialQuery?: string }
 
 const TYPE_ICON: Record<string, string> = { link: '🔗', pdf: '📄', nota: '📝', imagem: '🖼️', prompt: '🤖' }
 
-export default function SearchPalette({ onClose }: Props) {
+export default function SearchPalette({ onClose, initialQuery = '' }: Props) {
   const navigate = useNavigate()
   const { areas } = useAreasStore()
   const { links } = useLinksStore()
   const { collections } = useCollectionsStore()
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(initialQuery)
   const [focused, setFocused] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -33,34 +33,37 @@ export default function SearchPalette({ onClose }: Props) {
   }, [onClose])
 
   const q = query.toLowerCase().trim()
-  const areaById = Object.fromEntries(areas.map(a => [a.id, a.title]))
+  const isTagSearch = q.startsWith('#')
+  const tagQ = isTagSearch ? q.slice(1) : ''
 
-  const matchedAreas = q ? areas.filter(a => a.title.toLowerCase().includes(q) || a.desc.toLowerCase().includes(q)) : []
-  const matchedCols  = q ? collections.filter(c => c.name.toLowerCase().includes(q)) : []
-  const matchedLinks = q ? links.filter(l => l.title.toLowerCase().includes(q) || l.tags.some(t => t.includes(q))) : []
+  const areaById    = Object.fromEntries(areas.map(a => [a.id, a]))
 
-  const hasResults = matchedAreas.length + matchedCols.length + matchedLinks.length > 0
-  const noQuery    = !q
+  // Tag search: match links where any tag contains the search word
+  const tagMatches = isTagSearch && tagQ
+    ? links.filter(l => l.tags.some(t => t.includes(tagQ)))
+    : []
 
-  type Flat = { kind: 'area' | 'col' | 'item'; label: string; icon?: string; sub?: string }
-  const flat: Flat[] = [
-    ...matchedAreas.map(a => ({ kind: 'area' as const, label: a.title, icon: a.emoji, sub: a.desc })),
-    ...matchedCols.map(c  => ({ kind: 'col'  as const, label: c.name, icon: '🗂️' })),
-    ...matchedLinks.map(l => ({ kind: 'item' as const, label: l.title, icon: TYPE_ICON[l.type] ?? '🔗', sub: areaById[l.areaId] ?? '' })),
-  ]
+  // Normal search
+  const matchedAreas = !isTagSearch && q ? areas.filter(a => a.title.toLowerCase().includes(q) || a.desc.toLowerCase().includes(q)) : []
+  const matchedCols  = !isTagSearch && q ? collections.filter(c => c.name.toLowerCase().includes(q)) : []
+  const matchedLinks = !isTagSearch && q ? links.filter(l => l.title.toLowerCase().includes(q) || l.tags.some(t => t.includes(q))) : []
+
+  const hasResults = isTagSearch
+    ? tagMatches.length > 0
+    : matchedAreas.length + matchedCols.length + matchedLinks.length > 0
+  const noQuery = !q
 
   return (
     <>
-      {/* Subtle backdrop — doesn't block the app, just closes on click */}
       <div className={s.backdrop} onClick={onClose} />
 
       <div className={s.panel}>
         <div className={s.inputRow}>
-          <span className={s.searchIcon}>🔎</span>
+          <span className={s.searchIcon}>{isTagSearch ? '#' : '🔎'}</span>
           <input
             ref={inputRef}
             className={s.input}
-            placeholder="Buscar áreas, conteúdos, coleções..."
+            placeholder="Buscar áreas, conteúdos… ou #tag para filtrar"
             value={query}
             onChange={e => { setQuery(e.target.value); setFocused(0) }}
           />
@@ -70,10 +73,60 @@ export default function SearchPalette({ onClose }: Props) {
           <kbd className={s.esc} onClick={onClose}>Esc</kbd>
         </div>
 
-        {noQuery && (
+        {/* Tag search mode */}
+        {isTagSearch && (
+          <div className={s.results}>
+            {tagQ && (
+              <div className={s.group}>
+                <div className={s.groupLabel}>
+                  Tag <span className={s.tagBadge}>#{tagQ || '…'}</span>
+                  {tagMatches.length > 0 && <span className={s.tagCount}>{tagMatches.length} {tagMatches.length === 1 ? 'item' : 'itens'}</span>}
+                </div>
+                {tagMatches.length === 0 && (
+                  <div className={s.noResults}>Nenhum item com essa tag</div>
+                )}
+                {tagMatches.map((link, i) => {
+                  const area = areaById[link.areaId]
+                  const origin = area ? `${area.emoji} ${area.title}` : 'Inbox'
+                  return (
+                    <div
+                      key={link.id}
+                      className={`${s.result} ${focused === i ? s.resultFocused : ''}`}
+                      onMouseEnter={() => setFocused(i)}
+                      onClick={() => { if (link.url && link.url !== '#') window.open(link.url, '_blank'); onClose() }}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <span className={s.resultIcon}>{TYPE_ICON[link.type] ?? '🔗'}</span>
+                      <div className={s.resultMain}>
+                        <span className={s.resultLabel}>{link.title}</span>
+                        <span className={s.resultOrigin}>{origin}</span>
+                      </div>
+                      <div className={s.resultTags}>
+                        {link.tags.slice(0, 3).map(t => (
+                          <span key={t} className={`${s.resultTag} ${t === tagQ ? s.resultTagActive : ''}`}>#{t}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+            {!tagQ && (
+              <div className={s.emptyState}>
+                <div className={s.emptyHint}>Digite uma tag para filtrar — ex: <strong>#curso</strong></div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Normal search mode */}
+        {!isTagSearch && noQuery && (
           <div className={s.emptyState}>
             <div className={s.emptyHint}>
               <span>↵</span> para abrir · <span>↑↓</span> para navegar · <span>Esc</span> para fechar
+            </div>
+            <div className={s.emptyHint} style={{ marginTop: 4 }}>
+              Use <strong>#tag</strong> para buscar por hashtag
             </div>
             {recentLinks.length > 0 && (
               <div className={s.quickSection}>
@@ -114,31 +167,28 @@ export default function SearchPalette({ onClose }: Props) {
           </div>
         )}
 
-        {q && !hasResults && (
+        {!isTagSearch && q && !hasResults && (
           <div className={s.noResults}>Nenhum resultado para "{query}"</div>
         )}
 
-        {q && hasResults && (
+        {!isTagSearch && q && hasResults && (
           <div className={s.results}>
             {matchedAreas.length > 0 && (
               <div className={s.group}>
                 <div className={s.groupLabel}>Áreas</div>
-                {matchedAreas.map((a, i) => {
-                  const idx = i
-                  return (
-                    <div
-                      key={a.id}
-                      className={`${s.result} ${focused === idx ? s.resultFocused : ''}`}
-                      onMouseEnter={() => setFocused(idx)}
-                      onClick={() => { navigate(`/area/${a.id}`); onClose() }}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      <span className={s.resultIcon}>{a.emoji}</span>
-                      <span className={s.resultLabel}>{a.title}</span>
-                      <span className={s.resultSub}>{a.desc}</span>
-                    </div>
-                  )
-                })}
+                {matchedAreas.map((a, i) => (
+                  <div
+                    key={a.id}
+                    className={`${s.result} ${focused === i ? s.resultFocused : ''}`}
+                    onMouseEnter={() => setFocused(i)}
+                    onClick={() => { navigate(`/area/${a.id}`); onClose() }}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <span className={s.resultIcon}>{a.emoji}</span>
+                    <span className={s.resultLabel}>{a.title}</span>
+                    <span className={s.resultSub}>{a.desc}</span>
+                  </div>
+                ))}
               </div>
             )}
 
@@ -178,7 +228,7 @@ export default function SearchPalette({ onClose }: Props) {
                     >
                       <span className={s.resultIcon}>{TYPE_ICON[link.type] ?? '🔗'}</span>
                       <span className={s.resultLabel}>{link.title}</span>
-                      <span className={s.resultSub}>{areaById[link.areaId] ?? ''}</span>
+                      <span className={s.resultSub}>{areaById[link.areaId]?.title ?? ''}</span>
                     </div>
                   )
                 })}

@@ -7,6 +7,12 @@ import {
 } from 'firebase/auth'
 import type { User } from 'firebase/auth'
 import { auth } from '../firebase'
+import { useLinksStore } from '../store/linksStore'
+import { useAreasStore } from '../store/areasStore'
+import { useAreaItemsStore } from '../store/areaItemsStore'
+import { useCollectionsStore } from '../store/collectionsStore'
+import { useWorkspacesStore } from '../store/workspacesStore'
+import { useTasksStore } from '../store/tasksStore'
 
 interface AuthCtx {
   user: User | null
@@ -28,12 +34,22 @@ const DATA_STORE_KEYS = [
   'formcraft-workspaces',
   'formcraft-content-items',
   'formcraft-saved-tools',
+  'formcraft-chat-messages',
+  'formcraft-tasks',
 ]
 
 const SESSION_UID_KEY = 'formcraft-session-uid'
 
 function clearDataStores() {
   DATA_STORE_KEYS.forEach(k => localStorage.removeItem(k))
+  // Also wipe in-memory Zustand stores so stale data isn't shown
+  // while FirestoreSync re-hydrates from the new user's Firestore data.
+  useLinksStore.getState().hydrate([])
+  useAreasStore.getState().hydrate([])
+  useAreaItemsStore.getState().hydrate([])
+  useCollectionsStore.getState().hydrate([])
+  useWorkspacesStore.getState().hydrate([])
+  useTasksStore.getState().hydrate([])
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -46,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (u) {
         if (prevUid && prevUid !== u.uid) {
-          // Different user logged in — clear previous user's data from localStorage
+          // Different user logged in — clear previous user's data from localStorage and memory
           clearDataStores()
         }
         localStorage.setItem(SESSION_UID_KEY, u.uid)

@@ -215,3 +215,58 @@
   font-size: 11px;
   color: var(--text2);
 }
+
+/* ── Tag chip input ── */
+.tagBox {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+  padding: 6px 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  min-height: 38px;
+  cursor: text;
+  transition: border-color .15s;
+}
+.tagBox:focus-within { border-color: var(--accent); }
+
+.tagChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--accent-muted, rgba(124,110,247,.15));
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 2px 8px 2px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.tagChipRemove {
+  background: none;
+  border: none;
+  color: var(--accent);
+  opacity: .6;
+  cursor: pointer;
+  font-size: 10px;
+  padding: 0;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+}
+.tagChipRemove:hover { opacity: 1; }
+
+.tagInput {
+  flex: 1;
+  min-width: 80px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 13px;
+  padding: 0;
+  font-family: inherit;
+}
+.tagInput::placeholder { color: var(--text2); }
