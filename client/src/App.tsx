@@ -52,6 +52,8 @@ function AppRoutes() {
           <Route path="/salvos"             element={<Salvos />} />
           <Route path="/settings"           element={<Settings />} />
           <Route path="/workspace/:id"      element={<WorkspaceView />} />
+          <Route path="/inicio"             element={<Navigate to="/" replace />} />
+          <Route path="*"                   element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
     </>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCollectionsStore } from '../store/collectionsStore'
 import type { Collection } from '../store/collectionsStore'
@@ -186,22 +186,43 @@ function ColDetail({
 /* ── New Collection Modal ── */
 function NewColModal({ onSave, onClose }: { onSave: (data: { name: string; emoji: string; color: string; desc: string }) => void; onClose: () => void }) {
   const [name,       setName]       = useState('')
-  const [icon,       setIcon]       = useState('lucide:folder')
+  const [icon,       setIcon]       = useState('📁')
   const [color,      setColor]      = useState(COLORS[0])
   const [desc,       setDesc]       = useState('')
   const [pickerOpen, setPickerOpen] = useState(false)
+  const [pos, setPos] = useState({ x: 0, y: 0 })
+  const dragRef = useRef<{ mx: number; my: number; px: number; py: number } | null>(null)
+
+  function onHeaderMouseDown(e: React.MouseEvent) {
+    if ((e.target as HTMLElement).closest('button, input')) return
+    dragRef.current = { mx: e.clientX, my: e.clientY, px: pos.x, py: pos.y }
+    function onMove(ev: MouseEvent) {
+      if (!dragRef.current) return
+      const maxX = window.innerWidth / 2 - 60
+      const maxY = window.innerHeight / 2 - 40
+      setPos({
+        x: Math.max(-maxX, Math.min(maxX, dragRef.current.px + ev.clientX - dragRef.current.mx)),
+        y: Math.max(-maxY, Math.min(maxY, dragRef.current.py + ev.clientY - dragRef.current.my)),
+      })
+    }
+    function onUp() { dragRef.current = null; window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }
 
   return (
     <>
       <div className={s.modalBackdrop} onClick={onClose} />
+      <div style={{ position: 'fixed', top: '50%', left: '50%', zIndex: 60, transform: `translate(calc(-50% + ${pos.x}px), calc(-50% + ${pos.y}px))`, width: 420, maxWidth: 'calc(100vw - 32px)' }}>
       <motion.div
         className={s.newModal}
+        style={{ position: 'relative', top: 'auto', left: 'auto', transform: 'none', width: '100%' }}
         initial={{ opacity: 0, scale: .94, y: -12 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: .94, y: -12 }}
         transition={{ type: 'spring', stiffness: 400, damping: 28 }}
       >
-        <div className={s.newModalHeader}>
+        <div className={s.newModalHeader} onMouseDown={onHeaderMouseDown} style={{ cursor: 'grab', userSelect: 'none' }}>
           <span>Nova coleção</span>
           <button className={s.newModalClose} onClick={onClose}>✕</button>
         </div>
@@ -219,7 +240,7 @@ function NewColModal({ onSave, onClose }: { onSave: (data: { name: string; emoji
             <label className={s.newLabel}>Ícone</label>
             <button className={s.iconSelectBtn} onClick={() => setPickerOpen(true)}>
               <IconDisplay value={icon} size={16} color={color} />
-              <span>{icon.includes(':') ? icon.split(':')[1] : icon}</span>
+              <span>{icon}</span>
               <span className={s.iconSelectChange}>Trocar →</span>
             </button>
           </div>
@@ -258,6 +279,7 @@ function NewColModal({ onSave, onClose }: { onSave: (data: { name: string; emoji
           </button>
         </div>
       </motion.div>
+      </div>
 
       <AnimatePresence>
         {pickerOpen && (
@@ -265,7 +287,6 @@ function NewColModal({ onSave, onClose }: { onSave: (data: { name: string; emoji
             value={icon}
             onChange={setIcon}
             onClose={() => setPickerOpen(false)}
-            accentColor={color}
           />
         )}
       </AnimatePresence>

@@ -224,12 +224,12 @@
   background: rgba(0,0,0,.4); backdrop-filter: blur(2px);
 }
 .newModal {
-  position: fixed; top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  width: 420px; max-width: calc(100vw - 32px);
+  width: 100%;
+  max-height: 90vh;
   background: var(--surface); border: 1px solid var(--border);
   border-radius: 16px; box-shadow: 0 24px 64px rgba(0,0,0,.5);
-  z-index: 60; overflow: hidden;
+  overflow: hidden;
+  display: flex; flex-direction: column;
 }
 .newModalHeader {
   display: flex; align-items: center; justify-content: space-between;
@@ -243,7 +243,7 @@
 }
 .newModalClose:hover { background: var(--surface2); }
 
-.newModalBody { padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
+.newModalBody { padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; flex: 1; }
 
 /* Preview */
 .newPreview {

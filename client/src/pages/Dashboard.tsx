@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Link, useNavigate, useOutletContext } from 'react-router-dom'
 import { useAreasStore } from '../store/areasStore'
 import { useCollectionsStore } from '../store/collectionsStore'
@@ -105,6 +105,25 @@ export default function Dashboard() {
   const [showGH,       setShowGH]       = useState(false)
   const [newAreaModal, setNewAreaModal] = useState(false)
   const [newArea,      setNewArea]      = useState({ emoji: '📁', title: '', desc: '', color: '#7c6ef7' })
+  const [modalPos,     setModalPos]     = useState({ x: 0, y: 0 })
+  const modalDragRef = useRef<{ mx: number; my: number; px: number; py: number } | null>(null)
+
+  function onModalHeaderMouseDown(e: React.MouseEvent) {
+    if ((e.target as HTMLElement).closest('button, input')) return
+    modalDragRef.current = { mx: e.clientX, my: e.clientY, px: modalPos.x, py: modalPos.y }
+    function onMove(ev: MouseEvent) {
+      if (!modalDragRef.current) return
+      const maxX = window.innerWidth / 2 - 60
+      const maxY = window.innerHeight / 2 - 40
+      setModalPos({
+        x: Math.max(-maxX, Math.min(maxX, modalDragRef.current.px + ev.clientX - modalDragRef.current.mx)),
+        y: Math.max(-maxY, Math.min(maxY, modalDragRef.current.py + ev.clientY - modalDragRef.current.my)),
+      })
+    }
+    function onUp() { modalDragRef.current = null; window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }
 
   function handleAddArea() {
     if (!newArea.title.trim()) return
@@ -318,8 +337,14 @@ export default function Dashboard() {
       {/* Modal nova área */}
       {newAreaModal && (
         <div className={s.backdrop} onClick={() => setNewAreaModal(false)}>
-          <div className={s.modal} onClick={e => e.stopPropagation()}>
-            <h3>Nova área de conhecimento</h3>
+          <div
+            className={s.modal}
+            style={{ transform: `translate(calc(-50% + ${modalPos.x}px), calc(-50% + ${modalPos.y}px))` }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className={s.modalDragHandle} onMouseDown={onModalHeaderMouseDown}>
+              <h3>Nova área de conhecimento</h3>
+            </div>
             <div className={s.emojiPicker}>
               {EMOJI_LIST.map(e => (
                 <button

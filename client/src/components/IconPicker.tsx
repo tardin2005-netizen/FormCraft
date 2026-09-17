@@ -1,79 +1,114 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useRef } from 'react'
+import { motion } from 'framer-motion'
 import s from './IconPicker.module.css'
 
-const COLLECTIONS = [
-  { id: 'lucide',           label: 'Lucide' },
-  { id: 'ph',               label: 'Phosphor' },
-  { id: 'tabler',           label: 'Tabler' },
-  { id: 'material-symbols', label: 'Material' },
-  { id: 'heroicons',        label: 'Heroicons' },
-  { id: 'ri',               label: 'Remix' },
-  { id: 'mdi',              label: 'MDI' },
+type EmojiEntry = { e: string; t: string }
+
+const EMOJI_LIST: EmojiEntry[] = [
+  // Organização
+  { e: '📁', t: 'pasta folder arquivo' }, { e: '📂', t: 'pasta folder aberta' }, { e: '🗂️', t: 'ficheiro arquivo' },
+  { e: '📋', t: 'clipboard lista' }, { e: '📌', t: 'pin fixar importante' }, { e: '📍', t: 'localização mapa pin' },
+  { e: '🏷️', t: 'etiqueta tag label' }, { e: '🗃️', t: 'caixa arquivo' }, { e: '🗄️', t: 'gaveta arquivo ficheiro' },
+  { e: '📊', t: 'gráfico dados estatísticas' }, { e: '📈', t: 'crescimento alta gráfico' }, { e: '📉', t: 'queda baixo gráfico' },
+  // Escrita & Notas
+  { e: '📝', t: 'nota escrever anotação' }, { e: '✏️', t: 'lápis escrever editar' }, { e: '🖊️', t: 'caneta escrever' },
+  { e: '📎', t: 'clipe anexo' }, { e: '📏', t: 'régua medida' }, { e: '📐', t: 'esquadro matemática' },
+  { e: '🗒️', t: 'bloco notas rascunho' }, { e: '📓', t: 'caderno notas' }, { e: '📔', t: 'diário caderno' },
+  { e: '📒', t: 'livro amarelo' }, { e: '📕', t: 'livro vermelho' }, { e: '📗', t: 'livro verde' },
+  { e: '📘', t: 'livro azul' }, { e: '📙', t: 'livro laranja' }, { e: '📚', t: 'livros biblioteca' },
+  // Trabalho & Negócios
+  { e: '💼', t: 'maleta trabalho negócios' }, { e: '🏢', t: 'empresa escritório prédio' }, { e: '💰', t: 'dinheiro finanças' },
+  { e: '💳', t: 'cartão crédito pagamento' }, { e: '🤝', t: 'aperto mão parceria' }, { e: '📞', t: 'telefone ligar' },
+  { e: '📧', t: 'email mensagem correio' }, { e: '📤', t: 'enviar saída' }, { e: '📥', t: 'receber entrada' },
+  { e: '🗓️', t: 'calendário agenda data' }, { e: '⏰', t: 'alarme relógio hora' }, { e: '⏱️', t: 'cronômetro tempo' },
+  // Tech & Dev
+  { e: '💻', t: 'computador laptop código' }, { e: '🖥️', t: 'monitor desktop pc' }, { e: '📱', t: 'celular mobile app' },
+  { e: '⚙️', t: 'engrenagem configuração settings' }, { e: '🔧', t: 'chave ferramenta conserto' },
+  { e: '🔩', t: 'parafuso técnico' }, { e: '🛠️', t: 'ferramentas construção' }, { e: '🚀', t: 'foguete deploy lançamento' },
+  { e: '🤖', t: 'robô ia inteligência artificial' }, { e: '⚡', t: 'raio energia rápido' }, { e: '💡', t: 'ideia lâmpada insight' },
+  { e: '🔐', t: 'cadeado segurança autenticação' }, { e: '🔑', t: 'chave acesso' }, { e: '🛡️', t: 'escudo proteção segurança' },
+  { e: '🐛', t: 'bug erro problema' }, { e: '🔍', t: 'lupa busca pesquisa' }, { e: '📡', t: 'antena sinal api' },
+  { e: '🗺️', t: 'mapa navegação fluxo' }, { e: '🧩', t: 'puzzle peça integração módulo' },
+  // Estudo
+  { e: '🎓', t: 'formatura faculdade diploma' }, { e: '🏫', t: 'escola estudo universidade' },
+  { e: '🔬', t: 'microscópio ciência lab' }, { e: '🔭', t: 'telescópio astronomia' },
+  { e: '🧪', t: 'tubo lab experimento' }, { e: '📜', t: 'pergaminho certificado' },
+  { e: '🧠', t: 'cérebro inteligência conhecimento' }, { e: '🎯', t: 'alvo meta objetivo' },
+  { e: '🏆', t: 'troféu conquista vitória' }, { e: '🥇', t: 'medalha ouro primeiro' },
+  // Arte & Design
+  { e: '🎨', t: 'paleta cores design arte' }, { e: '🖌️', t: 'pincel desenho pintura' },
+  { e: '🖼️', t: 'quadro imagem galeria' }, { e: '✨', t: 'brilho magia destaque' },
+  { e: '🎬', t: 'câmera vídeo produção' }, { e: '📸', t: 'foto câmera imagem' },
+  { e: '🎵', t: 'nota musical som áudio' }, { e: '🎶', t: 'música playlist som' },
+  // Pessoas
+  { e: '👤', t: 'usuário pessoa perfil' }, { e: '👥', t: 'equipe grupo pessoas' },
+  { e: '🧑‍💻', t: 'desenvolvedor programador dev' }, { e: '👨‍🏫', t: 'professor ensino' },
+  // Marcadores & Estrelas
+  { e: '⭐', t: 'estrela favorito importante' }, { e: '🌟', t: 'estrela brilhante destaque' },
+  { e: '💎', t: 'diamante precioso valor' }, { e: '❤️', t: 'coração amor favorito' },
+  { e: '💯', t: 'cem perfeito completo' }, { e: '✅', t: 'concluído aprovado ok' },
+  { e: '🔴', t: 'vermelho círculo alerta' }, { e: '🟠', t: 'laranja círculo' },
+  { e: '🟡', t: 'amarelo círculo aviso' }, { e: '🟢', t: 'verde círculo ok ativo' },
+  { e: '🔵', t: 'azul círculo info' }, { e: '🟣', t: 'roxo violeta círculo' },
+  // Natureza & Viagem
+  { e: '🌍', t: 'mundo global terra planeta' }, { e: '🏠', t: 'casa home pessoal' },
+  { e: '🏗️', t: 'construção projeto obra' }, { e: '🌿', t: 'folha natureza verde' },
+  { e: '🌊', t: 'onda água mar' }, { e: '⛰️', t: 'montanha desafio subida' },
+  // Misc
+  { e: '🎁', t: 'presente gift surpresa' }, { e: '🎀', t: 'laço presente fita' },
+  { e: '🔮', t: 'bola cristal magia futuro' }, { e: '🎲', t: 'dado jogo random' },
+  { e: '🃏', t: 'carta curinga jogo' }, { e: '🧲', t: 'ímã atrair' },
+  { e: '📦', t: 'caixa pacote entrega' }, { e: '🗺️', t: 'mapa localização' },
 ]
 
-const DEFAULTS = [
-  'lucide:folder','lucide:star','lucide:heart','lucide:bookmark','lucide:tag',
-  'lucide:link','lucide:image','lucide:file-text','lucide:code','lucide:database',
-  'lucide:globe','lucide:camera','lucide:music','lucide:video','lucide:brain',
-  'lucide:zap','lucide:rocket','lucide:trophy','lucide:target','lucide:compass',
-  'lucide:shield','lucide:lock','lucide:key','lucide:settings','lucide:wrench',
-  'lucide:palette','lucide:pen-tool','lucide:layout-dashboard','lucide:grid-2x2','lucide:layers',
-  'lucide:chart-bar','lucide:trending-up','lucide:dollar-sign','lucide:shopping-bag','lucide:box',
-  'lucide:users','lucide:user','lucide:mail','lucide:calendar','lucide:clock',
-  'lucide:map-pin','lucide:home','lucide:building','lucide:flask-conical','lucide:graduation-cap',
-  'lucide:book-open','lucide:newspaper','lucide:megaphone','lucide:send','lucide:bell',
+const CATEGORIES = [
+  { label: 'Tudo', filter: '' },
+  { label: '📁 Organização', filter: 'pasta arquivo lista' },
+  { label: '💻 Tech', filter: 'computador código dev ia' },
+  { label: '💼 Trabalho', filter: 'trabalho empresa dinheiro' },
+  { label: '🎓 Estudo', filter: 'faculdade escola ciência' },
+  { label: '🎨 Arte', filter: 'design arte foto música' },
+  { label: '⭐ Marcadores', filter: 'estrela coração favorito círculo' },
 ]
-
-function iconUrl(id: string, color = '%23888888') {
-  const [prefix, ...rest] = id.split(':')
-  return `https://api.iconify.design/${prefix}/${rest.join(':')}.svg?color=${color}`
-}
-
-async function searchIcons(query: string, prefix: string): Promise<string[]> {
-  const p = prefix === 'all'
-    ? 'lucide,ph,tabler,material-symbols,heroicons,ri,mdi'
-    : prefix
-  const url = `https://api.iconify.design/search?query=${encodeURIComponent(query)}&limit=54&prefixes=${p}`
-  const res = await fetch(url)
-  if (!res.ok) return []
-  const data = await res.json()
-  return data.icons ?? []
-}
 
 interface Props {
   value: string
   onChange: (icon: string) => void
   onClose: () => void
-  accentColor?: string
 }
 
-export default function IconPicker({ value, onChange, onClose, accentColor = '#7c6ef7' }: Props) {
-  const [query,      setQuery]      = useState('')
-  const [collection, setCollection] = useState('lucide')
-  const [results,    setResults]    = useState<string[]>(DEFAULTS)
-  const [loading,    setLoading]    = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
-  const timerRef = useRef<ReturnType<typeof setTimeout>>()
+export default function IconPicker({ value, onChange, onClose }: Props) {
+  const [query, setQuery] = useState('')
+  const [cat, setCat] = useState('')
+  const [pos, setPos] = useState({ x: 0, y: 0 })
+  const dragRef = useRef<{ mx: number; my: number; px: number; py: number } | null>(null)
 
-  useEffect(() => { inputRef.current?.focus() }, [])
+  const q = query.toLowerCase().trim()
+  const filtered = EMOJI_LIST.filter(item => {
+    const matchQuery = !q || item.e === q || item.t.includes(q)
+    const matchCat = !cat || item.t.split(' ').some(w => cat.includes(w))
+    return matchQuery && matchCat
+  })
 
-  const doSearch = useCallback(async (q: string, col: string) => {
-    if (!q.trim()) { setResults(DEFAULTS); return }
-    setLoading(true)
-    const icons = await searchIcons(q, col)
-    setResults(icons)
-    setLoading(false)
-  }, [])
-
-  useEffect(() => {
-    clearTimeout(timerRef.current)
-    timerRef.current = setTimeout(() => doSearch(query, collection), 350)
-    return () => clearTimeout(timerRef.current)
-  }, [query, collection, doSearch])
-
-  function handleKey(e: React.KeyboardEvent) {
-    if (e.key === 'Escape') onClose()
+  function onHeaderMouseDown(e: React.MouseEvent) {
+    if ((e.target as HTMLElement).closest('button, input')) return
+    dragRef.current = { mx: e.clientX, my: e.clientY, px: pos.x, py: pos.y }
+    function onMove(ev: MouseEvent) {
+      if (!dragRef.current) return
+      const maxX = window.innerWidth / 2 - 60
+      const maxY = window.innerHeight / 2 - 40
+      setPos({
+        x: Math.max(-maxX, Math.min(maxX, dragRef.current.px + ev.clientX - dragRef.current.mx)),
+        y: Math.max(-maxY, Math.min(maxY, dragRef.current.py + ev.clientY - dragRef.current.my)),
+      })
+    }
+    function onUp() {
+      dragRef.current = null
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
   }
 
   return (
@@ -81,75 +116,51 @@ export default function IconPicker({ value, onChange, onClose, accentColor = '#7
       <div className={s.backdrop} onClick={onClose} />
       <motion.div
         className={s.picker}
+        style={{ transform: `translate(calc(-50% + ${pos.x}px), calc(-50% + ${pos.y}px))` }}
         initial={{ opacity: 0, scale: .94, y: -10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: .94, y: -10 }}
         transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-        onKeyDown={handleKey}
       >
-        <div className={s.header}>
+        <div className={s.header} onMouseDown={onHeaderMouseDown} style={{ cursor: 'grab', userSelect: 'none' }}>
           <span className={s.title}>Escolher ícone</span>
           <button className={s.closeBtn} onClick={onClose}>✕</button>
         </div>
 
         <div className={s.searchRow}>
           <input
-            ref={inputRef}
             className={s.searchInput}
-            placeholder="Buscar ícone…"
+            placeholder="Buscar emoji..."
             value={query}
             onChange={e => setQuery(e.target.value)}
+            autoFocus
           />
         </div>
 
         <div className={s.collectionRow}>
-          <button
-            className={`${s.colBtn} ${collection === 'all' ? s.colBtnActive : ''}`}
-            style={collection === 'all' ? { borderColor: accentColor, color: accentColor } : {}}
-            onClick={() => setCollection('all')}
-          >Todos</button>
-          {COLLECTIONS.map(c => (
+          {CATEGORIES.map(c => (
             <button
-              key={c.id}
-              className={`${s.colBtn} ${collection === c.id ? s.colBtnActive : ''}`}
-              style={collection === c.id ? { borderColor: accentColor, color: accentColor } : {}}
-              onClick={() => setCollection(c.id)}
+              key={c.label}
+              className={`${s.colBtn} ${cat === c.filter ? s.colBtnActive : ''}`}
+              onClick={() => setCat(c.filter)}
             >{c.label}</button>
           ))}
         </div>
 
         <div className={s.grid}>
-          {loading && (
-            <div className={s.loadingRow}>
-              <span className={s.spinner} />
-            </div>
+          {filtered.length === 0 && (
+            <div className={s.empty}>Nenhum emoji encontrado</div>
           )}
-          {!loading && results.length === 0 && (
-            <div className={s.empty}>Nenhum ícone encontrado</div>
-          )}
-          {!loading && results.map(id => (
+          {filtered.map(item => (
             <button
-              key={id}
-              className={`${s.iconBtn} ${value === id ? s.iconBtnActive : ''}`}
-              style={value === id ? { background: accentColor + '22', borderColor: accentColor } : {}}
-              onClick={() => { onChange(id); onClose() }}
-              title={id.split(':')[1]}
+              key={item.e}
+              className={`${s.iconBtn} ${value === item.e ? s.iconBtnActive : ''}`}
+              onClick={() => { onChange(item.e); onClose() }}
+              title={item.t.split(' ')[0]}
             >
-              <img
-                src={iconUrl(id, value === id ? encodeURIComponent(accentColor) : '%23888888')}
-                width={20} height={20}
-                alt=""
-                loading="lazy"
-              />
+              <span style={{ fontSize: 22, lineHeight: 1 }}>{item.e}</span>
             </button>
           ))}
-        </div>
-
-        <div className={s.footer}>
-          <span className={s.footerNote}>
-            via <a href="https://iconify.design" target="_blank" rel="noopener noreferrer">Iconify</a>
-            {' · '}Lucide · Phosphor · Tabler · Material · Heroicons · Remix
-          </span>
         </div>
       </motion.div>
     </>
@@ -159,7 +170,6 @@ export default function IconPicker({ value, onChange, onClose, accentColor = '#7
 export function IconDisplay({
   value,
   size = 24,
-  color,
   className,
 }: {
   value: string
@@ -168,18 +178,7 @@ export function IconDisplay({
   className?: string
 }) {
   if (!value) return null
-  if (value.includes(':')) {
-    const hex = color ? encodeURIComponent(color) : '%23888888'
-    const [prefix, ...rest] = value.split(':')
-    return (
-      <img
-        src={`https://api.iconify.design/${prefix}/${rest.join(':')}.svg?color=${hex}`}
-        width={size} height={size}
-        alt=""
-        style={{ display: 'block', flexShrink: 0 }}
-        className={className}
-      />
-    )
-  }
+  // Legacy iconify format (lucide:folder) — show as emoji fallback
+  if (value.includes(':')) return <span style={{ fontSize: size, lineHeight: 1 }} className={className}>📁</span>
   return <span style={{ fontSize: size, lineHeight: 1 }} className={className}>{value}</span>
 }

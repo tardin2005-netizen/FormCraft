@@ -16,6 +16,25 @@ function AddItemModal({ areaId, onClose }: { areaId: string; onClose: () => void
   const [title, setTitle] = useState('')
   const [url, setUrl] = useState('')
   const [content, setContent] = useState('')
+  const [pos, setPos] = useState({ x: 0, y: 0 })
+  const dragRef = useRef<{ mx: number; my: number; px: number; py: number } | null>(null)
+
+  function onHeaderMouseDown(e: React.MouseEvent) {
+    if ((e.target as HTMLElement).closest('button, input')) return
+    dragRef.current = { mx: e.clientX, my: e.clientY, px: pos.x, py: pos.y }
+    function onMove(ev: MouseEvent) {
+      if (!dragRef.current) return
+      const maxX = window.innerWidth / 2 - 60
+      const maxY = window.innerHeight / 2 - 40
+      setPos({
+        x: Math.max(-maxX, Math.min(maxX, dragRef.current.px + ev.clientX - dragRef.current.mx)),
+        y: Math.max(-maxY, Math.min(maxY, dragRef.current.py + ev.clientY - dragRef.current.my)),
+      })
+    }
+    function onUp() { dragRef.current = null; window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }
 
   function save() {
     if (!title.trim()) return
@@ -26,14 +45,16 @@ function AddItemModal({ areaId, onClose }: { areaId: string; onClose: () => void
   return (
     <>
       <div className={s.backdrop} onClick={onClose} />
+      <div style={{ position: 'fixed', top: '50%', left: '50%', zIndex: 60, transform: `translate(calc(-50% + ${pos.x}px), calc(-50% + ${pos.y}px))`, width: 440, maxWidth: 'calc(100vw - 32px)' }}>
       <motion.div
         className={s.modal}
+        style={{ position: 'relative', top: 'auto', left: 'auto', transform: 'none', width: '100%' }}
         initial={{ opacity: 0, scale: .94, y: -10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: .94 }}
         transition={{ type: 'spring', stiffness: 400, damping: 28 }}
       >
-        <div className={s.modalHeader}>
+        <div className={s.modalHeader} onMouseDown={onHeaderMouseDown} style={{ cursor: 'grab', userSelect: 'none' }}>
           <span>Adicionar item</span>
           <button className={s.modalClose} onClick={onClose}>✕</button>
         </div>
@@ -92,6 +113,7 @@ function AddItemModal({ areaId, onClose }: { areaId: string; onClose: () => void
           <button className={s.saveBtn} disabled={!title.trim()} onClick={save}>Salvar</button>
         </div>
       </motion.div>
+      </div>
     </>
   )
 }

@@ -218,11 +218,22 @@
 /* ── Modal ── */
 .backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; z-index: 300; }
 .modal {
+  position: fixed; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: 14px; padding: 28px; width: 480px;
+  border-radius: 14px; width: 480px; max-width: calc(100vw - 32px);
+  max-height: 90vh; overflow-y: auto;
   display: flex; flex-direction: column; gap: 14px;
+  padding: 28px;
 }
-.modal h3 { font-size: 16px; font-weight: 600; }
+.modalDragHandle {
+  cursor: grab;
+  user-select: none;
+  margin: -28px -28px 0;
+  padding: 20px 28px 8px;
+}
+.modalDragHandle:active { cursor: grabbing; }
+.modal h3 { font-size: 16px; font-weight: 600; margin: 0; }
 
 .emojiPicker { display: flex; flex-wrap: wrap; gap: 4px; }
 .emojiBtn {
