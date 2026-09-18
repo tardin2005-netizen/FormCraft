@@ -13,6 +13,10 @@ import { useAreaItemsStore } from '../store/areaItemsStore'
 import { useCollectionsStore } from '../store/collectionsStore'
 import { useWorkspacesStore } from '../store/workspacesStore'
 import { useTasksStore } from '../store/tasksStore'
+import { useHubsStore } from '../store/hubsStore'
+import { useContentItemsStore } from '../store/contentItemsStore'
+import { useSavedToolsStore } from '../store/savedToolsStore'
+import { useChatMessagesStore } from '../store/chatMessagesStore'
 
 interface AuthCtx {
   user: User | null
@@ -42,14 +46,24 @@ const SESSION_UID_KEY = 'formcraft-session-uid'
 
 function clearDataStores() {
   DATA_STORE_KEYS.forEach(k => localStorage.removeItem(k))
-  // Also wipe in-memory Zustand stores so stale data isn't shown
-  // while FirestoreSync re-hydrates from the new user's Firestore data.
+  // Wipe in-memory Zustand stores so stale data isn't visible
+  // during the window between auth change and FirestoreSync re-hydration.
   useLinksStore.getState().hydrate([])
   useAreasStore.getState().hydrate([])
   useAreaItemsStore.getState().hydrate([])
   useCollectionsStore.getState().hydrate([])
   useWorkspacesStore.getState().hydrate([])
+  useContentItemsStore.getState().hydrate([])
   useTasksStore.getState().hydrate([])
+  useSavedToolsStore.getState().hydrate([])
+  useHubsStore.getState().hydrateHubs([])
+  useHubsStore.getState().hydrateSemesters([])
+  useHubsStore.getState().hydrateSubjects([])
+  useHubsStore.getState().hydrateClasses([])
+  useHubsStore.getState().hydrateContents([])
+  useHubsStore.getState().hydrateChats([])
+  useHubsStore.getState().hydrateChatMessages([])
+  useChatMessagesStore.setState({ messages: [] })
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
