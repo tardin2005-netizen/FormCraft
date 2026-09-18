@@ -149,6 +149,7 @@
 .gridView {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-auto-rows: 1fr;
   gap: 14px;
   padding-top: 4px;
 }
@@ -164,6 +165,7 @@
   color: inherit;
   position: relative;
   transition: border-color .2s, box-shadow .2s, transform .2s;
+  height: 100%;
 }
 .gridCard:hover {
   border-color: var(--card-color, var(--accent));
@@ -224,14 +226,18 @@
   font-size: 11px;
   color: var(--text2);
   line-height: 1.5;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
   word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .cardFooter {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
 }
 .cardTags { display: flex; gap: 4px; flex-wrap: wrap; }
 .tagChip {
@@ -243,6 +249,35 @@
   color: var(--text2);
 }
 .cardTime { font-size: 10px; color: var(--text2); white-space: nowrap; flex-shrink: 0; }
+
+.cardActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.cardBtns {
+  display: flex;
+  gap: 6px;
+}
+.cardActionBtn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--text2);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .12s, color .12s, border-color .12s;
+  flex-shrink: 0;
+}
+.cardActionBtn:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
 
 /* ── List view ── */
 .listView {

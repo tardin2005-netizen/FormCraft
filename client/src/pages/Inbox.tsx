@@ -10,14 +10,39 @@ function EditModal({ item, onClose, onSave }: {
   onClose: () => void
   onSave: (patch: Partial<Omit<SavedLink, 'id' | 'savedAt'>>) => void
 }) {
-  const [title, setTitle] = useState(item.title)
-  const [desc,  setDesc]  = useState(item.desc)
-  const [tags,  setTags]  = useState(item.tags.join(', '))
+  const [title,    setTitle]    = useState(item.title)
+  const [desc,     setDesc]     = useState(item.desc)
+  const [url,      setUrl]      = useState(item.url && item.url !== '#' ? item.url : '')
+  const [tags,     setTags]     = useState<string[]>(item.tags.map(t => t.replace(/^#+/, '')))
+  const [tagInput, setTagInput] = useState('')
+  const showUrl = item.type === 'link' || item.type === 'pdf'
+
+  function commitTag(raw: string) {
+    const t = raw.replace(/^#+/, '').trim().toLowerCase()
+    if (t && !tags.includes(t)) setTags(prev => [...prev, t])
+    setTagInput('')
+  }
+  function onTagKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter' || e.key === ' ' || e.key === ',') { e.preventDefault(); commitTag(tagInput) }
+    if (e.key === 'Backspace' && !tagInput && tags.length > 0) setTags(prev => prev.slice(0, -1))
+  }
 
   function save() {
-    onSave({ title: title.trim(), desc: desc.trim(), tags: tags.split(',').map(t => t.trim()).filter(Boolean) })
+    const finalTags = tagInput.trim()
+      ? [...tags, tagInput.replace(/^#+/, '').trim().toLowerCase()].filter(Boolean)
+      : tags
+    const patch: Partial<Omit<SavedLink, 'id' | 'savedAt'>> = {
+      title: title.trim(),
+      desc:  desc.trim(),
+      tags:  finalTags,
+    }
+    if (showUrl && url.trim()) patch.url = url.trim()
+    onSave(patch)
     onClose()
   }
+
+  const fieldLabel: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: '.06em', display: 'block', marginBottom: 4 }
+  const fieldInput: React.CSSProperties = { width: '100%', padding: '8px 10px', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none', boxSizing: 'border-box' }
 
   return (
     <motion.div className={s.lightbox} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
@@ -32,29 +57,39 @@ function EditModal({ item, onClose, onSave }: {
           <span className={s.fullModalTitle}>Editar</span>
           <button className={s.lightboxClose} onClick={onClose}>✕</button>
         </div>
-        <div className={s.fullModalBody} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div className={s.fullModalBody} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {showUrl && (
+            <div>
+              <label style={fieldLabel}>URL</label>
+              <input value={url} onChange={e => setUrl(e.target.value)} placeholder="https://..." style={fieldInput} />
+            </div>
+          )}
           <div>
-            <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: '.06em', display: 'block', marginBottom: 4 }}>Título</label>
-            <input
-              value={title} onChange={e => setTitle(e.target.value)}
-              style={{ width: '100%', padding: '8px 10px', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none' }}
-              autoFocus
-            />
+            <label style={fieldLabel}>Título</label>
+            <input value={title} onChange={e => setTitle(e.target.value)} style={fieldInput} autoFocus />
           </div>
           <div>
-            <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: '.06em', display: 'block', marginBottom: 4 }}>Descrição</label>
-            <textarea
-              value={desc} onChange={e => setDesc(e.target.value)} rows={5}
-              style={{ width: '100%', padding: '8px 10px', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none', resize: 'vertical', fontFamily: 'inherit' }}
-            />
+            <label style={fieldLabel}>Descrição</label>
+            <textarea value={desc} onChange={e => setDesc(e.target.value)} rows={4}
+              style={{ ...fieldInput, resize: 'vertical', fontFamily: 'inherit' }} />
           </div>
           <div>
-            <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: '.06em', display: 'block', marginBottom: 4 }}>Tags (separadas por vírgula)</label>
-            <input
-              value={tags} onChange={e => setTags(e.target.value)}
-              placeholder="faculdade, design, ..."
-              style={{ width: '100%', padding: '8px 10px', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none' }}
-            />
+            <label style={fieldLabel}>Tags</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: '6px 8px', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 8, minHeight: 38, alignItems: 'center' }}>
+              {tags.map(t => (
+                <span key={t} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--accent)22', color: 'var(--accent)', border: '1px solid var(--accent)44', borderRadius: 20, padding: '2px 8px', fontSize: 12, fontWeight: 500 }}>
+                  #{t}
+                  <button onClick={() => setTags(prev => prev.filter(x => x !== t))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: 0, fontSize: 11, lineHeight: 1 }}>✕</button>
+                </span>
+              ))}
+              <input
+                value={tagInput} onChange={e => setTagInput(e.target.value)}
+                onKeyDown={onTagKeyDown} onBlur={() => { if (tagInput.trim()) commitTag(tagInput) }}
+                placeholder={tags.length === 0 ? 'ex: design, ia...' : ''}
+                style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--text)', fontSize: 13, flex: '1 1 80px', minWidth: 60 }}
+              />
+            </div>
+            <span style={{ fontSize: 10, color: 'var(--text2)', marginTop: 3, display: 'block' }}>Espaço, Enter ou vírgula para criar tag</span>
           </div>
         </div>
         <div className={s.fullModalFooter}>
@@ -267,7 +302,7 @@ function GridCard({ item, onDelete, onUpdate, onTagSearch }: { item: SavedLink; 
             </motion.div>
           )}
         </AnimatePresence>
-        {isImage && imgSrc && hovered && (
+        {imgSrc && hovered && (
           <motion.div
             className={s.expandHint}
             style={{ cursor: 'zoom-in', pointerEvents: 'auto' }}
@@ -286,23 +321,25 @@ function GridCard({ item, onDelete, onUpdate, onTagSearch }: { item: SavedLink; 
         </div>}
         {item.desc && <div className={s.cardDesc}>{item.desc}</div>}
         <div className={s.cardFooter}>
-          <div className={s.cardTags}>
-            {item.tags.slice(0, 2).map(t => <TagChip key={t} tag={t} onSearch={onTagSearch} />)}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            {isExpandable && item.desc && (
-              <button
-                className={s.expandBtn}
-                onClick={e => { e.preventDefault(); e.stopPropagation(); setShowFull(true) }}
-                title="Ver conteúdo completo"
-              >↗ ver tudo</button>
-            )}
-            <button
-              className={s.expandBtn}
-              onClick={e => { e.preventDefault(); e.stopPropagation(); setShowEdit(true) }}
-              title="Editar"
-            >✎ editar</button>
+          {item.tags.length > 0 && (
+            <div className={s.cardTags}>
+              {item.tags.slice(0, 3).map(t => <TagChip key={t} tag={t} onSearch={onTagSearch} />)}
+            </div>
+          )}
+          <div className={s.cardActions}>
             <span className={s.cardTime}>{timeAgo(item.savedAt)}</span>
+            <div className={s.cardBtns}>
+              {isExpandable && item.desc && (
+                <button
+                  className={s.cardActionBtn}
+                  onClick={e => { e.preventDefault(); e.stopPropagation(); setShowFull(true) }}
+                >↗ ver tudo</button>
+              )}
+              <button
+                className={s.cardActionBtn}
+                onClick={e => { e.preventDefault(); e.stopPropagation(); setShowEdit(true) }}
+              >✎ editar</button>
+            </div>
           </div>
         </div>
       </div>
@@ -563,7 +600,7 @@ export default function Inbox() {
             <motion.div className={s.gridView} key="grid"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               {filtered.map((item, i) => (
-                <motion.div key={item.id} transition={{ delay: i * .04 }}>
+                <motion.div key={item.id} transition={{ delay: i * .04 }} style={{ height: '100%' }}>
                   <GridCard item={item} onDelete={() => removeLink(item.id)} onUpdate={patch => updateLink(item.id, patch)} onTagSearch={onOpenSearch} />
                 </motion.div>
               ))}
