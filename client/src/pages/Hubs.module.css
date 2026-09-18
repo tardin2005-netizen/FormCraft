@@ -109,6 +109,16 @@
 .hubCardWrap:hover .deleteBtn { color: rgba(255,255,255,.7); }
 .deleteBtn:hover { color: #fff !important; background: rgba(220,38,38,.7) !important; }
 
+.editBtn {
+  position: absolute; top: 8px; right: 44px; z-index: 10;
+  background: rgba(0,0,0,.45); border: 1px solid rgba(255,255,255,.15);
+  border-radius: 6px; color: transparent; font-size: 10px; cursor: pointer;
+  padding: 3px 7px; transition: color .12s, background .12s; line-height: 1.4;
+  backdrop-filter: blur(4px);
+}
+.hubCardWrap:hover .editBtn { color: rgba(255,255,255,.7); }
+.editBtn:hover { color: #fff !important; background: rgba(79,142,247,.7) !important; }
+
 .addCard {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 8px; background: transparent; border: 2px dashed var(--border);

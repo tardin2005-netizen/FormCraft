@@ -19,7 +19,7 @@ interface NewHubForm {
 }
 
 export default function Hubs() {
-  const { hubs, addHub, removeHub } = useHubsStore()
+  const { hubs, addHub, updateHub, removeHub } = useHubsStore()
   const [modal,    setModal]    = useState(false)
   const [step,     setStep]     = useState<'type' | 'details'>('type')
   const [form,     setForm]     = useState<NewHubForm>({
@@ -27,6 +27,10 @@ export default function Hubs() {
   })
   const [modalPos, setModalPos] = useState({ x: 0, y: 0 })
   const drag = useRef<{ mx: number; my: number; px: number; py: number } | null>(null)
+
+  const [editHub, setEditHub] = useState<{ id: string; name: string; emoji: string; color: string } | null>(null)
+  const [editPos, setEditPos] = useState({ x: 0, y: 0 })
+  const editDrag = useRef<{ mx: number; my: number; px: number; py: number } | null>(null)
 
   const onHeaderMouseDown = useCallback((e: React.MouseEvent) => {
     if ((e.target as HTMLElement).tagName === 'BUTTON') return
@@ -39,6 +43,30 @@ export default function Hubs() {
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
   }, [modalPos])
+
+  const onEditHeaderMouseDown = useCallback((e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).tagName === 'BUTTON') return
+    editDrag.current = { mx: e.clientX, my: e.clientY, px: editPos.x, py: editPos.y }
+    const onMove = (ev: MouseEvent) => {
+      if (!editDrag.current) return
+      setEditPos({ x: editDrag.current.px + ev.clientX - editDrag.current.mx, y: editDrag.current.py + ev.clientY - editDrag.current.my })
+    }
+    const onUp = () => { editDrag.current = null; window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }, [editPos])
+
+  function openEdit(hub: typeof hubs[0], e: React.MouseEvent) {
+    e.preventDefault()
+    setEditHub({ id: hub.id, name: hub.name, emoji: hub.emoji, color: hub.color })
+    setEditPos({ x: 0, y: 0 })
+  }
+
+  function saveEdit() {
+    if (!editHub || !editHub.name.trim()) return
+    updateHub(editHub.id, { name: editHub.name.trim(), emoji: editHub.emoji, color: editHub.color })
+    setEditHub(null)
+  }
 
   function openModal() { setModal(true); setStep('type'); setModalPos({ x: 0, y: 0 }) }
   function closeModal() { setModal(false); setForm({ type: 'faculdade', name: '', emoji: '🎓', color: '#7c6ef7' }) }
@@ -107,6 +135,11 @@ export default function Hubs() {
                     <span className={s.hubCardMetaType}>{info?.label}</span>
                   </div>
                 </Link>
+                <button
+                  className={s.editBtn}
+                  onClick={e => openEdit(hub, e)}
+                  title="Editar"
+                >✎</button>
                 <button
                   className={s.deleteBtn}
                   onClick={e => {
@@ -196,6 +229,61 @@ export default function Hubs() {
                   </div>
                 </>
               )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {editHub && (
+          <>
+            <div className={s.backdrop} onClick={() => setEditHub(null)} />
+            <motion.div
+              className={s.modal}
+              initial={{ opacity: 0, scale: .94, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: .94 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+              style={{ transform: `translate(calc(-50% + ${editPos.x}px), calc(-50% + ${editPos.y}px))` }}
+            >
+              <div className={`${s.modalHeader} ${s.modalDrag}`} onMouseDown={onEditHeaderMouseDown}>
+                <span>Editar Hub</span>
+                <button className={s.modalClose} onClick={() => setEditHub(null)}>✕</button>
+              </div>
+              <div className={s.modalBody}>
+                <div className={s.emojiRow}>
+                  {EMOJIS.map(e => (
+                    <button
+                      key={e}
+                      className={`${s.emojiBtn} ${editHub.emoji === e ? s.emojiActive : ''}`}
+                      onClick={() => setEditHub(h => h ? { ...h, emoji: e } : h)}
+                    >{e}</button>
+                  ))}
+                </div>
+                <input
+                  className={s.nameInput}
+                  placeholder="Nome do hub"
+                  value={editHub.name}
+                  onChange={e => setEditHub(h => h ? { ...h, name: e.target.value } : h)}
+                  autoFocus
+                />
+                <div className={s.colorRow}>
+                  {COLORS.map(c => (
+                    <button
+                      key={c}
+                      className={`${s.colorDot} ${editHub.color === c ? s.colorActive : ''}`}
+                      style={{ background: c }}
+                      onClick={() => setEditHub(h => h ? { ...h, color: c } : h)}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className={s.modalFooter}>
+                <button className={s.cancelBtn} onClick={() => setEditHub(null)}>Cancelar</button>
+                <button className={s.createBtn} disabled={!editHub.name.trim()} onClick={saveEdit}>
+                  Salvar
+                </button>
+              </div>
             </motion.div>
           </>
         )}

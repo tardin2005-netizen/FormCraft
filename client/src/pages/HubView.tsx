@@ -2,8 +2,16 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useHubsStore, type Semester, type Subject, type ClassItem, type HubContent } from '../store/hubsStore'
+import { useContentItemsStore } from '../store/contentItemsStore'
+import { type WorkspaceModule } from '../store/workspacesStore'
+import { type ModuleType, type ModuleLayout } from '../data/contextTemplates'
 import DeleteBtn from '../modules/DeleteBtn'
 import PdfProcessorModal from '../components/PdfProcessorModal'
+import ScriptsModule from '../modules/ScriptsModule'
+import TroubleshootingModule from '../modules/TroubleshootingModule'
+import ToolsDbModule from '../modules/ToolsDbModule'
+import HubGenericModule from '../modules/GenericModule'
+import ReferenceGallery from '../modules/ReferenceGallery'
 import s from './HubView.module.css'
 
 /* ─── helpers ─── */
@@ -179,6 +187,14 @@ function FaculdadeView({ hubId }: { hubId: string }) {
   const [selSem, setSelSem]     = useState<string | null>(hubSemesters[0]?.id ?? null)
   const [selSubj, setSelSubj]   = useState<string | null>(null)
   const [selClass, setSelClass] = useState<string | null>(null)
+
+  // Auto-select first subject so content is visible on refresh
+  useEffect(() => {
+    if (selSem && !selSubj) {
+      const first = subjects.find(x => x.semesterId === selSem)
+      if (first) setSelSubj(first.id)
+    }
+  }, [selSem, subjects])
 
   // Modals
   const [semModal,     setSemModal]     = useState(false)
@@ -490,77 +506,54 @@ function FaculdadeView({ hubId }: { hubId: string }) {
   )
 }
 
+/* ─── Workspace tabs for generic hubs ─── */
+const WORKSPACE_TABS: { key: string; label: string; icon: string; type: ModuleType; layout: ModuleLayout }[] = [
+  { key: 'tools-db',         label: 'Ferramentas',     icon: '🛠',  type: 'tools-db',         layout: 'grid'    },
+  { key: 'scripts',          label: 'Scripts',         icon: '📜',  type: 'scripts',          layout: 'list'    },
+  { key: 'troubleshooting',  label: 'Troubleshooting', icon: '🔧',  type: 'troubleshooting',  layout: 'table'   },
+  { key: 'notes',            label: 'Notas',           icon: '📝',  type: 'notes',            layout: 'list'    },
+  { key: 'references',       label: 'Referências',     icon: '🔖',  type: 'references',       layout: 'gallery' },
+  { key: 'links',            label: 'Links',           icon: '🔗',  type: 'links',            layout: 'list'    },
+]
+
+function HubModuleTab({ hubId, tabKey, type, layout }: { hubId: string; tabKey: string; type: ModuleType; layout: ModuleLayout }) {
+  const { items, addItem, updateItem, removeItem, toggleStar } = useContentItemsStore()
+  const moduleId = `hub-${hubId}-${tabKey}`
+  const moduleItems = items.filter(i => i.moduleId === moduleId)
+
+  const syntheticModule: WorkspaceModule = {
+    id: moduleId, type, name: '', icon: '', order: 0, enabled: true, layout,
+  }
+  const props = { module: syntheticModule, workspaceId: hubId, items: moduleItems, addItem, updateItem, removeItem, toggleStar }
+
+  switch (type) {
+    case 'tools-db':         return <ToolsDbModule {...props} />
+    case 'scripts':          return <ScriptsModule {...props} />
+    case 'troubleshooting':  return <TroubleshootingModule {...props} />
+    case 'references':       return <ReferenceGallery {...props} />
+    default:                 return <HubGenericModule {...props} />
+  }
+}
+
 /* ─── Generic Hub ─── */
 function GenericHubView({ hubId }: { hubId: string }) {
-  const { contents, addContent, removeContent } = useHubsStore()
-  const [modal, setModal] = useState(false)
-  const [form, setForm]   = useState({ type: 'link' as HubContent['type'], title: '', url: '', content: '' })
-
-  const items = contents.filter(c => c.hubId === hubId && !c.semesterId)
-
-  function save() {
-    if (!form.title.trim()) return
-    addContent({ hubId, type: form.type, title: form.title.trim(), url: form.url || undefined, content: form.content || undefined })
-    setModal(false)
-    setForm({ type: 'link', title: '', url: '', content: '' })
-  }
+  const [activeTab, setActiveTab] = useState(WORKSPACE_TABS[0].key)
+  const tab = WORKSPACE_TABS.find(t => t.key === activeTab) ?? WORKSPACE_TABS[0]
 
   return (
     <div className={s.genericPage}>
-      <div className={s.genericActions}>
-        <button className={s.actionBtn} onClick={() => setModal(true)}>+ Adicionar conteúdo</button>
-      </div>
-
-      {items.length === 0 && (
-        <div className={s.emptyState}>
-          <div>📭</div>
-          <div>Nenhum conteúdo ainda</div>
-          <button className={s.actionBtn} onClick={() => setModal(true)}>+ Adicionar primeiro item</button>
-        </div>
-      )}
-
-      <div className={s.contentList}>
-        {items.map(c => (
-          <ContentCard key={c.id} c={c} onDelete={() => removeContent(c.id)} />
+      <div className={s.wsTabs}>
+        {WORKSPACE_TABS.map(t => (
+          <button
+            key={t.key}
+            className={`${s.wsTab} ${activeTab === t.key ? s.wsTabActive : ''}`}
+            onClick={() => setActiveTab(t.key)}
+          >{t.icon} {t.label}</button>
         ))}
       </div>
-
-      <AnimatePresence>
-        {modal && (
-          <Modal title="Adicionar Conteúdo" onClose={() => setModal(false)} onSave={save} saveLabel="Salvar" disabled={!form.title.trim()}>
-            <div className={s.field}>
-              <label className={s.label}>Tipo</label>
-              <div className={s.typeRow}>
-                {(['link','pdf','note','file'] as HubContent['type'][]).map(t => (
-                  <button key={t}
-                    className={`${s.typeBtn} ${form.type === t ? s.typeActive : ''}`}
-                    onClick={() => setForm(f => ({ ...f, type: t }))}
-                  >{CONTENT_ICON[t]} {t}</button>
-                ))}
-              </div>
-            </div>
-            <div className={s.field}>
-              <label className={s.label}>Título</label>
-              <input className={s.input} placeholder="Nome do item" value={form.title} autoFocus
-                onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
-            </div>
-            {(form.type === 'link' || form.type === 'pdf') && (
-              <div className={s.field}>
-                <label className={s.label}>URL</label>
-                <input className={s.input} placeholder="https://..." value={form.url}
-                  onChange={e => setForm(f => ({ ...f, url: e.target.value }))} />
-              </div>
-            )}
-            {form.type === 'note' && (
-              <div className={s.field}>
-                <label className={s.label}>Conteúdo</label>
-                <textarea className={`${s.input} ${s.textarea}`} value={form.content}
-                  onChange={e => setForm(f => ({ ...f, content: e.target.value }))} rows={4} />
-              </div>
-            )}
-          </Modal>
-        )}
-      </AnimatePresence>
+      <div className={s.wsContent}>
+        <HubModuleTab key={tab.key} hubId={hubId} tabKey={tab.key} type={tab.type} layout={tab.layout} />
+      </div>
     </div>
   )
 }

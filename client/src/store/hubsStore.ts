@@ -85,6 +85,7 @@ interface HubsStore {
   hubChatMessages: HubChatMessage[]
 
   addHub: (h: Omit<Hub, 'id' | 'createdAt'>) => void
+  updateHub: (id: string, updates: Partial<Pick<Hub, 'name' | 'emoji' | 'color'>>) => void
   removeHub: (id: string) => void
 
   addSemester: (s: Omit<Semester, 'id'>) => void
@@ -143,6 +144,14 @@ export const useHubsStore = create<HubsStore>()(
         const hub: Hub = { ...h, id: crypto.randomUUID(), createdAt: new Date().toISOString() }
         set(s => ({ hubs: [...s.hubs, hub] }))
         fs('hubs', hub)
+      },
+      updateHub: (id, updates) => {
+        set(s => {
+          const hubs = s.hubs.map(h => h.id === id ? { ...h, ...updates } : h)
+          const updated = hubs.find(h => h.id === id)
+          if (updated) fs('hubs', updated)
+          return { hubs }
+        })
       },
       removeHub: (id) => {
         set(s => ({ hubs: s.hubs.filter(h => h.id !== id) }))
