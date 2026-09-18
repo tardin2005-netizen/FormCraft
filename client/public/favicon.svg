@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="fGrad" x1="0.3" y1="0" x2="0.7" y2="1">
+      <stop offset="0%"   stop-color="#60CFFF"/>
+      <stop offset="45%"  stop-color="#2979FF"/>
+      <stop offset="100%" stop-color="#1040E0"/>
+    </linearGradient>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#141B2D"/>
+      <stop offset="100%" stop-color="#0A0F1E"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background rounded square -->
+  <rect width="512" height="512" rx="110" fill="url(#bgGrad)"/>
+
+  <!-- F shape — top bar curves right -->
+  <!-- Vertical stroke -->
+  <rect x="115" y="105" width="90" height="302" rx="28" fill="url(#fGrad)"/>
+
+  <!-- Top horizontal bar -->
+  <path d="M115 105 Q115 105 380 105 Q415 105 415 140 Q415 175 380 175 L115 175 Z"
+        fill="url(#fGrad)"/>
+
+  <!-- Middle horizontal bar (shorter) -->
+  <path d="M205 237 Q205 237 340 237 Q368 237 368 265 Q368 293 340 293 L205 293 Z"
+        fill="url(#fGrad)"/>
+
+  <!-- Connecting piece vertical stroke top to middle -->
+  <rect x="115" y="105" width="90" height="188" rx="0" fill="url(#fGrad)"/>
+</svg>
