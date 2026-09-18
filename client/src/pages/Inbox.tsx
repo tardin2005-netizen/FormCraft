@@ -192,15 +192,32 @@ function FullContentModal({ item, onClose, onTagSearch }: { item: SavedLink; onC
           <button className={s.lightboxClose} onClick={onClose}>✕</button>
         </div>
         <div className={s.fullModalBody}>
+          {item.ogImage && (
+            <img src={item.ogImage} alt="" style={{ width: '100%', maxHeight: 220, objectFit: 'cover', borderRadius: 8, marginBottom: 16 }} />
+          )}
+          {item.url && item.url !== '#' && (
+            <a href={item.url} target="_blank" rel="noopener noreferrer"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--accent)', marginBottom: 12, wordBreak: 'break-all' }}>
+              ↗ {item.url}
+            </a>
+          )}
           <div className={s.fullModalContent}>{item.desc || '—'}</div>
         </div>
         <div className={s.fullModalFooter}>
           <div className={s.fullModalTags}>
             {item.tags.map(t => <TagChip key={t} tag={t} onSearch={onTagSearch} />)}
           </div>
-          <button className={s.fullModalCopy} onClick={copy}>
-            {copied ? '✓ Copiado!' : '📋 Copiar'}
-          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {item.url && item.url !== '#' && (
+              <a href={item.url} target="_blank" rel="noopener noreferrer"
+                className={s.fullModalCopy} style={{ textDecoration: 'none', background: 'var(--surface2)', color: 'var(--text)', border: '1px solid var(--border)' }}>
+                ↗ Abrir link
+              </a>
+            )}
+            <button className={s.fullModalCopy} onClick={copy}>
+              {copied ? '✓ Copiado!' : '📋 Copiar'}
+            </button>
+          </div>
         </div>
       </motion.div>
     </motion.div>
@@ -268,7 +285,7 @@ function GridCard({ item, onDelete, onUpdate, onTagSearch }: { item: SavedLink; 
   const [showFull,  setShowFull]  = useState(false)
   const [showEdit,  setShowEdit]  = useState(false)
   const { confirming, requestDelete, cancelDelete } = useDeleteConfirm(onDelete)
-  const isExpandable = item.type === 'prompt' || item.type === 'nota'
+  const isExpandable = !!item.desc
   const isImage = item.type === 'imagem'
   const imgSrc  = item.ogImage ?? ''
   const fallbackEmoji = item.type === 'nota' ? '📝' : item.type === 'pdf' ? '📄' : item.type === 'prompt' ? '🤖' : '🔗'
@@ -408,7 +425,7 @@ function ListRow({ item, onDelete, onTagSearch }: { item: SavedLink; onDelete: (
   const [expanded, setExpanded] = useState(false)
   const [showFull, setShowFull] = useState(false)
   const hasUrl = item.url && item.url !== '#'
-  const isExpandable = item.type === 'prompt' || item.type === 'nota'
+  const isExpandable = !!item.desc
 
   function handleRowClick(e: React.MouseEvent) {
     if ((e.target as HTMLElement).closest('button')) return

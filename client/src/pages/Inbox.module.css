@@ -228,8 +228,9 @@
   line-height: 1.5;
   margin-bottom: 6px;
   word-break: break-word;
+  white-space: pre-wrap;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
