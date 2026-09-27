@@ -38,57 +38,57 @@ export default function FirestoreSync() {
     const unsubs = [
       onSnapshot(
         query(collection(db, 'users', uid, 'links'), orderBy('savedAt', 'desc')),
-        snap => safe('links', snap.docs.map(d => d.data() as any), d => useLinksStore.getState().hydrate(d))
+        snap => safe('links', snap.docs.map(d => ({ ...d.data(), id: d.id }) as any), d => useLinksStore.getState().hydrate(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'collections'),
-        snap => safe('collections', snap.docs.map(d => d.data() as any), d => useCollectionsStore.getState().hydrate(d))
+        snap => safe('collections', snap.docs.map(d => ({ ...d.data(), id: d.id }) as any), d => useCollectionsStore.getState().hydrate(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'areas'),
-        snap => safe('areas', snap.docs.map(d => d.data() as any), d => useAreasStore.getState().hydrate(d))
+        snap => safe('areas', snap.docs.map(d => ({ ...d.data(), id: d.id }) as any), d => useAreasStore.getState().hydrate(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'areaItems'),
-        snap => safe('areaItems', snap.docs.map(d => d.data() as any), d => useAreaItemsStore.getState().hydrate(d))
+        snap => safe('areaItems', snap.docs.map(d => ({ ...d.data(), id: d.id }) as any), d => useAreaItemsStore.getState().hydrate(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'hubs'),
-        snap => safe('hubs', snap.docs.map(d => d.data() as any), d => useHubsStore.getState().hydrateHubs(d))
+        snap => safe('hubs', snap.docs.map(d => ({ ...d.data(), id: d.id }) as any), d => useHubsStore.getState().hydrateHubs(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'hubSemesters'),
-        snap => safe('hubSemesters', snap.docs.map(d => d.data() as any), d => useHubsStore.getState().hydrateSemesters(d))
+        snap => safe('hubSemesters', snap.docs.map(d => ({ ...d.data(), id: d.id }) as any), d => useHubsStore.getState().hydrateSemesters(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'hubSubjects'),
-        snap => safe('hubSubjects', snap.docs.map(d => d.data() as any), d => useHubsStore.getState().hydrateSubjects(d))
+        snap => safe('hubSubjects', snap.docs.map(d => ({ ...d.data(), id: d.id }) as any), d => useHubsStore.getState().hydrateSubjects(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'hubClasses'),
-        snap => safe('hubClasses', snap.docs.map(d => d.data() as any), d => useHubsStore.getState().hydrateClasses(d))
+        snap => safe('hubClasses', snap.docs.map(d => ({ ...d.data(), id: d.id }) as any), d => useHubsStore.getState().hydrateClasses(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'hubContents'),
-        snap => safe('hubContents', snap.docs.map(d => d.data() as any), d => useHubsStore.getState().hydrateContents(d))
+        snap => safe('hubContents', snap.docs.map(d => ({ ...d.data(), id: d.id }) as any), d => useHubsStore.getState().hydrateContents(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'hubChats'),
-        snap => safe('hubChats', snap.docs.map(d => d.data() as any), d => useHubsStore.getState().hydrateChats(d))
+        snap => safe('hubChats', snap.docs.map(d => ({ ...d.data(), id: d.id }) as any), d => useHubsStore.getState().hydrateChats(d))
       ),
       onSnapshot(
         query(collection(db, 'users', uid, 'hubChatMessages'), orderBy('createdAt', 'asc')),
-        snap => safe('hubChatMessages', snap.docs.map(d => d.data() as any), d => useHubsStore.getState().hydrateChatMessages(d))
+        snap => safe('hubChatMessages', snap.docs.map(d => ({ ...d.data(), id: d.id }) as any), d => useHubsStore.getState().hydrateChatMessages(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'hubConcepts'),
-        snap => safe('hubConcepts', snap.docs.map(d => d.data() as any), d => useHubsStore.getState().hydrateConcepts(d))
+        snap => safe('hubConcepts', snap.docs.map(d => ({ ...d.data(), id: d.id }) as any), d => useHubsStore.getState().hydrateConcepts(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'designPatterns'),
         snap => {
           const lib = useLibraryStore.getState()
-          const docs = snap.docs.map(d => d.data() as any)
+          const docs = snap.docs.map(d => ({ ...d.data(), id: d.id }) as any)
           if (docs.length > 0) return lib.hydrate(docs)
           if (snap.metadata.fromCache) return
           if (lib.seeded) lib.hydrate([])
@@ -103,15 +103,15 @@ export default function FirestoreSync() {
       ),
       onSnapshot(
         collection(db, 'users', uid, 'workspaces'),
-        snap => safe('workspaces', snap.docs.map(d => d.data() as any), d => useWorkspacesStore.getState().hydrate(d))
+        snap => safe('workspaces', snap.docs.map(d => ({ ...d.data(), id: d.id }) as any), d => useWorkspacesStore.getState().hydrate(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'contentItems'),
-        snap => safe('contentItems', snap.docs.map(d => d.data() as any), d => useContentItemsStore.getState().hydrate(d))
+        snap => safe('contentItems', snap.docs.map(d => ({ ...d.data(), id: d.id }) as any), d => useContentItemsStore.getState().hydrate(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'tasks'),
-        snap => safe('tasks', snap.docs.map(d => d.data() as any), d => useTasksStore.getState().hydrate(d))
+        snap => safe('tasks', snap.docs.map(d => ({ ...d.data(), id: d.id }) as any), d => useTasksStore.getState().hydrate(d))
       ),
     ]
 
