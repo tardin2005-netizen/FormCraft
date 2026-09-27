@@ -428,7 +428,7 @@
 .conceptCard:hover { border-color: var(--accent); transform: translateY(-2px); }
 
 .conceptCardImg {
-  width: 100%; background: var(--bg2);
+  width: 100%; background: var(--surface2);
   border-bottom: 1px solid var(--border);
   display: flex; align-items: center; justify-content: center;
   min-height: 120px; max-height: 200px; overflow: hidden;
@@ -453,3 +453,15 @@
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .mark { background: transparent; color: var(--accent); font-weight: 700; }
+
+.resultCount { font-size: 11px; color: var(--text2); margin-bottom: 10px; font-variant-numeric: tabular-nums; }
+.originChip {
+  display: inline-block; margin-right: 6px; padding: 1px 7px;
+  border-radius: 20px; font-size: 10px; font-weight: 600; letter-spacing: .03em;
+  background: var(--surface2); color: var(--text2); border: 1px solid var(--border);
+}
+.originChipLib { background: var(--accent-muted); color: var(--accent); border-color: transparent; }
+@media (max-width: 640px) {
+  .conceptSearchSection { padding: 0 16px 8px; }
+  .conceptGrid { grid-template-columns: 1fr; }
+}

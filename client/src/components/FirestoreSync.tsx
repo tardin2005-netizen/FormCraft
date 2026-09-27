@@ -11,6 +11,7 @@ import { useSavedToolsStore } from '../store/savedToolsStore'
 import { useWorkspacesStore } from '../store/workspacesStore'
 import { useContentItemsStore } from '../store/contentItemsStore'
 import { useTasksStore } from '../store/tasksStore'
+import { useLibraryStore } from '../store/libraryStore'
 
 export default function FirestoreSync() {
   const { user } = useAuth()
@@ -82,6 +83,17 @@ export default function FirestoreSync() {
       onSnapshot(
         collection(db, 'users', uid, 'hubConcepts'),
         snap => safe('hubConcepts', snap.docs.map(d => d.data() as any), d => useHubsStore.getState().hydrateConcepts(d))
+      ),
+      onSnapshot(
+        collection(db, 'users', uid, 'designPatterns'),
+        snap => {
+          const lib = useLibraryStore.getState()
+          const docs = snap.docs.map(d => d.data() as any)
+          if (docs.length > 0) return lib.hydrate(docs)
+          if (snap.metadata.fromCache) return
+          if (lib.seeded) lib.hydrate([])
+          else lib.seedDefaults()
+        }
       ),
       onSnapshot(
         doc(db, 'users', uid, 'meta', 'savedTools'),

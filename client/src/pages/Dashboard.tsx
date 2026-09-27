@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useMemo } from 'react'
 import { Link, useNavigate, useOutletContext } from 'react-router-dom'
 import { useAreasStore } from '../store/areasStore'
 import { useCollectionsStore } from '../store/collectionsStore'
@@ -6,6 +6,8 @@ import { useAreaItemsStore } from '../store/areaItemsStore'
 import { useWorkspacesStore } from '../store/workspacesStore'
 import { useLinksStore } from '../store/linksStore'
 import { useHubsStore } from '../store/hubsStore'
+import { useLibraryStore } from '../store/libraryStore'
+import { searchAll, normalize } from '../utils/globalSearch'
 import WorkspaceCreator from '../components/WorkspaceCreator'
 import VoiceSearch from '../components/VoiceSearch'
 import s from './Dashboard.module.css'
@@ -83,8 +85,14 @@ function GitHubWidget() {
   )
 }
 
-function normalize(str: string) {
-  return str.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+function Highlight({ text, query }: { text: string; query: string }) {
+  const tokens = normalize(query).split(/\s+/).filter(Boolean)
+  const norm = normalize(text)
+  for (const t of tokens) {
+    const idx = norm.indexOf(t)
+    if (idx !== -1) return <>{text.slice(0, idx)}<mark className={s.mark}>{text.slice(idx, idx + t.length)}</mark>{text.slice(idx + t.length)}</>
+  }
+  return <>{text}</>
 }
 
 export default function Dashboard() {
@@ -95,7 +103,8 @@ export default function Dashboard() {
   const { items } = useAreaItemsStore()
   const { workspaces } = useWorkspacesStore()
   const { links } = useLinksStore()
-  const { hubs, semesters, subjects, classes, concepts } = useHubsStore()
+  const { hubs, subjects, classes, concepts } = useHubsStore()
+  const { patterns } = useLibraryStore()
   const [showWorkspaceCreator, setShowWorkspaceCreator] = useState(false)
 
   const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
@@ -109,22 +118,11 @@ export default function Dashboard() {
   const [conceptQuery, setConceptQuery] = useState('')
   const [showGH,       setShowGH]       = useState(false)
 
-  const conceptResults = conceptQuery.trim().length < 1 ? [] : (() => {
-    const q = normalize(conceptQuery)
-    return concepts.filter(c => {
-      const subj = subjects.find(x => x.id === c.subjectId)
-      const hub  = hubs.find(x => x.id === c.hubId)
-      const cls  = classes.find(x => x.id === c.classId)
-      return (
-        normalize(c.termo).includes(q) ||
-        normalize(c.definicao).includes(q) ||
-        c.tags.some(t => normalize(t).includes(q)) ||
-        (subj && normalize(subj.name).includes(q)) ||
-        (hub && normalize(hub.name).includes(q)) ||
-        (cls && normalize(cls.title).includes(q))
-      )
-    })
-  })()
+  const searching = conceptQuery.trim().length > 0
+  const results = useMemo(
+    () => searchAll(conceptQuery, { concepts, hubs, subjects, classes, patterns }),
+    [conceptQuery, concepts, hubs, subjects, classes, patterns],
+  )
   const [newAreaModal, setNewAreaModal] = useState(false)
   const [newArea,      setNewArea]      = useState({ emoji: '📁', title: '', desc: '', color: '#7c6ef7' })
   const [modalPos,     setModalPos]     = useState({ x: 0, y: 0 })
@@ -190,7 +188,7 @@ export default function Dashboard() {
           <span className={s.conceptSearchIcon}>🔍</span>
           <input
             className={s.conceptSearchInput}
-            placeholder="Buscar conceitos de todas as matérias e semestres…"
+            placeholder="Buscar conceitos das aulas e padrões da Biblioteca…"
             value={conceptQuery}
             onChange={e => setConceptQuery(e.target.value)}
           />
@@ -198,54 +196,67 @@ export default function Dashboard() {
             <button className={s.conceptSearchClear} onClick={() => setConceptQuery('')}>✕</button>
           )}
         </div>
-        {conceptQuery.trim().length > 0 && (
+        {searching && (
           <div className={s.conceptResultsArea}>
-            {conceptResults.length === 0 ? (
+            {results.length === 0 ? (
               <div className={s.conceptEmpty}>
                 <span>🔎</span>
-                <p>Nenhum conceito indexado com esse termo ainda.</p>
-                <p className={s.conceptEmptyHint}>O conteúdo pode existir — apenas não foi indexado como conceito. Abra a matéria, selecione uma aula e clique em + Conceito para indexar.</p>
+                <p>Nada indexado com “{conceptQuery.trim()}” ainda.</p>
+                <p className={s.conceptEmptyHint}>O conteúdo pode existir, só não foi indexado nessa forma. Para indexar, abra uma aula e use + Conceito, ou cadastre um padrão na Biblioteca.</p>
               </div>
             ) : (
-              <div className={s.conceptGrid}>
-                {conceptResults.map(c => {
-                  const subj = subjects.find(x => x.id === c.subjectId)
-                  const cls  = classes.find(x => x.id === c.classId)
-                  const q = normalize(conceptQuery)
-                  function highlight(text: string) {
-                    const norm = normalize(text)
-                    const idx  = norm.indexOf(q)
-                    if (idx === -1) return <>{text}</>
-                    return <>{text.slice(0, idx)}<mark className={s.mark}>{text.slice(idx, idx + q.length)}</mark>{text.slice(idx + q.length)}</>
-                  }
-                  return (
+              <>
+                <div className={s.resultCount}>{results.length} {results.length === 1 ? 'resultado' : 'resultados'}</div>
+                <div className={s.conceptGrid}>
+                  {results.map(r => r.kind === 'concept' ? (
                     <button
-                      key={c.id}
+                      key={r.item.id}
                       className={s.conceptCard}
-                      onClick={() => navigate(`/hub/${c.hubId}`)}
+                      onClick={() => navigate(`/hub/${r.item.hubId}?sem=${r.item.semesterId}&subj=${r.item.subjectId}&cls=${r.item.classId}`)}
                     >
-                      {c.imageData && (
+                      {r.item.imageData && (
                         <div className={s.conceptCardImg}>
-                          <img src={c.imageData} alt={c.termo} />
+                          <img src={r.item.imageData} alt={r.item.termo} />
                         </div>
                       )}
                       <div className={s.conceptCardBody}>
-                        <div className={s.conceptCardTermo}>{highlight(c.termo)}</div>
-                        <div className={s.conceptCardDef}>{c.definicao}</div>
+                        <div className={s.conceptCardTermo}><Highlight text={r.item.termo} query={conceptQuery} /></div>
+                        <div className={s.conceptCardDef}>{r.item.definicao}</div>
                       </div>
                       <div className={s.conceptCardFoot}>
-                        {subj?.name ?? '—'}
-                        {cls ? ` · ${cls.title}` : ''}
+                        <span className={s.originChip}>Matéria</span>
+                        {r.subject?.name ?? '—'}{r.classItem ? ` · ${r.classItem.title}` : ''}
                       </div>
                     </button>
-                  )
-                })}
-              </div>
+                  ) : (
+                    <button
+                      key={r.item.id}
+                      className={s.conceptCard}
+                      onClick={() => navigate(`/biblioteca/${r.item.id}`)}
+                    >
+                      {r.item.exemploImagem && (
+                        <div className={s.conceptCardImg}>
+                          <img src={r.item.exemploImagem} alt={r.item.nomePrincipal} />
+                        </div>
+                      )}
+                      <div className={s.conceptCardBody}>
+                        <div className={s.conceptCardTermo}><Highlight text={r.item.nomePrincipal} query={conceptQuery} /></div>
+                        <div className={s.conceptCardDef}>{r.item.oQueE}</div>
+                      </div>
+                      <div className={s.conceptCardFoot}>
+                        <span className={`${s.originChip} ${s.originChipLib}`}>Biblioteca</span>
+                        Padrão de Design · {r.item.categoria}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         )}
       </section>
 
+      {!searching && <>
       {/* Stats */}
       <div className={s.stats}>
         {[
@@ -412,6 +423,8 @@ export default function Dashboard() {
           </div>
         </section>
       )}
+
+      </>}
 
       {/* Workspace Creator */}
       {showWorkspaceCreator && (

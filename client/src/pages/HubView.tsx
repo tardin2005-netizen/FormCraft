@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useHubsStore, type Semester, type Subject, type ClassItem, type HubContent, type Concept } from '../store/hubsStore'
 import { useContentItemsStore } from '../store/contentItemsStore'
@@ -208,9 +208,10 @@ function FaculdadeView({ hubId }: { hubId: string }) {
   const hubSemesters = semesters.filter(s => s.hubId === hubId)
     .sort((a, b) => a.year !== b.year ? a.year - b.year : Number(a.period) - Number(b.period))
 
-  const [selSem, setSelSem]     = useState<string | null>(hubSemesters[0]?.id ?? null)
-  const [selSubj, setSelSubj]   = useState<string | null>(null)
-  const [selClass, setSelClass] = useState<string | null>(null)
+  const [params] = useSearchParams()
+  const [selSem, setSelSem]     = useState<string | null>(params.get('sem') ?? hubSemesters[0]?.id ?? null)
+  const [selSubj, setSelSubj]   = useState<string | null>(params.get('subj'))
+  const [selClass, setSelClass] = useState<string | null>(params.get('cls'))
 
   // Auto-select first subject so content is visible on refresh
   useEffect(() => {
