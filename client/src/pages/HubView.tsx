@@ -214,7 +214,7 @@ function FaculdadeView({ hubId }: { hubId: string }) {
   const hubSemesters = semesters.filter(s => s.hubId === hubId)
     .sort((a, b) => a.year !== b.year ? a.year - b.year : Number(a.period) - Number(b.period))
 
-  const [params] = useSearchParams()
+  const [params, setParams] = useSearchParams()
   const [selSem, setSelSem]     = useState<string | null>(params.get('sem') ?? hubSemesters[0]?.id ?? null)
   const [selSubj, setSelSubj]   = useState<string | null>(params.get('subj'))
   const [selClass, setSelClass] = useState<string | null>(params.get('cls'))
@@ -257,16 +257,21 @@ function FaculdadeView({ hubId }: { hubId: string }) {
   const novoHandled = useRef(false)
   useEffect(() => {
     if (novoHandled.current || !novo) return
-    if (novo === 'semestre' || !selSem) { novoHandled.current = true; setSemModal(true); return }
+    // Consume the param so switching tabs (which remounts this view) doesn't reopen the modal.
+    const consume = () => {
+      novoHandled.current = true
+      setParams(p => { const next = new URLSearchParams(p); next.delete('novo'); return next }, { replace: true })
+    }
+    if (novo === 'semestre' || !selSem) { consume(); setSemModal(true); return }
     if (novo === 'material') {
       if (!selSubj) {
-        if (!subjects.some(x => x.semesterId === selSem)) { novoHandled.current = true; setSubjModal(true) }
+        if (!subjects.some(x => x.semesterId === selSem)) { consume(); setSubjModal(true) }
         return
       }
-      novoHandled.current = true
+      consume()
       setContentModal(true)
     }
-  }, [novo, selSem, selSubj, subjects])
+  }, [novo, selSem, selSubj, subjects, setParams])
 
   const curSubjects  = subjects.filter(x => x.semesterId === selSem)
   const curClasses   = classes.filter(x => x.subjectId === selSubj).sort((a, b) => a.date.localeCompare(b.date))
