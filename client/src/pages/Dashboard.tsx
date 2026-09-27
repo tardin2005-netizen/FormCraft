@@ -12,7 +12,7 @@ import WorkspaceCreator from '../components/WorkspaceCreator'
 import VoiceSearch from '../components/VoiceSearch'
 import s from './Dashboard.module.css'
 
-interface OutletCtx { onOpenSearch: () => void }
+interface OutletCtx { onOpenSearch: (q?: string) => void }
 
 type GHCommit = { sha: string; commit: { message: string; author: { date: string } } }
 type GHRepo   = { stargazers_count: number; open_issues_count: number; pushed_at: string; description: string | null }
@@ -165,9 +165,9 @@ export default function Dashboard() {
             placeholder="ex: gerar vídeo com IA, analisar métricas do instagram..."
             value={heroQuery}
             onChange={e => setHeroQuery(e.target.value)}
-            onFocus={onOpenSearch}
+            onKeyDown={e => { if (e.key === 'Enter') onOpenSearch(heroQuery) }}
           />
-          <button className={s.heroBtn}>Encontrar</button>
+          <button className={s.heroBtn} onClick={() => onOpenSearch(heroQuery)}>Encontrar</button>
         </div>
         <div className={s.voiceRow}>
           <VoiceSearch />
@@ -175,7 +175,7 @@ export default function Dashboard() {
         </div>
         <div className={s.chips}>
           {CHIPS.map(c => (
-            <button key={c.label} className={s.chip} onClick={onOpenSearch}>
+            <button key={c.label} className={s.chip} onClick={() => onOpenSearch(c.label)}>
               {c.emoji} {c.label}
             </button>
           ))}

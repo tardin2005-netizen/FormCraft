@@ -168,7 +168,7 @@ export default function Hubs() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: .94 }}
               transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-              style={{ transform: `translate(calc(-50% + ${modalPos.x}px), calc(-50% + ${modalPos.y}px))` }}
+              style={{ translate: `calc(-50% + ${modalPos.x}px) calc(-50% + ${modalPos.y}px)` }}
             >
               {step === 'type' ? (
                 <>
@@ -244,7 +244,7 @@ export default function Hubs() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: .94 }}
               transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-              style={{ transform: `translate(calc(-50% + ${editPos.x}px), calc(-50% + ${editPos.y}px))` }}
+              style={{ translate: `calc(-50% + ${editPos.x}px) calc(-50% + ${editPos.y}px)` }}
             >
               <div className={`${s.modalHeader} ${s.modalDrag}`} onMouseDown={onEditHeaderMouseDown}>
                 <span>Editar Hub</span>

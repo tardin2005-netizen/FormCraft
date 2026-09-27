@@ -116,7 +116,7 @@ export default function IconPicker({ value, onChange, onClose }: Props) {
       <div className={s.backdrop} onClick={onClose} />
       <motion.div
         className={s.picker}
-        style={{ transform: `translate(calc(-50% + ${pos.x}px), calc(-50% + ${pos.y}px))` }}
+        style={{ translate: `calc(-50% + ${pos.x}px) calc(-50% + ${pos.y}px)` }}
         initial={{ opacity: 0, scale: .94, y: -10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: .94, y: -10 }}

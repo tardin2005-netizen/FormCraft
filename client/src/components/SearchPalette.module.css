@@ -143,3 +143,15 @@
 
 .tagBadge    { font-size: 11px; font-weight: 700; color: var(--accent); margin-left: 6px; }
 .tagCount    { font-size: 10px; color: var(--text2); margin-left: 8px; font-weight: 400; }
+
+.results { max-height: min(60vh, 520px); overflow-y: auto; }
+.resultOrigin { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.resultLabel { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.toolLetter {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; border-radius: 6px; color: #fff; font-size: 11px; font-weight: 700;
+}
+@media (max-width: 768px) {
+  .panel { top: 12px; width: calc(100vw - 16px); max-width: none; }
+  .resultTags { display: none; }
+}
