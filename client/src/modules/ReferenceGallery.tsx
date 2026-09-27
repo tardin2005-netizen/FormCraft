@@ -29,8 +29,9 @@ async function fetchSiteMeta(url: string) {
   } catch { return null }
 }
 
-export default function ReferenceGallery({ module, workspaceId, items, addItem, removeItem, toggleStar }: ModuleProps) {
+export default function ReferenceGallery({ module, workspaceId, items, addItem, updateItem, removeItem, toggleStar }: ModuleProps) {
   const [showForm, setShowForm] = useState(false)
+  const [editId, setEditId] = useState<string | null>(null)
   const [form, setForm] = useState<ReferenceData>({ title: '', url: '', imageUrl: '', pastedImage: '', description: '', why: '', tags: '', category: '' })
   const [view, setView] = useState<'grid' | 'list'>('grid')
   const [fetching, setFetching] = useState(false)
@@ -79,8 +80,22 @@ export default function ReferenceGallery({ module, workspaceId, items, addItem, 
     reader.readAsDataURL(file)
   }
 
+  function closeForm() { setShowForm(false); setEditId(null); setForm({ title: '', url: '', imageUrl: '', pastedImage: '', description: '', why: '', tags: '', category: '' }) }
+
+  function openEdit(item: { id: string; data: Record<string, unknown>; tags: string[] }) {
+    const data = item.data as Record<string, unknown>
+    setForm({ ...{ title: '', url: '', imageUrl: '', pastedImage: '', description: '', why: '', tags: '', category: '' }, ...data, tags: typeof data.tags === 'string' ? data.tags : item.tags.join(', ') } as typeof form)
+    setEditId(item.id)
+    setShowForm(true)
+  }
+
   function handleAdd() {
     if (!form.title.trim()) return
+    if (editId) {
+      updateItem(editId, { data: form as unknown as Record<string, unknown>, tags: String(form.tags ?? '').split(',').map(t => t.trim()).filter(Boolean) })
+      closeForm()
+      return
+    }
     addItem({
       workspaceId,
       moduleId: module.id,
@@ -89,7 +104,7 @@ export default function ReferenceGallery({ module, workspaceId, items, addItem, 
       tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
       starred: false,
     })
-    setShowForm(false)
+    closeForm()
     setForm({ title: '', url: '', imageUrl: '', pastedImage: '', description: '', why: '', tags: '', category: '' })
   }
 
@@ -127,7 +142,8 @@ export default function ReferenceGallery({ module, workspaceId, items, addItem, 
                     <div style={{ display: 'flex', gap: 4 }}>
                       <button className={`${s.starBtn} ${item.starred ? s.starActive : ''}`} onClick={() => toggleStar(item.id)}>{item.starred ? '★' : '☆'}</button>
                       {d.url && <a href={d.url} target="_blank" rel="noreferrer" className={s.linkBtn}>↗</a>}
-                      <DeleteBtn onConfirm={() => removeItem(item.id)} />
+                      <button className={s.starBtn} title="Editar" aria-label="Editar" onClick={e => { e.stopPropagation(); openEdit(item) }}>✎</button>
+                    <DeleteBtn onConfirm={() => removeItem(item.id)} />
                     </div>
                   </div>
                   {d.why && <div className={s.refWhy}>"{d.why}"</div>}
@@ -162,7 +178,8 @@ export default function ReferenceGallery({ module, workspaceId, items, addItem, 
                 <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
                   <button className={`${s.starBtn} ${item.starred ? s.starActive : ''}`} onClick={() => toggleStar(item.id)}>{item.starred ? '★' : '☆'}</button>
                   {d.url && <a href={d.url} target="_blank" rel="noreferrer" className={s.linkBtn}>↗</a>}
-                  <DeleteBtn onConfirm={() => removeItem(item.id)} />
+                  <button className={s.starBtn} title="Editar" aria-label="Editar" onClick={e => { e.stopPropagation(); openEdit(item) }}>✎</button>
+                    <DeleteBtn onConfirm={() => removeItem(item.id)} />
                 </div>
               </div>
             )
@@ -171,9 +188,9 @@ export default function ReferenceGallery({ module, workspaceId, items, addItem, 
       )}
 
       {showForm && (
-        <div className={s.backdrop} onClick={e => { if (e.target === e.currentTarget) setShowForm(false) }}>
+        <div className={s.backdrop} onClick={e => { if (e.target === e.currentTarget) closeForm() }}>
           <div className={s.formModal}>
-            <h3 className={s.formTitle}>Adicionar referência</h3>
+            <h3 className={s.formTitle}>{editId ? 'Editar referência' : 'Adicionar referência'}</h3>
             <div className={s.formGrid}>
               <div className={`${s.formGroup} ${s.fullWidth}`}>
                 <label className={s.label}>Título *</label>
@@ -222,8 +239,8 @@ export default function ReferenceGallery({ module, workspaceId, items, addItem, 
               </div>
             </div>
             <div className={s.formFooter}>
-              <button className={s.cancelBtn} onClick={() => setShowForm(false)}>Cancelar</button>
-              <button className={s.saveBtn} onClick={handleAdd} disabled={!form.title.trim()}>Salvar referência</button>
+              <button className={s.cancelBtn} onClick={() => closeForm()}>Cancelar</button>
+              <button className={s.saveBtn} onClick={handleAdd} disabled={!form.title.trim()}>{editId ? 'Salvar alterações' : 'Salvar referência'}</button>
             </div>
           </div>
         </div>

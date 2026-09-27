@@ -48,23 +48,38 @@ const EMPTY: ToolData = {
   useCase:'', preco:'', alternativas:'', rating:'', notas:'', tags:'',
 }
 
-export default function ToolsDbModule({ module, workspaceId, items, addItem, removeItem, toggleStar }: ModuleProps) {
+export default function ToolsDbModule({ module, workspaceId, items, addItem, updateItem, removeItem, toggleStar }: ModuleProps) {
   const [showForm, setShowForm] = useState(false)
+  const [editId, setEditId] = useState<string | null>(null)
   const [form, setForm] = useState<ToolData>({...EMPTY})
   const [filterCat, setFilterCat] = useState<string>('todos')
   const [search, setSearch] = useState('')
 
   function set(patch: Partial<ToolData>) { setForm(p=>({...p,...patch})) }
 
+  function closeForm() { setShowForm(false); setEditId(null); setForm({...EMPTY}) }
+
+  function openEdit(item: { id: string; data: Record<string, unknown>; tags: string[] }) {
+    const data = item.data as Record<string, unknown>
+    setForm({ ...{...EMPTY}, ...data, tags: typeof data.tags === 'string' ? data.tags : item.tags.join(', ') } as typeof form)
+    setEditId(item.id)
+    setShowForm(true)
+  }
+
   function handleAdd() {
     if (!form.title.trim()||!form.descricao.trim()) return
+    if (editId) {
+      updateItem(editId, { data: form as unknown as Record<string, unknown>, tags: String(form.tags ?? '').split(',').map(t => t.trim()).filter(Boolean) })
+      closeForm()
+      return
+    }
     addItem({
       workspaceId, moduleId: module.id, contentType: 'tools-db',
       data: form as unknown as Record<string,unknown>,
       tags: form.tags.split(',').map(t=>t.trim()).filter(Boolean),
       starred: false,
     })
-    setShowForm(false)
+    closeForm()
     setForm({...EMPTY})
   }
 
@@ -132,6 +147,7 @@ export default function ToolsDbModule({ module, workspaceId, items, addItem, rem
                       ))}</div>
                     )}
                     <button className={`${s.starBtn} ${item.starred?s.starActive:''}`} onClick={()=>toggleStar(item.id)}>{item.starred?'★':'☆'}</button>
+                    <button className={s.starBtn} title="Editar" aria-label="Editar" onClick={e => { e.stopPropagation(); openEdit(item) }}>✎</button>
                     <DeleteBtn onConfirm={()=>removeItem(item.id)}/>
                   </div>
                 </div>
@@ -177,9 +193,9 @@ export default function ToolsDbModule({ module, workspaceId, items, addItem, rem
       )}
 
       {showForm && (
-        <div className={s.backdrop} onClick={e=>{if(e.target===e.currentTarget)setShowForm(false)}}>
+        <div className={s.backdrop} onClick={e=>{if(e.target===e.currentTarget)closeForm()}}>
           <div className={s.formModal}>
-            <h3 className={s.formTitle}>Nova ferramenta</h3>
+            <h3 className={s.formTitle}>{editId ? 'Editar ferramenta' : 'Nova ferramenta'}</h3>
             <div className={s.formGrid}>
               <div className={`${s.formGroup} ${s.fullWidth}`}>
                 <label className={s.label}>Nome da ferramenta *</label>
@@ -238,8 +254,8 @@ export default function ToolsDbModule({ module, workspaceId, items, addItem, rem
               </div>
             </div>
             <div className={s.formFooter}>
-              <button className={s.cancelBtn} onClick={()=>setShowForm(false)}>Cancelar</button>
-              <button className={s.saveBtn} onClick={handleAdd} disabled={!form.title.trim()||!form.descricao.trim()}>Salvar ferramenta</button>
+              <button className={s.cancelBtn} onClick={()=>closeForm()}>Cancelar</button>
+              <button className={s.saveBtn} onClick={handleAdd} disabled={!form.title.trim()||!form.descricao.trim()}>{editId ? 'Salvar alterações' : 'Salvar ferramenta'}</button>
             </div>
           </div>
         </div>

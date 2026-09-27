@@ -39,8 +39,9 @@ const EMPTY: TroubleshootData = {
   problema:'', causa:'', solucao:'', prevencao:'', links:'', tags:'',
 }
 
-export default function TroubleshootingModule({ module, workspaceId, items, addItem, removeItem, toggleStar }: ModuleProps) {
+export default function TroubleshootingModule({ module, workspaceId, items, addItem, updateItem, removeItem, toggleStar }: ModuleProps) {
   const [showForm, setShowForm] = useState(false)
+  const [editId, setEditId] = useState<string | null>(null)
   const [form, setForm] = useState<TroubleshootData>({...EMPTY})
   const [filterStatus, setFilterStatus] = useState<string>('todos')
   const [filterSev, setFilterSev] = useState<string>('todos')
@@ -48,15 +49,29 @@ export default function TroubleshootingModule({ module, workspaceId, items, addI
 
   function set(patch: Partial<TroubleshootData>) { setForm(p=>({...p,...patch})) }
 
+  function closeForm() { setShowForm(false); setEditId(null); setForm({...EMPTY}) }
+
+  function openEdit(item: { id: string; data: Record<string, unknown>; tags: string[] }) {
+    const data = item.data as Record<string, unknown>
+    setForm({ ...{...EMPTY}, ...data, tags: typeof data.tags === 'string' ? data.tags : item.tags.join(', ') } as typeof form)
+    setEditId(item.id)
+    setShowForm(true)
+  }
+
   function handleAdd() {
     if (!form.title.trim()||!form.problema.trim()) return
+    if (editId) {
+      updateItem(editId, { data: form as unknown as Record<string, unknown>, tags: String(form.tags ?? '').split(',').map(t => t.trim()).filter(Boolean) })
+      closeForm()
+      return
+    }
     addItem({
       workspaceId, moduleId: module.id, contentType: 'troubleshooting',
       data: form as unknown as Record<string,unknown>,
       tags: form.tags.split(',').map(t=>t.trim()).filter(Boolean),
       starred: false,
     })
-    setShowForm(false)
+    closeForm()
     setForm({...EMPTY})
   }
 
@@ -133,6 +148,7 @@ export default function TroubleshootingModule({ module, workspaceId, items, addI
                   </div>
                   <div className={d.cardActions}>
                     <button className={`${s.starBtn} ${item.starred?s.starActive:''}`} onClick={e=>{e.stopPropagation();toggleStar(item.id)}}>{item.starred?'★':'☆'}</button>
+                    <button className={s.starBtn} title="Editar" aria-label="Editar" onClick={e => { e.stopPropagation(); openEdit(item) }}>✎</button>
                     <DeleteBtn onConfirm={()=>removeItem(item.id)}/>
                     <span className={d.chevron}>{isOpen?'↑':'↓'}</span>
                   </div>
@@ -177,9 +193,9 @@ export default function TroubleshootingModule({ module, workspaceId, items, addI
       )}
 
       {showForm && (
-        <div className={s.backdrop} onClick={e=>{if(e.target===e.currentTarget)setShowForm(false)}}>
+        <div className={s.backdrop} onClick={e=>{if(e.target===e.currentTarget)closeForm()}}>
           <div className={s.formModal} style={{width:620}}>
-            <h3 className={s.formTitle}>Novo problema</h3>
+            <h3 className={s.formTitle}>{editId ? 'Editar problema' : 'Novo problema'}</h3>
             <div className={s.formGrid}>
               <div className={`${s.formGroup} ${s.fullWidth}`}>
                 <label className={s.label}>Título / Descrição curta *</label>
@@ -231,8 +247,8 @@ export default function TroubleshootingModule({ module, workspaceId, items, addI
               </div>
             </div>
             <div className={s.formFooter}>
-              <button className={s.cancelBtn} onClick={()=>setShowForm(false)}>Cancelar</button>
-              <button className={s.saveBtn} onClick={handleAdd} disabled={!form.title.trim()||!form.problema.trim()}>Salvar problema</button>
+              <button className={s.cancelBtn} onClick={()=>closeForm()}>Cancelar</button>
+              <button className={s.saveBtn} onClick={handleAdd} disabled={!form.title.trim()||!form.problema.trim()}>{editId ? 'Salvar alterações' : 'Salvar problema'}</button>
             </div>
           </div>
         </div>

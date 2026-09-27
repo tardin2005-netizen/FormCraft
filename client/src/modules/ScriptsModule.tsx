@@ -49,8 +49,9 @@ const EMPTY: ScriptData = {
   uso:'', dependencias:'', so:'', notas:'', tags:'',
 }
 
-export default function ScriptsModule({ module, workspaceId, items, addItem, removeItem, toggleStar }: ModuleProps) {
+export default function ScriptsModule({ module, workspaceId, items, addItem, updateItem, removeItem, toggleStar }: ModuleProps) {
   const [showForm, setShowForm] = useState(false)
+  const [editId, setEditId] = useState<string | null>(null)
   const [form, setForm] = useState<ScriptData>({...EMPTY})
   const [filterLang, setFilterLang] = useState<string>('todos')
   const [expanded, setExpanded] = useState<string|null>(null)
@@ -58,15 +59,29 @@ export default function ScriptsModule({ module, workspaceId, items, addItem, rem
 
   function set(patch: Partial<ScriptData>) { setForm(p=>({...p,...patch})) }
 
+  function closeForm() { setShowForm(false); setEditId(null); setForm({...EMPTY}) }
+
+  function openEdit(item: { id: string; data: Record<string, unknown>; tags: string[] }) {
+    const data = item.data as Record<string, unknown>
+    setForm({ ...{...EMPTY}, ...data, tags: typeof data.tags === 'string' ? data.tags : item.tags.join(', ') } as typeof form)
+    setEditId(item.id)
+    setShowForm(true)
+  }
+
   function handleAdd() {
     if (!form.title.trim()||!form.code.trim()) return
+    if (editId) {
+      updateItem(editId, { data: form as unknown as Record<string, unknown>, tags: String(form.tags ?? '').split(',').map(t => t.trim()).filter(Boolean) })
+      closeForm()
+      return
+    }
     addItem({
       workspaceId, moduleId: module.id, contentType: 'scripts',
       data: form as unknown as Record<string,unknown>,
       tags: form.tags.split(',').map(t=>t.trim()).filter(Boolean),
       starred: false,
     })
-    setShowForm(false)
+    closeForm()
     setForm({...EMPTY})
   }
 
@@ -126,6 +141,7 @@ export default function ScriptsModule({ module, workspaceId, items, addItem, rem
                   </div>
                   <div className={d.cardActions}>
                     <button className={`${s.starBtn} ${item.starred?s.starActive:''}`} onClick={e=>{e.stopPropagation();toggleStar(item.id)}}>{item.starred?'★':'☆'}</button>
+                    <button className={s.starBtn} title="Editar" aria-label="Editar" onClick={e => { e.stopPropagation(); openEdit(item) }}>✎</button>
                     <DeleteBtn onConfirm={()=>removeItem(item.id)}/>
                     <span className={d.chevron}>{isOpen?'↑':'↓'}</span>
                   </div>
@@ -160,9 +176,9 @@ export default function ScriptsModule({ module, workspaceId, items, addItem, rem
       )}
 
       {showForm && (
-        <div className={s.backdrop} onClick={e=>{if(e.target===e.currentTarget)setShowForm(false)}}>
+        <div className={s.backdrop} onClick={e=>{if(e.target===e.currentTarget)closeForm()}}>
           <div className={s.formModal} style={{width:620}}>
-            <h3 className={s.formTitle}>Novo script</h3>
+            <h3 className={s.formTitle}>{editId ? 'Editar script' : 'Novo script'}</h3>
             <div className={s.formGrid}>
               <div className={`${s.formGroup} ${s.fullWidth}`}>
                 <label className={s.label}>Nome do script *</label>
@@ -210,8 +226,8 @@ export default function ScriptsModule({ module, workspaceId, items, addItem, rem
               </div>
             </div>
             <div className={s.formFooter}>
-              <button className={s.cancelBtn} onClick={()=>setShowForm(false)}>Cancelar</button>
-              <button className={s.saveBtn} onClick={handleAdd} disabled={!form.title.trim()||!form.code.trim()}>Salvar script</button>
+              <button className={s.cancelBtn} onClick={()=>closeForm()}>Cancelar</button>
+              <button className={s.saveBtn} onClick={handleAdd} disabled={!form.title.trim()||!form.code.trim()}>{editId ? 'Salvar alterações' : 'Salvar script'}</button>
             </div>
           </div>
         </div>
