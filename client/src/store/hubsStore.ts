@@ -89,6 +89,10 @@ export interface Concept {
   /** Free-text context for standalone concepts, e.g. "Marketing", "Trabalho". */
   contexto?: string
   termo: string
+  /** Other names for the same thing (glossary "também chamado de"). */
+  sinonimos?: string[]
+  comoFunciona?: string
+  ondeUsar?: string
   definicao: string
   imageData?: string
   tags: string[]
@@ -120,6 +124,7 @@ interface HubsStore {
   removeClassItem: (id: string) => void
 
   addContent: (c: Omit<HubContent, 'id' | 'createdAt'>) => void
+  updateContent: (id: string, patch: Partial<Omit<HubContent, 'id'>>) => void
   removeContent: (id: string) => void
 
   addChat: (c: Omit<HubChat, 'id' | 'createdAt'>) => HubChat
@@ -230,6 +235,13 @@ export const useHubsStore = create<HubsStore>()(
         const content: HubContent = { ...c, id: crypto.randomUUID(), createdAt: new Date().toISOString() }
         set(s => ({ contents: [...s.contents, content] }))
         fs('hubContents', content)
+      },
+      updateContent: (id, patch) => {
+        const current = get().contents.find(x => x.id === id)
+        if (!current) return
+        const updated: HubContent = { ...current, ...patch }
+        set(s => ({ contents: s.contents.map(x => x.id === id ? updated : x) }))
+        fs('hubContents', updated)
       },
       removeContent: (id) => {
         const item = get().contents.find(x => x.id === id)

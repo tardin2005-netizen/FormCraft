@@ -7,6 +7,7 @@ import { useLinksStore } from '../../store/linksStore'
 import { ALL_TOOLS } from '../../data/tools'
 import { normalize, searchAll, searchTools, conceptHref } from '../../utils/globalSearch'
 import VoiceSearch from '../VoiceSearch'
+import { plainText } from '../RichText'
 import s from './Home.module.css'
 
 export type Scope = 'tudo' | 'conceitos' | 'faculdade' | 'biblioteca' | 'ferramentas'
@@ -152,7 +153,7 @@ export default function HomeSearch({ query, setQuery, onSaveLink, onQuickNote }:
                       {r.item.imageData && <div className={s.rImg}><img src={r.item.imageData} alt={r.item.termo} /></div>}
                       <div className={s.rBody}>
                         <span className={s.rTitle}><Highlight text={r.item.termo} query={q} /></span>
-                        <span className={s.rText}>{r.item.definicao}</span>
+                        <span className={s.rText}>{plainText(r.item.definicao)}</span>
                       </div>
                       <span className={s.rFoot}>{r.item.classId
                         ? <><span className={s.chip}>Aula</span>{r.subject?.name ?? '—'}{r.classItem ? ` · ${r.classItem.title}` : ''}</>
@@ -163,7 +164,7 @@ export default function HomeSearch({ query, setQuery, onSaveLink, onQuickNote }:
                       {r.item.exemploImagem && <div className={s.rImg}><img src={r.item.exemploImagem} alt={r.item.nomePrincipal} /></div>}
                       <div className={s.rBody}>
                         <span className={s.rTitle}><Highlight text={r.item.nomePrincipal} query={q} /></span>
-                        <span className={s.rText}>{r.item.oQueE}</span>
+                        <span className={s.rText}>{plainText(r.item.oQueE)}</span>
                       </div>
                       <span className={s.rFoot}><span className={`${s.chip} ${s.chipLib}`}>Biblioteca</span>Padrão de design · {r.item.categoria}</span>
                     </button>

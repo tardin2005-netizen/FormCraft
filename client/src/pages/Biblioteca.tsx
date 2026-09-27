@@ -6,6 +6,7 @@ import {
 } from '../store/libraryStore'
 import { normalize } from '../utils/globalSearch'
 import { imageToDataUrl } from '../utils/imageData'
+import RichText, { plainText } from '../components/RichText'
 import s from './Biblioteca.module.css'
 
 const splitList = (v: string) => v.split(',').map(x => x.trim()).filter(Boolean)
@@ -120,7 +121,7 @@ export default function Biblioteca() {
               <div className={s.cardBody}>
                 <span className={s.cardCat}>{p.categoria}</span>
                 <div className={s.cardTitle}>{p.nomePrincipal}</div>
-                <div className={s.cardDef}>{p.oQueE}</div>
+                <div className={s.cardDef}>{plainText(p.oQueE)}</div>
               </div>
               {p.sinonimos.length > 0 && (
                 <div className={s.cardFoot}>também: {p.sinonimos.slice(0, 2).join(', ')}{p.sinonimos.length > 2 ? ` +${p.sinonimos.length - 2}` : ''}</div>
@@ -163,7 +164,6 @@ function PatternDetail({ p, onClose, onEdit, onDelete }: {
   p: DesignPattern; onClose: () => void; onEdit: () => void; onDelete: () => void
 }) {
   useEscape(onClose)
-  const lines = (text: string) => text.split('\n').filter(Boolean)
 
   return (
     <div className={s.backdrop} onClick={onClose}>
@@ -189,20 +189,20 @@ function PatternDetail({ p, onClose, onEdit, onDelete }: {
 
         <section className={s.detailSection}>
           <h3>O que é</h3>
-          <p>{p.oQueE}</p>
+          <RichText text={p.oQueE} />
         </section>
 
         {p.comoFunciona && (
           <section className={s.detailSection}>
             <h3>Como funciona</h3>
-            {lines(p.comoFunciona).map((l, i) => <p key={i}>{l}</p>)}
+            <RichText text={p.comoFunciona} />
           </section>
         )}
 
         {p.ondeUsar && (
           <section className={s.detailSection}>
             <h3>Onde usar</h3>
-            <p>{p.ondeUsar}</p>
+            <RichText text={p.ondeUsar} />
           </section>
         )}
 

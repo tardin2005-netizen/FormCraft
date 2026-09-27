@@ -1,0 +1,5 @@
+.rich { display: flex; flex-direction: column; gap: 10px; max-width: 68ch; }
+.rich p { margin: 0; line-height: 1.6; }
+.rich ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; line-height: 1.55; }
+.rich li::marker { color: var(--accent); }
+.rich strong { font-weight: 600; color: var(--text); }

@@ -7,9 +7,12 @@ import { type WorkspaceModule } from '../store/workspacesStore'
 import { type ModuleType, type ModuleLayout } from '../data/contextTemplates'
 import DeleteBtn from '../modules/DeleteBtn'
 import EmptyState from '../components/EmptyState'
+import RichText from '../components/RichText'
 import { imageToDataUrl } from '../utils/imageData'
 import { CalendarDays, BookOpen, FileText, Lightbulb } from 'lucide-react'
 import { uploadUserFile, MAX_UPLOAD_MB, type UploadedFile } from '../utils/fileUpload'
+import { ref as storageRef, getDownloadURL } from 'firebase/storage'
+import { storage } from '../firebase'
 import PdfProcessorModal from '../components/PdfProcessorModal'
 import ScriptsModule from '../modules/ScriptsModule'
 import TroubleshootingModule from '../modules/TroubleshootingModule'
@@ -46,27 +49,62 @@ interface ContentBlock {
   items?: string[]
 }
 
-function PdfViewer({ url, title }: { url: string; title: string }) {
+function PdfViewer({ url, title, onFixUrl, onReplace }: {
+  url: string; title: string; onFixUrl: (url: string) => void; onReplace: () => void
+}) {
   const [expanded, setExpanded] = useState(true)
+  const path = storagePathFromUrl(url)
+  // A Storage link without its access token only works while the bucket allows public reads.
+  const needsToken = !!path && !/[?&]token=/.test(url)
+  const [src, setSrc] = useState(needsToken ? '' : url)
+  const [failed, setFailed] = useState(false)
+
+  useEffect(() => {
+    if (!needsToken || !path) { setSrc(url); setFailed(false); return }
+    let alive = true
+    getDownloadURL(storageRef(storage, path))
+      .then(fresh => { if (!alive) return; setSrc(fresh); onFixUrl(fresh) })
+      .catch(() => { if (alive) setFailed(true) })
+    return () => { alive = false }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [url])
+
   return (
     <div className={s.pdfContainer}>
       <div className={s.pdfHeader}>
         <button className={s.pdfToggle} onClick={() => setExpanded(v => !v)}>
           {expanded ? '▲ Recolher slides' : '▼ Ver slides'}
         </button>
-        <a href={url} target="_blank" rel="noopener noreferrer" className={s.pdfOpenLink}>
-          Abrir PDF ↗
-        </a>
+        {src && (
+          <a href={src} target="_blank" rel="noopener noreferrer" className={s.pdfOpenLink}>
+            Abrir PDF ↗
+          </a>
+        )}
       </div>
-      {expanded && (
-        <iframe
-          src={url + '#toolbar=0&navpanes=0&scrollbar=1'}
-          className={s.pdfFrame}
-          title={title}
-        />
-      )}
+      {expanded && (failed ? (
+        <div className={s.pdfError} role="alert">
+          <b>Este PDF não abre mais pelo link salvo.</b>
+          <span>
+            Ele está no Firebase Storage, mas o link foi salvo sem a chave de acesso e as regras atuais do
+            Storage não liberam a leitura dele. O arquivo continua lá. Envie o PDF de novo pelo computador
+            para gerar um link que funciona.
+          </span>
+          <button className={s.pdfErrorBtn} onClick={onReplace}>Enviar o PDF de novo</button>
+        </div>
+      ) : src ? (
+        <iframe src={src + '#toolbar=0&navpanes=0&scrollbar=1'} className={s.pdfFrame} title={title} />
+      ) : (
+        <div className={s.pdfLoading}>Abrindo PDF…</div>
+      ))}
     </div>
   )
+}
+
+/** Object path inside this project's Storage bucket, if the URL points there. */
+function storagePathFromUrl(url: string): string | null {
+  if (url.startsWith('gs://')) return url.replace(/^gs:\/\/[^/]+\//, '') || null
+  const m = url.match(/^https:\/\/firebasestorage\.googleapis\.com\/v0\/b\/[^/]+\/o\/([^?#]+)/)
+  return m ? decodeURIComponent(m[1]) : null
 }
 
 function parseContent(raw: string): ContentBlock[] {
@@ -132,6 +170,22 @@ function ContentCard({ c, onDelete }: { c: HubContent; onDelete: () => void }) {
   const [collapsed, setCollapsed] = useState(false)
   const blocks = c.content ? parseContent(c.content) : null
   const isPdf = c.type === 'pdf' && !!c.url
+  const { updateContent } = useHubsStore()
+  const replaceRef = useRef<HTMLInputElement>(null)
+  const [replacing, setReplacing] = useState<number | null>(null)
+
+  async function replaceFile(file: File | undefined) {
+    if (!file) return
+    setReplacing(0)
+    try {
+      const up = await uploadUserFile(file, pct => setReplacing(pct))
+      updateContent(c.id, { url: up.url, storagePath: up.storagePath, fileSize: up.size })
+    } catch (err) {
+      alert((err as Error).message)
+    } finally {
+      setReplacing(null)
+    }
+  }
 
   return (
     <div className={s.contentCard}>
@@ -150,7 +204,20 @@ function ContentCard({ c, onDelete }: { c: HubContent; onDelete: () => void }) {
         <DeleteBtn onConfirm={onDelete} />
       </div>
 
-      {isPdf && <PdfViewer url={c.url!} title={c.title} />}
+      {isPdf && (
+        <>
+          <input ref={replaceRef} type="file" accept="application/pdf,.pdf" hidden
+            onChange={e => { replaceFile(e.target.files?.[0]); e.target.value = '' }} />
+          {replacing !== null
+            ? <div className={s.pdfLoading}>Enviando PDF… {replacing}%</div>
+            : <PdfViewer
+                url={c.url!}
+                title={c.title}
+                onFixUrl={url => updateContent(c.id, { url })}
+                onReplace={() => replaceRef.current?.click()}
+              />}
+        </>
+      )}
 
       {blocks && !collapsed && (
         <div className={s.cardBlocks}>
@@ -189,7 +256,7 @@ function ConceptCard({ concept, onDelete }: { concept: Concept; onDelete: () => 
       )}
       <div className={s.conceptBody}>
         <div className={s.conceptTermo}>{concept.termo}</div>
-        <div className={s.conceptDef}>{concept.definicao}</div>
+        <RichText text={concept.definicao} className={s.conceptDef} />
         {concept.tags.length > 0 && (
           <div className={s.conceptTags}>
             {concept.tags.map(t => <span key={t} className={s.conceptTag}>{t}</span>)}
@@ -764,9 +831,9 @@ function FaculdadeView({ hubId }: { hubId: string }) {
                 value={cptForm.termo} onChange={e => setCptForm(f => ({ ...f, termo: e.target.value }))} />
             </div>
             <div className={s.field}>
-              <label className={s.label}>Definição * (1-2 frases)</label>
+              <label className={s.label}>Definição *</label>
               <textarea className={`${s.input} ${s.textarea}`} placeholder="Explique em 1-2 frases o que é esse conceito..."
-                value={cptForm.definicao} onChange={e => setCptForm(f => ({ ...f, definicao: e.target.value }))} rows={3} />
+                value={cptForm.definicao} onChange={e => setCptForm(f => ({ ...f, definicao: e.target.value }))} rows={6} />
             </div>
             <div className={s.field}>
               <label className={s.label}>Imagem (print do slide)</label>
