@@ -40,13 +40,13 @@ export default function SearchPalette({ onClose, initialQuery = '' }: Props) {
 
   // Tag search: match links where any tag contains the search word
   const tagMatches = isTagSearch && tagQ
-    ? links.filter(l => l.tags.some(t => t.includes(tagQ)))
+    ? links.filter(l => (l.tags ?? []).some(t => (t ?? '').includes(tagQ)))
     : []
 
-  // Normal search
-  const matchedAreas = !isTagSearch && q ? areas.filter(a => a.title.toLowerCase().includes(q) || a.desc.toLowerCase().includes(q)) : []
-  const matchedCols  = !isTagSearch && q ? collections.filter(c => c.name.toLowerCase().includes(q)) : []
-  const matchedLinks = !isTagSearch && q ? links.filter(l => l.title.toLowerCase().includes(q) || l.tags.some(t => t.includes(q))) : []
+  // Normal search — guarded against older Firestore docs saved before a field existed
+  const matchedAreas = !isTagSearch && q ? areas.filter(a => (a.title ?? '').toLowerCase().includes(q) || (a.desc ?? '').toLowerCase().includes(q)) : []
+  const matchedCols  = !isTagSearch && q ? collections.filter(c => (c.name ?? '').toLowerCase().includes(q)) : []
+  const matchedLinks = !isTagSearch && q ? links.filter(l => (l.title ?? '').toLowerCase().includes(q) || (l.tags ?? []).some(t => (t ?? '').includes(q))) : []
 
   const hasResults = isTagSearch
     ? tagMatches.length > 0
@@ -102,7 +102,7 @@ export default function SearchPalette({ onClose, initialQuery = '' }: Props) {
                         <span className={s.resultOrigin}>{origin}</span>
                       </div>
                       <div className={s.resultTags}>
-                        {link.tags.slice(0, 3).map(t => (
+                        {(link.tags ?? []).slice(0, 3).map(t => (
                           <span key={t} className={`${s.resultTag} ${t === tagQ ? s.resultTagActive : ''}`}>#{t}</span>
                         ))}
                       </div>

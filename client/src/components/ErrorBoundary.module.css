@@ -1,0 +1,24 @@
+.page {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: var(--bg, #0f1115); padding: 24px;
+}
+.card {
+  max-width: 440px; width: 100%; text-align: center;
+  background: var(--surface, #1a1d24); border: 1px solid var(--border, #2a2d36);
+  border-radius: 14px; padding: 32px 28px; display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.icon { font-size: 36px; }
+.title { font-size: 18px; font-weight: 700; color: var(--text, #fff); margin: 0; }
+.desc { font-size: 13px; color: var(--text2, #9aa0ac); line-height: 1.6; margin: 0 0 8px; }
+.actions { display: flex; gap: 8px; }
+.primary, .secondary {
+  padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid transparent;
+}
+.primary { background: var(--accent, #7c6ef7); color: #fff; }
+.secondary { background: var(--surface2, #24272f); color: var(--text, #fff); border-color: var(--border, #2a2d36); }
+.details { margin-top: 14px; width: 100%; text-align: left; }
+.details summary { font-size: 11px; color: var(--text2, #9aa0ac); cursor: pointer; }
+.details pre {
+  margin-top: 8px; font-size: 10px; line-height: 1.5; color: var(--text2, #9aa0ac);
+  background: var(--surface2, #24272f); border-radius: 8px; padding: 10px; overflow-x: auto; white-space: pre-wrap; word-break: break-word;
+}

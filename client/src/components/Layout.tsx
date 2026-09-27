@@ -14,6 +14,7 @@ import type { Accent } from '../store/themeStore'
 import { useAuth } from '../contexts/AuthContext'
 import { ALL_TOOLS, TOOL_CATS, type ToolCategory } from '../data/tools'
 import SearchPalette from './SearchPalette'
+import ErrorBoundary from './ErrorBoundary'
 import SaveLinkModal from './SaveLinkModal'
 import QuickNote from './QuickNote'
 import FormCraftChat from './FormCraftChat'
@@ -497,7 +498,9 @@ export default function Layout() {
         </header>
 
         <main className={s.content}>
-          <Outlet context={{ onOpenSearch: (q?: string) => { setSearchQuery(q ?? ''); setSearchOpen(true) }, onOpenSaveLink: () => setSaveLinkOpen(true) }} />
+          <ErrorBoundary key={location.pathname}>
+            <Outlet context={{ onOpenSearch: (q?: string) => { setSearchQuery(q ?? ''); setSearchOpen(true) }, onOpenSaveLink: () => setSaveLinkOpen(true) }} />
+          </ErrorBoundary>
         </main>
       </div>
 
@@ -626,10 +629,14 @@ export default function Layout() {
         ))}
       </nav>
 
-      {searchOpen    && <SearchPalette onClose={() => { setSearchOpen(false); setSearchQuery('') }} initialQuery={searchQuery} />}
-      {saveLinkOpen  && <SaveLinkModal onClose={() => setSaveLinkOpen(false)} />}
-      <AnimatePresence>{quickNoteOpen && <QuickNote onClose={() => setQuickNoteOpen(false)} />}</AnimatePresence>
-      <FormCraftChat open={aiChatOpen} onClose={() => setAiChatOpen(false)} />
+      {searchOpen && (
+        <ErrorBoundary key="search"><SearchPalette onClose={() => { setSearchOpen(false); setSearchQuery('') }} initialQuery={searchQuery} /></ErrorBoundary>
+      )}
+      {saveLinkOpen && (
+        <ErrorBoundary key="save-link"><SaveLinkModal onClose={() => setSaveLinkOpen(false)} /></ErrorBoundary>
+      )}
+      <AnimatePresence>{quickNoteOpen && <ErrorBoundary key="quick-note"><QuickNote onClose={() => setQuickNoteOpen(false)} /></ErrorBoundary>}</AnimatePresence>
+      <ErrorBoundary key="ai-chat"><FormCraftChat open={aiChatOpen} onClose={() => setAiChatOpen(false)} /></ErrorBoundary>
 
       {newChatOpen && (
         <div className={s.newChatBackdrop} onClick={() => setNewChatOpen(false)}>

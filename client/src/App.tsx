@@ -2,6 +2,7 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import Layout from './components/Layout'
 import FirestoreSync from './components/FirestoreSync'
+import ErrorBoundary from './components/ErrorBoundary'
 import { useMigrateFaculdadeHub } from './hooks/useMigrateFaculdadeHub'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
@@ -66,9 +67,11 @@ function AppRoutes() {
 export default function App() {
   return (
     <HashRouter>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
+      <ErrorBoundary>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </ErrorBoundary>
     </HashRouter>
   )
 }
