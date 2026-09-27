@@ -7,6 +7,7 @@ import { type WorkspaceModule } from '../store/workspacesStore'
 import { type ModuleType, type ModuleLayout } from '../data/contextTemplates'
 import DeleteBtn from '../modules/DeleteBtn'
 import EmptyState from '../components/EmptyState'
+import { imageToDataUrl } from '../utils/imageData'
 import { CalendarDays, BookOpen, FileText, Lightbulb } from 'lucide-react'
 import { uploadUserFile, MAX_UPLOAD_MB, type UploadedFile } from '../utils/fileUpload'
 import PdfProcessorModal from '../components/PdfProcessorModal'
@@ -349,14 +350,19 @@ function FaculdadeView({ hubId }: { hubId: string }) {
     closeContentModal()
   }
 
-  function handleCptImage(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleCptImage(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
+    e.target.value = ''
     if (!file) return
-    if (file.size > 1.5 * 1024 * 1024) { alert('Imagem muito grande (máx 1.5 MB). Comprime antes de enviar.'); return }
     setCptUploading(true)
-    const reader = new FileReader()
-    reader.onload = () => { setCptForm(f => ({ ...f, imageData: reader.result as string })); setCptUploading(false) }
-    reader.readAsDataURL(file)
+    try {
+      const imageData = await imageToDataUrl(file)
+      setCptForm(f => ({ ...f, imageData }))
+    } catch (err) {
+      alert((err as Error).message)
+    } finally {
+      setCptUploading(false)
+    }
   }
 
   function createConcept() {

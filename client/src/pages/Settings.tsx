@@ -158,7 +158,7 @@ export default function Settings() {
               onClick={() => {
                 if (!confirm('Limpar o cache local e recarregar? Seus dados na nuvem continuam salvos.')) return
                 Object.keys(localStorage)
-                  .filter(k => k.startsWith('formcraft-') && !['formcraft-prefs', 'formcraft-sidebar', 'formcraft-session-uid', 'formcraft-migration-faculdade-semesters-v1'].includes(k))
+                  .filter(k => k.startsWith('formcraft-') && !k.startsWith('formcraft-rescue-') && !['formcraft-prefs', 'formcraft-sidebar', 'formcraft-session-uid', 'formcraft-migration-faculdade-semesters-v1'].includes(k))
                   .forEach(k => localStorage.removeItem(k))
                 window.location.reload()
               }}

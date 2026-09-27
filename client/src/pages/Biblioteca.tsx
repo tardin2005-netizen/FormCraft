@@ -5,6 +5,7 @@ import {
   type DesignPattern, type DesignPatternInput, type PatternCategory,
 } from '../store/libraryStore'
 import { normalize } from '../utils/globalSearch'
+import { imageToDataUrl } from '../utils/imageData'
 import s from './Biblioteca.module.css'
 
 const splitList = (v: string) => v.split(',').map(x => x.trim()).filter(Boolean)
@@ -236,13 +237,12 @@ function PatternForm({ initial, isNew, onClose, onSave }: {
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => setF(prev => ({ ...prev, [k]: v }))
   const valid = f.nomePrincipal.trim() && f.oQueE.trim()
 
-  function onImage(e: React.ChangeEvent<HTMLInputElement>) {
+  async function onImage(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
+    e.target.value = ''
     if (!file) return
-    if (file.size > 1.5 * 1024 * 1024) { alert('Imagem muito grande (máx. 1,5 MB). Comprima antes de enviar.'); return }
-    const reader = new FileReader()
-    reader.onload = () => set('exemploImagem', reader.result as string)
-    reader.readAsDataURL(file)
+    try { set('exemploImagem', await imageToDataUrl(file)) }
+    catch (err) { alert((err as Error).message) }
   }
 
   return (

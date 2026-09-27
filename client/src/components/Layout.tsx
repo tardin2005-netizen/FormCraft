@@ -16,6 +16,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { ALL_TOOLS, TOOL_CATS, type ToolCategory } from '../data/tools'
 import SearchPalette from './SearchPalette'
 import ErrorBoundary from './ErrorBoundary'
+import RescueBanner from './RescueBanner'
 import { usePwaInstall, promptInstall } from '../hooks/usePwaInstall'
 import SaveLinkModal from './SaveLinkModal'
 import QuickNote from './QuickNote'
@@ -529,6 +530,7 @@ export default function Layout() {
         </header>
 
         <main className={s.content}>
+          <RescueBanner />
           <ErrorBoundary key={location.pathname}>
             <Outlet context={{ onOpenSearch: (q?: string) => { setSearchQuery(q ?? ''); setSearchOpen(true) }, onOpenSaveLink: () => setSaveLinkOpen(true), onOpenQuickNote: () => setQuickNoteOpen(true) }} />
           </ErrorBoundary>
