@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Hexagon, Inbox, BookMarked, Wrench, Settings,
   LogOut, Search, Link2, Sun, Moon, PanelLeft, Grid2X2, CheckSquare, Bookmark, Library, MoreHorizontal,
+  UserRound, ChevronRight, Palette, Monitor, Keyboard, Download, X,
 } from 'lucide-react'
 import { useThemeStore, ACCENT_COLORS } from '../store/themeStore'
 import { useAreasStore } from '../store/areasStore'
@@ -15,6 +16,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { ALL_TOOLS, TOOL_CATS, type ToolCategory } from '../data/tools'
 import SearchPalette from './SearchPalette'
 import ErrorBoundary from './ErrorBoundary'
+import { usePwaInstall, promptInstall } from '../hooks/usePwaInstall'
 import SaveLinkModal from './SaveLinkModal'
 import QuickNote from './QuickNote'
 import FormCraftChat from './FormCraftChat'
@@ -38,11 +40,22 @@ const NAV_ITEMS = [
 
 const MOBILE_PRIMARY = 4
 
+const MOD_KEY = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl'
+const SHORTCUTS: [string[], string][] = [
+  [['Mod', 'K'], 'Buscar em tudo'],
+  [['Mod', 'S'], 'Salvar um link'],
+  [['Mod', 'N'], 'Nota rápida'],
+  [['Mod', 'J'], 'Chat com a IA'],
+  [['Mod', '\\'], 'Mostrar ou recolher a barra lateral'],
+  [['?'], 'Abrir esta lista'],
+  [['Esc'], 'Fechar janelas e painéis'],
+]
+
 const LEFT_W  = { expanded: 220, compact: 56, hidden: 0 }
 const RIGHT_W = { expanded: 264, compact: 48, hidden: 0 }
 
 export default function Layout() {
-  const { theme, toggle, accent, setAccent } = useThemeStore()
+  const { theme, mode, setMode, toggle, accent, setAccent } = useThemeStore()
   const { areas } = useAreasStore()
   const { items: areaItems, addItem: addAreaItem } = useAreaItemsStore()
   const { user, signOut } = useAuth()
@@ -83,6 +96,15 @@ export default function Layout() {
   const [quickNoteOpen, setQuickNoteOpen] = useState(false)
   const [aiChatOpen,    setAiChatOpen]    = useState(false)
   const [moreOpen,      setMoreOpen]      = useState(false)
+  const [shortcutsOpen, setShortcutsOpen] = useState(false)
+  const [iosHelpOpen,   setIosHelpOpen]   = useState(false)
+  const pwa = usePwaInstall()
+  const [installDismissed, setInstallDismissed] = useState(() => { try { return localStorage.getItem('formcraft-install-dismissed') === '1' } catch { return false } })
+  const dismissInstall = () => { setInstallDismissed(true); try { localStorage.setItem('formcraft-install-dismissed', '1') } catch { /* ignore */ } }
+  async function installApp() {
+    if (pwa.canPrompt) { if (await promptInstall()) dismissInstall() }
+    else setIosHelpOpen(true)
+  }
   const [toolCat,      setToolCat]      = useState<ToolCategory>('Todas')
   const [toolSearch,   setToolSearch]   = useState('')
 
@@ -96,7 +118,9 @@ export default function Layout() {
       if ((e.metaKey || e.ctrlKey) && e.key === 'n') { e.preventDefault(); setQuickNoteOpen(v => !v) }
       if ((e.metaKey || e.ctrlKey) && e.key === '\\') { e.preventDefault(); cycleLeft() }
       if ((e.metaKey || e.ctrlKey) && e.key === 'j') { e.preventDefault(); setAiChatOpen(v => !v) }
-      if (e.key === 'Escape') { setSearchOpen(false); setSettingsOpen(false); setSaveLinkOpen(false); setQuickNoteOpen(false); setAiChatOpen(false) }
+      if (e.key === 'Escape') { setSearchOpen(false); setSettingsOpen(false); setSaveLinkOpen(false); setQuickNoteOpen(false); setAiChatOpen(false); setShortcutsOpen(false); setIosHelpOpen(false) }
+      const typing = e.target instanceof HTMLElement && (e.target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName))
+      if (e.key === '?' && !typing) { e.preventDefault(); setShortcutsOpen(v => !v) }
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
@@ -313,6 +337,16 @@ export default function Layout() {
               </div>
             )}
 
+            {leftState === 'expanded' && pwa.available && !installDismissed && (
+              <div className={s.installCard}>
+                <button className={s.installClose} onClick={dismissInstall} aria-label="Dispensar aviso de instalação"><X size={13} /></button>
+                <div className={s.installIcon}><Download size={16} /></div>
+                <div className={s.installTitle}>Instale o FormCraft</div>
+                <div className={s.installText}>Abre em janela própria, direto da área de trabalho ou da tela inicial do celular.</div>
+                <button className={s.installBtn} onClick={installApp}>Instalar app</button>
+              </div>
+            )}
+
             <div className={s.leftBottom}>
               <AnimatePresence initial={false} mode="wait">
                 {leftState === 'expanded' ? (
@@ -450,18 +484,19 @@ export default function Layout() {
                       </div>
                     </div>
                     <div className={s.settingsDivider} />
-                    <div className={s.settingsRow}>
-                      <span className={s.settingsRowLabel}>Tema</span>
-                      <div className={s.themeToggle}>
-                        <button className={`${s.themeOpt} ${theme === 'dark' ? s.themeOptActive : ''}`}
-                          onClick={() => useThemeStore.getState().setTheme('dark')}>🌙</button>
-                        <button className={`${s.themeOpt} ${theme === 'bw' ? s.themeOptActive : ''}`}
-                          onClick={() => useThemeStore.getState().setTheme('bw')}>☀️</button>
+                    <NavLink to="/settings" className={s.menuItem} onClick={() => setSettingsOpen(false)}>
+                      <UserRound size={16} /><span>Minha conta</span><ChevronRight size={14} className={s.menuChevron} />
+                    </NavLink>
+                    <div className={s.menuGroup}>
+                      <div className={s.menuItemStatic}><Palette size={16} /><span>Aparência</span></div>
+                      <div className={s.segmented} role="radiogroup" aria-label="Tema">
+                        {([['bw', 'Claro', Sun], ['dark', 'Escuro', Moon], ['system', 'Sistema', Monitor]] as const).map(([m, label, Ico]) => (
+                          <button key={m} role="radio" aria-checked={mode === m}
+                            className={`${s.segBtn} ${mode === m ? s.segActive : ''}`}
+                            onClick={() => setMode(m)}><Ico size={13} />{label}</button>
+                        ))}
                       </div>
-                    </div>
-                    <div className={s.settingsRow}>
-                      <span className={s.settingsRowLabel}>Cor de destaque</span>
-                      <div className={s.accentPicker}>
+                      <div className={s.accentPicker} aria-label="Cor de destaque">
                         {(Object.keys(ACCENT_COLORS) as Accent[]).map(a => (
                           <button
                             key={a}
@@ -469,35 +504,23 @@ export default function Layout() {
                             style={{ background: ACCENT_COLORS[a].accent }}
                             onClick={() => useThemeStore.getState().setAccent(a)}
                             title={ACCENT_LABELS[a]}
+                            aria-label={`Cor ${ACCENT_LABELS[a]}`}
                           />
                         ))}
                       </div>
                     </div>
+                    <button className={s.menuItem} onClick={() => { setShortcutsOpen(true); setSettingsOpen(false) }}>
+                      <Keyboard size={16} /><span>Atalhos de teclado</span><kbd className={s.menuKbd}>?</kbd>
+                    </button>
+                    {pwa.available && (
+                      <button className={s.menuItem} onClick={() => { setSettingsOpen(false); installApp() }}>
+                        <Download size={16} /><span>Instalar app</span>
+                      </button>
+                    )}
                     <div className={s.settingsDivider} />
-                    <div className={s.settingsRow}>
-                      <span className={s.settingsRowLabel}>Sidebar</span>
-                      <div className={s.sidebarPills}>
-                        {(['expanded','compact','hidden'] as const).map(st => (
-                          <button
-                            key={st}
-                            className={`${s.sidebarPill} ${leftState === st ? s.sidebarPillActive : ''}`}
-                            onClick={() => setLeft(st)}
-                            title={st}
-                          >
-                            {st === 'expanded' ? '◧' : st === 'compact' ? '◫' : '□'}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div className={s.settingsDivider} />
-                    <NavLink to="/settings" className={s.settingsLink} onClick={() => setSettingsOpen(false)}>
-                      ⚙️ Ver todas as configurações →
-                    </NavLink>
-                    <div className={s.settingsDivider} />
-                    <button
-                      className={s.settingsLogout}
-                      onClick={() => { signOut(); setSettingsOpen(false) }}
-                    >🚪 Sair da conta</button>
+                    <button className={`${s.menuItem} ${s.menuDanger}`} onClick={() => { setSettingsOpen(false); signOut() }}>
+                      <LogOut size={16} /><span>Sair da conta</span>
+                    </button>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -507,7 +530,7 @@ export default function Layout() {
 
         <main className={s.content}>
           <ErrorBoundary key={location.pathname}>
-            <Outlet context={{ onOpenSearch: (q?: string) => { setSearchQuery(q ?? ''); setSearchOpen(true) }, onOpenSaveLink: () => setSaveLinkOpen(true) }} />
+            <Outlet context={{ onOpenSearch: (q?: string) => { setSearchQuery(q ?? ''); setSearchOpen(true) }, onOpenSaveLink: () => setSaveLinkOpen(true), onOpenQuickNote: () => setQuickNoteOpen(true) }} />
           </ErrorBoundary>
         </main>
       </div>
@@ -668,6 +691,7 @@ export default function Layout() {
                 <button className={s.moreAction} onClick={() => { setSaveLinkOpen(true); setMoreOpen(false) }}><Link2 size={16} /> Salvar link</button>
                 <button className={s.moreAction} onClick={() => { setQuickNoteOpen(true); setMoreOpen(false) }}><Inbox size={16} /> Nota rápida</button>
                 <button className={s.moreAction} onClick={toggle}>{theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />} Tema {theme === 'dark' ? 'claro' : 'escuro'}</button>
+                {pwa.available && <button className={s.moreAction} onClick={() => { setMoreOpen(false); installApp() }}><Download size={16} /> Instalar app</button>}
               </div>
             </motion.div>
           </>
@@ -682,6 +706,41 @@ export default function Layout() {
       )}
       <AnimatePresence>{quickNoteOpen && <ErrorBoundary key="quick-note"><QuickNote onClose={() => setQuickNoteOpen(false)} /></ErrorBoundary>}</AnimatePresence>
       <ErrorBoundary key="ai-chat"><FormCraftChat open={aiChatOpen} onClose={() => setAiChatOpen(false)} /></ErrorBoundary>
+
+      {shortcutsOpen && (
+        <div className={s.sheetBackdrop} onClick={() => setShortcutsOpen(false)}>
+          <div className={s.infoPanel} role="dialog" aria-label="Atalhos de teclado" onClick={e => e.stopPropagation()}>
+            <div className={s.infoHead}>
+              <h2>Atalhos de teclado</h2>
+              <button className={s.infoClose} onClick={() => setShortcutsOpen(false)} aria-label="Fechar"><X size={16} /></button>
+            </div>
+            <dl className={s.shortcutList}>
+              {SHORTCUTS.map(([keys, what]) => (
+                <div key={what} className={s.shortcutRow}>
+                  <dt>{what}</dt>
+                  <dd>{keys.map(k => <kbd key={k}>{k === 'Mod' ? MOD_KEY : k}</kbd>)}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </div>
+      )}
+
+      {iosHelpOpen && (
+        <div className={s.sheetBackdrop} onClick={() => setIosHelpOpen(false)}>
+          <div className={s.infoPanel} role="dialog" aria-label="Como instalar o app" onClick={e => e.stopPropagation()}>
+            <div className={s.infoHead}>
+              <h2>Instalar no iPhone ou iPad</h2>
+              <button className={s.infoClose} onClick={() => setIosHelpOpen(false)} aria-label="Fechar"><X size={16} /></button>
+            </div>
+            <ol className={s.iosSteps}>
+              <li>Abra o FormCraft no <b>Safari</b>.</li>
+              <li>Toque em <b>Compartilhar</b> (o quadrado com a seta para cima).</li>
+              <li>Escolha <b>Adicionar à Tela de Início</b> e confirme.</li>
+            </ol>
+          </div>
+        </div>
+      )}
 
       {newChatOpen && (
         <div className={s.newChatBackdrop} onClick={() => setNewChatOpen(false)}>
