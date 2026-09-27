@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react'
+import { useState, useRef } from 'react'
 import { Link, useNavigate, useOutletContext } from 'react-router-dom'
 import { useAreasStore } from '../store/areasStore'
 import { useCollectionsStore } from '../store/collectionsStore'
@@ -6,13 +6,13 @@ import { useAreaItemsStore } from '../store/areaItemsStore'
 import { useWorkspacesStore } from '../store/workspacesStore'
 import { useLinksStore } from '../store/linksStore'
 import { useHubsStore } from '../store/hubsStore'
-import { useLibraryStore } from '../store/libraryStore'
-import { searchAll, normalize } from '../utils/globalSearch'
 import WorkspaceCreator from '../components/WorkspaceCreator'
-import VoiceSearch from '../components/VoiceSearch'
+import HomeSearch from '../components/home/HomeSearch'
+import Upcoming from '../components/home/Upcoming'
+import FirstSteps from '../components/home/FirstSteps'
 import s from './Dashboard.module.css'
 
-interface OutletCtx { onOpenSearch: (q?: string) => void }
+interface OutletCtx { onOpenSaveLink: () => void; onOpenQuickNote: () => void }
 
 type GHCommit = { sha: string; commit: { message: string; author: { date: string } } }
 type GHRepo   = { stargazers_count: number; open_issues_count: number; pushed_at: string; description: string | null }
@@ -30,13 +30,6 @@ function timeAgo(dateStr: string) {
   if (d < 7) return `${d} dias`
   return `${Math.floor(d / 7)} semanas`
 }
-
-const CHIPS = [
-  { emoji: '🎬', label: 'gerar vídeo com IA' },
-  { emoji: '✏️', label: 'criar artes e posts' },
-  { emoji: '📊', label: 'analisar métricas' },
-  { emoji: '🎤', label: 'gerar narração' },
-]
 
 const EMOJI_LIST = ['🎨','💻','📚','🎵','💼','🌱','🚀','⚡','🔥','🌍','🎯','🧠','📊','🏆','🎮','✏️','📷','🎬','🔬','💡']
 
@@ -85,26 +78,15 @@ function GitHubWidget() {
   )
 }
 
-function Highlight({ text, query }: { text: string; query: string }) {
-  const tokens = normalize(query).split(/\s+/).filter(Boolean)
-  const norm = normalize(text)
-  for (const t of tokens) {
-    const idx = norm.indexOf(t)
-    if (idx !== -1) return <>{text.slice(0, idx)}<mark className={s.mark}>{text.slice(idx, idx + t.length)}</mark>{text.slice(idx + t.length)}</>
-  }
-  return <>{text}</>
-}
-
 export default function Dashboard() {
   const navigate = useNavigate()
-  const { onOpenSearch } = useOutletContext<OutletCtx>()
+  const { onOpenSaveLink, onOpenQuickNote } = useOutletContext<OutletCtx>()
   const { areas, addArea, removeArea } = useAreasStore()
   const { collections } = useCollectionsStore()
   const { items } = useAreaItemsStore()
   const { workspaces } = useWorkspacesStore()
   const { links } = useLinksStore()
-  const { hubs, subjects, classes, concepts } = useHubsStore()
-  const { patterns } = useLibraryStore()
+  const { hubs } = useHubsStore()
   const [showWorkspaceCreator, setShowWorkspaceCreator] = useState(false)
 
   const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
@@ -114,15 +96,10 @@ export default function Dashboard() {
     .sort((a, b) => (b.savedAt ?? 0) - (a.savedAt ?? 0))
     .slice(0, 5)
 
-  const [heroQuery,    setHeroQuery]    = useState('')
-  const [conceptQuery, setConceptQuery] = useState('')
+  const [query,        setQuery]        = useState('')
   const [showGH,       setShowGH]       = useState(false)
 
-  const searching = conceptQuery.trim().length > 0
-  const results = useMemo(
-    () => searchAll(conceptQuery, { concepts, hubs, subjects, classes, patterns }),
-    [conceptQuery, concepts, hubs, subjects, classes, patterns],
-  )
+  const searching = query.trim().length > 0
   const [newAreaModal, setNewAreaModal] = useState(false)
   const [newArea,      setNewArea]      = useState({ emoji: '📁', title: '', desc: '', color: '#7c6ef7' })
   const [modalPos,     setModalPos]     = useState({ x: 0, y: 0 })
@@ -154,109 +131,12 @@ export default function Dashboard() {
 
   return (
     <div className={s.page}>
-      {/* Hero search */}
-      <section className={s.hero}>
-        <h1 className={s.heroTitle}>O que você precisa agora?</h1>
-        <p className={s.heroSub}>Descreva ou fale sua dor e o FormCraft recomenda a ferramenta certa com IA.</p>
-        <div className={s.heroSearch}>
-          <span className={s.heroSearchIcon}>💬</span>
-          <input
-            className={s.heroInput}
-            placeholder="ex: gerar vídeo com IA, analisar métricas do instagram..."
-            value={heroQuery}
-            onChange={e => setHeroQuery(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') onOpenSearch(heroQuery) }}
-          />
-          <button className={s.heroBtn} onClick={() => onOpenSearch(heroQuery)}>Encontrar</button>
-        </div>
-        <div className={s.voiceRow}>
-          <VoiceSearch />
-          <span className={s.voiceHint}>ou fale sua dor — a IA recomenda a ferramenta certa</span>
-        </div>
-        <div className={s.chips}>
-          {CHIPS.map(c => (
-            <button key={c.label} className={s.chip} onClick={() => onOpenSearch(c.label)}>
-              {c.emoji} {c.label}
-            </button>
-          ))}
-        </div>
-      </section>
+      <FirstSteps />
 
-      {/* Concept search */}
-      <section className={s.conceptSearchSection}>
-        <div className={s.conceptSearchRow}>
-          <span className={s.conceptSearchIcon}>🔍</span>
-          <input
-            className={s.conceptSearchInput}
-            placeholder="Buscar conceitos das aulas e padrões da Biblioteca…"
-            value={conceptQuery}
-            onChange={e => setConceptQuery(e.target.value)}
-          />
-          {conceptQuery && (
-            <button className={s.conceptSearchClear} onClick={() => setConceptQuery('')}>✕</button>
-          )}
-        </div>
-        {searching && (
-          <div className={s.conceptResultsArea}>
-            {results.length === 0 ? (
-              <div className={s.conceptEmpty}>
-                <span>🔎</span>
-                <p>Nada indexado com “{conceptQuery.trim()}” ainda.</p>
-                <p className={s.conceptEmptyHint}>O conteúdo pode existir, só não foi indexado nessa forma. Para indexar, abra uma aula e use + Conceito, ou cadastre um padrão na Biblioteca.</p>
-              </div>
-            ) : (
-              <>
-                <div className={s.resultCount}>{results.length} {results.length === 1 ? 'resultado' : 'resultados'}</div>
-                <div className={s.conceptGrid}>
-                  {results.map(r => r.kind === 'concept' ? (
-                    <button
-                      key={r.item.id}
-                      className={s.conceptCard}
-                      onClick={() => navigate(`/hub/${r.item.hubId}?sem=${r.item.semesterId}&subj=${r.item.subjectId}&cls=${r.item.classId}`)}
-                    >
-                      {r.item.imageData && (
-                        <div className={s.conceptCardImg}>
-                          <img src={r.item.imageData} alt={r.item.termo} />
-                        </div>
-                      )}
-                      <div className={s.conceptCardBody}>
-                        <div className={s.conceptCardTermo}><Highlight text={r.item.termo} query={conceptQuery} /></div>
-                        <div className={s.conceptCardDef}>{r.item.definicao}</div>
-                      </div>
-                      <div className={s.conceptCardFoot}>
-                        <span className={s.originChip}>Matéria</span>
-                        {r.subject?.name ?? '—'}{r.classItem ? ` · ${r.classItem.title}` : ''}
-                      </div>
-                    </button>
-                  ) : (
-                    <button
-                      key={r.item.id}
-                      className={s.conceptCard}
-                      onClick={() => navigate(`/biblioteca/${r.item.id}`)}
-                    >
-                      {r.item.exemploImagem && (
-                        <div className={s.conceptCardImg}>
-                          <img src={r.item.exemploImagem} alt={r.item.nomePrincipal} />
-                        </div>
-                      )}
-                      <div className={s.conceptCardBody}>
-                        <div className={s.conceptCardTermo}><Highlight text={r.item.nomePrincipal} query={conceptQuery} /></div>
-                        <div className={s.conceptCardDef}>{r.item.oQueE}</div>
-                      </div>
-                      <div className={s.conceptCardFoot}>
-                        <span className={`${s.originChip} ${s.originChipLib}`}>Biblioteca</span>
-                        Padrão de Design · {r.item.categoria}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        )}
-      </section>
+      <HomeSearch query={query} setQuery={setQuery} onSaveLink={onOpenSaveLink} onQuickNote={onOpenQuickNote} />
 
       {!searching && <>
+      <Upcoming />
       {/* Stats */}
       <div className={s.stats}>
         {[

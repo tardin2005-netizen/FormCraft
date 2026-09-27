@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useHubsStore, type HubType } from '../store/hubsStore'
 import s from './Hubs.module.css'
@@ -69,6 +69,13 @@ export default function Hubs() {
   }
 
   function openModal() { setModal(true); setStep('type'); setModalPos({ x: 0, y: 0 }) }
+  const [params, setParams] = useSearchParams()
+  useEffect(() => {
+    if (params.get('novo') !== '1') return
+    openModal()
+    setParams({}, { replace: true })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params])
   function closeModal() { setModal(false); setForm({ type: 'faculdade', name: '', emoji: '🎓', color: '#7c6ef7' }) }
 
   function selectType(t: typeof HUB_TYPES[0]) {
