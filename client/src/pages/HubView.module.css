@@ -535,3 +535,53 @@
 }
 .cptImgRemove:hover { background: rgba(244,63,94,.1); }
 .cptHint { font-size: 12px; color: #f59e0b; margin: 8px 0 0; }
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .hubPage, .facPage, .facContent, .mainPanel, .genericPage, .wsContent { height: auto; overflow: visible; }
+  .hubHeader { flex-wrap: wrap; padding: 14px 16px 12px; }
+  .hubHeaderLeft { flex-basis: 100%; }
+  .hubHeaderRight { flex: 1; justify-content: space-between; }
+
+  .semBar { padding: 8px 12px; }
+
+  /* Subjects become a horizontal chip rail above the content */
+  .facContent { flex-direction: column; }
+  .subjPanel {
+    width: 100%; flex-direction: row; align-items: center; gap: 6px;
+    overflow-x: auto; overflow-y: hidden; border-right: none; border-bottom: 1px solid var(--border);
+    padding: 8px 12px; scrollbar-width: none;
+  }
+  .subjPanel::-webkit-scrollbar { display: none; }
+  .panelHeader { border-bottom: none; padding: 0 4px 0 0; gap: 6px; flex-shrink: 0; }
+  .subjItem {
+    flex-shrink: 0; align-items: center; max-width: 220px; padding: 7px 12px;
+    border-radius: 20px; border: 1px solid var(--border);
+  }
+  .subjName { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .subjPanel .panelEmpty { white-space: nowrap; padding: 0; }
+
+  .mainHeader { flex-wrap: wrap; padding: 12px 16px; }
+  .mainTitle { flex-basis: 100%; min-width: 0; }
+  .mainActions { width: 100%; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+  .mainActions::-webkit-scrollbar { display: none; }
+  .actionBtn, .actionBtnPdf { padding: 9px 14px; font-size: 13px; }
+
+  .classList { max-height: none; }
+  .classRow { padding: 11px 16px; }
+  .contentSection { overflow: visible; padding: 14px 16px; }
+
+  .wsTabs { padding: 8px 12px 0; }
+  .contentList { padding: 12px 16px; }
+
+  .chatsPage { flex-direction: column; height: auto; min-height: 70vh; }
+
+  .modal { width: calc(100vw - 24px); max-height: calc(100vh - 32px); border-radius: 14px; }
+  .modalBody { padding: 16px; }
+  .modalFooter { padding: 12px 16px; }
+  .ctxMenu { max-width: calc(100vw - 16px); }
+}
+@media (max-width: 768px) {
+  .channelList { width: 100%; max-height: 38vh; border-right: none; border-bottom: 1px solid var(--border); }
+  .chatMain { min-height: 50vh; }
+}

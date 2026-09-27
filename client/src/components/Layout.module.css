@@ -492,3 +492,45 @@
     color: var(--accent) !important;
   }
 }
+
+/* ── Mobile helpers + "Mais" sheet ── */
+.mobileOnly { display: none !important; }
+.moreBackdrop, .moreSheet { display: none; }
+
+@media (max-width: 768px) {
+  .mobileOnly { display: flex !important; }
+  .desktopOnly { display: none !important; }
+
+  .bottomNav button.bottomNavItem {
+    background: none; border: none; font: inherit; cursor: pointer;
+    font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  }
+  .bottomNavItem span { white-space: nowrap; }
+
+  .moreBackdrop {
+    display: block; position: fixed; inset: 0; z-index: 997;
+    background: rgba(0,0,0,.45);
+  }
+  .moreSheet {
+    display: flex; flex-direction: column; gap: 14px;
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 998;
+    background: var(--surface); border-top: 1px solid var(--border);
+    border-radius: 18px 18px 0 0;
+    padding: 10px 16px calc(104px + env(safe-area-inset-bottom));
+    box-shadow: 0 -12px 40px rgba(0,0,0,.3);
+  }
+  .moreHandle { width: 36px; height: 4px; border-radius: 4px; background: var(--border); align-self: center; }
+  .moreGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .moreItem {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    padding: 14px 6px; border-radius: 12px; background: var(--surface2);
+    color: var(--text); text-decoration: none; font-size: 12px; font-weight: 500; text-align: center;
+  }
+  .moreItemActive { background: var(--accent-muted); color: var(--accent); }
+  .moreRow { display: flex; flex-wrap: wrap; gap: 8px; }
+  .moreAction {
+    flex: 1 1 auto; display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border);
+    background: transparent; color: var(--text); font-size: 12px; cursor: pointer; white-space: nowrap;
+  }
+}

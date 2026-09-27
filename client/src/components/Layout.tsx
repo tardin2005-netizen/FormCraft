@@ -3,7 +3,7 @@ import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Hexagon, Inbox, BookMarked, Wrench, Settings,
-  LogOut, Search, Link2, Sun, Moon, PanelLeft, Grid2X2, CheckSquare, Bookmark, Library,
+  LogOut, Search, Link2, Sun, Moon, PanelLeft, Grid2X2, CheckSquare, Bookmark, Library, MoreHorizontal,
 } from 'lucide-react'
 import { useThemeStore, ACCENT_COLORS } from '../store/themeStore'
 import { useAreasStore } from '../store/areasStore'
@@ -36,6 +36,8 @@ const NAV_ITEMS = [
   { to: '/settings',    Icon: Settings,        label: 'Config.' },
 ]
 
+const MOBILE_PRIMARY = 4
+
 const LEFT_W  = { expanded: 220, compact: 56, hidden: 0 }
 const RIGHT_W = { expanded: 264, compact: 48, hidden: 0 }
 
@@ -51,6 +53,8 @@ export default function Layout() {
   const activeAreaId = areaMatch ? areaMatch[1] : null
 
   const [expandedAreaIds, setExpandedAreaIds] = useState<Set<string>>(new Set())
+
+  useEffect(() => { setMoreOpen(false) }, [location.pathname])
 
   useEffect(() => {
     if (activeAreaId) {
@@ -78,6 +82,7 @@ export default function Layout() {
   const [settingsOpen,  setSettingsOpen]  = useState(false)
   const [quickNoteOpen, setQuickNoteOpen] = useState(false)
   const [aiChatOpen,    setAiChatOpen]    = useState(false)
+  const [moreOpen,      setMoreOpen]      = useState(false)
   const [toolCat,      setToolCat]      = useState<ToolCategory>('Todas')
   const [toolSearch,   setToolSearch]   = useState('')
 
@@ -384,11 +389,14 @@ export default function Layout() {
             <button className={s.topSearchBtn} onClick={() => setSearchOpen(true)}>
               <Search size={13} /> Buscar <kbd className={s.topKbd}>⌘K</kbd>
             </button>
+            <button className={`${s.topIconBtn} ${s.mobileOnly}`} onClick={() => setSearchOpen(true)} aria-label="Buscar">
+              <Search size={16} />
+            </button>
             <button className={s.topSaveLinkBtn} onClick={() => setSaveLinkOpen(true)} title="Salvar link (⌘S)">
               <Link2 size={15} />
             </button>
             <button
-              className={`${s.topIconBtn} ${rightState !== 'hidden' ? s.topIconActive : ''}`}
+              className={`${s.topIconBtn} ${s.desktopOnly} ${rightState !== 'hidden' ? s.topIconActive : ''}`}
               onClick={cycleRight}
               title={
                 rightState === 'expanded' ? 'Compactar ferramentas' :
@@ -404,7 +412,7 @@ export default function Layout() {
             >
               ⬡
             </button>
-            <button className={s.topIconBtn} onClick={toggle} title="Tema">
+            <button className={`${s.topIconBtn} ${s.desktopOnly}`} onClick={toggle} title="Tema">
               {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
             </button>
             <div className={s.avatarWrapper}>
@@ -615,19 +623,56 @@ export default function Layout() {
       </motion.aside>
 
       {/* ── Mobile bottom nav ── */}
-      <nav className={s.bottomNav}>
-        {NAV_ITEMS.slice(0, 5).map(({ to, Icon, label }) => (
+      <nav className={s.bottomNav} aria-label="Navegação principal">
+        {NAV_ITEMS.slice(0, MOBILE_PRIMARY).map(({ to, Icon, label }) => (
           <NavLink
             key={to}
             to={to}
             end={to === '/'}
             className={({ isActive }) => `${s.bottomNavItem} ${isActive ? s.bottomNavActive : ''}`}
+            onClick={() => setMoreOpen(false)}
           >
             <Icon size={20} />
-            <span>{label}</span>
+            <span>{label === 'Meus Hubs' ? 'Hubs' : label}</span>
           </NavLink>
         ))}
+        <button
+          className={`${s.bottomNavItem} ${moreOpen || NAV_ITEMS.slice(MOBILE_PRIMARY).some(i => location.pathname.startsWith(i.to)) ? s.bottomNavActive : ''}`}
+          onClick={() => setMoreOpen(v => !v)}
+          aria-expanded={moreOpen}
+        >
+          <MoreHorizontal size={20} />
+          <span>Mais</span>
+        </button>
       </nav>
+
+      <AnimatePresence>
+        {moreOpen && (
+          <>
+            <motion.div className={s.moreBackdrop} onClick={() => setMoreOpen(false)}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
+            <motion.div className={s.moreSheet} role="dialog" aria-label="Mais opções"
+              initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+              transition={{ type: 'spring', stiffness: 380, damping: 36 }}>
+              <div className={s.moreHandle} />
+              <div className={s.moreGrid}>
+                {NAV_ITEMS.slice(MOBILE_PRIMARY).map(({ to, Icon, label }) => (
+                  <NavLink key={to} to={to} className={({ isActive }) => `${s.moreItem} ${isActive ? s.moreItemActive : ''}`}
+                    onClick={() => setMoreOpen(false)}>
+                    <Icon size={20} />
+                    <span>{label === 'Config.' ? 'Configurações' : label}</span>
+                  </NavLink>
+                ))}
+              </div>
+              <div className={s.moreRow}>
+                <button className={s.moreAction} onClick={() => { setSaveLinkOpen(true); setMoreOpen(false) }}><Link2 size={16} /> Salvar link</button>
+                <button className={s.moreAction} onClick={() => { setQuickNoteOpen(true); setMoreOpen(false) }}><Inbox size={16} /> Nota rápida</button>
+                <button className={s.moreAction} onClick={toggle}>{theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />} Tema {theme === 'dark' ? 'claro' : 'escuro'}</button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {searchOpen && (
         <ErrorBoundary key="search"><SearchPalette onClose={() => { setSearchOpen(false); setSearchQuery('') }} initialQuery={searchQuery} /></ErrorBoundary>

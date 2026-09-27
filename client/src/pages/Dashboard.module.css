@@ -465,3 +465,12 @@
   .conceptSearchSection { padding: 0 16px 8px; }
   .conceptGrid { grid-template-columns: 1fr; }
 }
+@media (max-width: 768px) {
+  .hero { padding: 28px 16px 24px; }
+  .heroTitle { font-size: 22px; text-wrap: balance; }
+  .stats { grid-template-columns: repeat(2, 1fr); padding: 16px; gap: 8px; }
+  .statCard { padding: 12px 14px; }
+  .section { padding: 20px 16px; }
+  .sectionRow { flex-wrap: wrap; gap: 10px; }
+  .modal { padding: 20px 16px; }
+}
