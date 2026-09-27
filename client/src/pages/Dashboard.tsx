@@ -1,12 +1,10 @@
 import { useState, useRef } from 'react'
-import { Link, useNavigate, useOutletContext } from 'react-router-dom'
+import { Link, useOutletContext } from 'react-router-dom'
 import { useAreasStore } from '../store/areasStore'
 import { useCollectionsStore } from '../store/collectionsStore'
 import { useAreaItemsStore } from '../store/areaItemsStore'
-import { useWorkspacesStore } from '../store/workspacesStore'
 import { useLinksStore } from '../store/linksStore'
 import { useHubsStore } from '../store/hubsStore'
-import WorkspaceCreator from '../components/WorkspaceCreator'
 import HomeSearch from '../components/home/HomeSearch'
 import Upcoming from '../components/home/Upcoming'
 import FirstSteps from '../components/home/FirstSteps'
@@ -79,15 +77,12 @@ function GitHubWidget() {
 }
 
 export default function Dashboard() {
-  const navigate = useNavigate()
   const { onOpenSaveLink, onOpenQuickNote } = useOutletContext<OutletCtx>()
   const { areas, addArea, removeArea } = useAreasStore()
   const { collections } = useCollectionsStore()
   const { items } = useAreaItemsStore()
-  const { workspaces } = useWorkspacesStore()
   const { links } = useLinksStore()
   const { hubs } = useHubsStore()
-  const [showWorkspaceCreator, setShowWorkspaceCreator] = useState(false)
 
   const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
   const thisWeekCount = items.filter(i => new Date(i.createdAt).getTime() > oneWeekAgo).length
@@ -204,41 +199,6 @@ export default function Dashboard() {
         )}
       </section>
 
-      {/* Workspaces adaptativos */}
-      <section className={s.section}>
-        <div className={s.sectionRow}>
-          <div>
-            <h2 className={s.sectionTitle}>Workspaces</h2>
-            <p className={s.sectionDesc}>Ambientes de trabalho personalizados com módulos — ferramentas, tarefas, notas e fluxos reunidos num só lugar.</p>
-          </div>
-          <button className={s.newAreaBtn} onClick={() => setShowWorkspaceCreator(true)}>+ Novo espaço</button>
-        </div>
-        {workspaces.length === 0 ? (
-          <button className={s.wsEmptyCard} onClick={() => setShowWorkspaceCreator(true)}>
-            <span className={s.wsEmptyPlus}>+</span>
-            <span className={s.wsEmptyTitle}>Criar primeiro workspace</span>
-            <span className={s.wsEmptyDesc}>Design, Faculdade, TI, Marketing — o FormCraft se adapta ao seu contexto.</span>
-          </button>
-        ) : (
-          <div className={s.wsGrid}>
-            {workspaces.map(ws => (
-              <button key={ws.id} className={s.wsCard} onClick={() => navigate(`/workspace/${ws.id}`)}>
-                <div className={s.wsCardBar} style={{ background: ws.color }} />
-                <div className={s.wsCardBody}>
-                  <div className={s.wsCardIcon}>{ws.icon}</div>
-                  <div className={s.wsCardName}>{ws.name}</div>
-                  <div className={s.wsCardModules}>{ws.modules.filter(m => m.type !== 'overview').length} módulos</div>
-                </div>
-              </button>
-            ))}
-            <button className={s.areaCardAdd} onClick={() => setShowWorkspaceCreator(true)}>
-              <span className={s.addPlusIcon}>+</span>
-              <span>Novo espaço</span>
-            </button>
-          </div>
-        )}
-      </section>
-
       {/* Áreas */}
       <section className={s.section}>
         <div className={s.sectionRow}>
@@ -305,11 +265,6 @@ export default function Dashboard() {
       )}
 
       </>}
-
-      {/* Workspace Creator */}
-      {showWorkspaceCreator && (
-        <WorkspaceCreator onClose={() => setShowWorkspaceCreator(false)} />
-      )}
 
       {/* Modal nova área */}
       {newAreaModal && (
