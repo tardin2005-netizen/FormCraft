@@ -1,4 +1,6 @@
 import { useState, useRef } from 'react'
+import EmptyState from '../components/EmptyState'
+import { Inbox as InboxIcon, Search } from 'lucide-react'
 import { useOutletContext } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useLinksStore } from '../store/linksStore'
@@ -602,15 +604,23 @@ export default function Inbox() {
 
       {/* ── Content ── */}
       <div className={s.content}>
-        {filtered.length === 0 && (
-          <div className={s.empty}>
-            <div className={s.emptyIcon}>📭</div>
-            <div className={s.emptyTitle}>Inbox vazio</div>
-            <div className={s.emptyDesc}>
-              Use o botão "+ Adicionar" ou o atalho <kbd>⌘S</kbd> para salvar seu primeiro item.
-            </div>
-          </div>
-        )}
+        {filtered.length === 0 && (links.length === 0 ? (
+          <EmptyState
+            icon={<InboxIcon size={20} />}
+            title="Seu Inbox está vazio"
+            actions={[{ label: '+ Adicionar', onClick: onOpenSaveLink }]}
+          >
+            O Inbox guarda links, PDFs, notas e prompts que ainda não têm lugar. Depois você move cada item para uma área ou coleção. Atalho: Ctrl+S.
+          </EmptyState>
+        ) : (
+          <EmptyState
+            icon={<Search size={20} />}
+            title={search ? `Nada com “${search}” no Inbox` : 'Nenhum item deste tipo'}
+            actions={[{ label: 'Ver tudo', onClick: () => { setFilter('todos'); setSearch('') } }]}
+          >
+            {`Você tem ${links.length} ${links.length === 1 ? 'item' : 'itens'} no Inbox, mas nenhum com esse filtro.`}
+          </EmptyState>
+        ))}
 
         <AnimatePresence>
           {view === 'grid' && filtered.length > 0 && (

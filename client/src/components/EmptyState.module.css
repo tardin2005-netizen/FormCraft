@@ -1,0 +1,31 @@
+.empty {
+  display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px;
+  padding: 40px 24px; color: var(--text2);
+}
+.icon {
+  width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center;
+  background: var(--accent-muted); color: var(--accent); font-size: 20px;
+}
+.text { display: flex; flex-direction: column; align-items: center; gap: 6px; max-width: 420px; }
+.title { margin: 0; font-size: 15px; font-weight: 600; color: var(--text); text-wrap: balance; }
+.desc { margin: 0; font-size: 13px; line-height: 1.55; }
+.actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 6px; }
+.primary, .secondary {
+  padding: 8px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit;
+}
+.primary { background: var(--accent); color: #fff; border: 1px solid var(--accent); }
+.primary:hover { filter: brightness(1.08); }
+.secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
+.secondary:hover { border-color: var(--accent); color: var(--accent); }
+.primary:focus-visible, .secondary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.compact {
+  flex-direction: row; align-items: flex-start; text-align: left; gap: 12px;
+  padding: 14px 16px; border: 1px dashed var(--border); border-radius: 10px; margin: 8px 0;
+}
+.compact .icon { width: 32px; height: 32px; border-radius: 9px; font-size: 15px; flex-shrink: 0; }
+.compact .text { align-items: flex-start; max-width: none; }
+.compact .title { font-size: 13.5px; }
+.compact .desc { font-size: 12.5px; }
+.compact .actions { justify-content: flex-start; margin-top: 4px; }
+.compact .primary, .compact .secondary { padding: 6px 11px; font-size: 12px; }

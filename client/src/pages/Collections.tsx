@@ -1,4 +1,6 @@
 import { useState, useRef } from 'react'
+import EmptyState from '../components/EmptyState'
+import { Library } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCollectionsStore } from '../store/collectionsStore'
 import type { Collection } from '../store/collectionsStore'
@@ -334,9 +336,14 @@ export default function Collections() {
           </AnimatePresence>
 
           {collections.length === 0 && (
-            <div className={s.empty}>
-              <div>🗂️</div>
-              <div>Nenhuma coleção ainda. Crie a primeira!</div>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <EmptyState
+                icon={<Library size={20} />}
+                title="Nenhuma coleção ainda"
+                actions={[{ label: '+ Nova coleção', onClick: () => setNewOpen(true) }]}
+              >
+                Coleções juntam itens de várias áreas num mesmo tema, como “Referências para o TCC” ou “Inspirações de marca”. Um item pode estar em várias coleções.
+              </EmptyState>
             </div>
           )}
         </div>

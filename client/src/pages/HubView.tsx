@@ -6,6 +6,8 @@ import { useContentItemsStore } from '../store/contentItemsStore'
 import { type WorkspaceModule } from '../store/workspacesStore'
 import { type ModuleType, type ModuleLayout } from '../data/contextTemplates'
 import DeleteBtn from '../modules/DeleteBtn'
+import EmptyState from '../components/EmptyState'
+import { CalendarDays, BookOpen, FileText, Lightbulb } from 'lucide-react'
 import { uploadUserFile, MAX_UPLOAD_MB, type UploadedFile } from '../utils/fileUpload'
 import PdfProcessorModal from '../components/PdfProcessorModal'
 import ScriptsModule from '../modules/ScriptsModule'
@@ -250,6 +252,22 @@ function FaculdadeView({ hubId }: { hubId: string }) {
   const [ctxMenu, setCtxMenu] = useState<CtxMenuState | null>(null)
   const closeCtx = useCallback(() => setCtxMenu(null), [])
 
+  // ?novo=semestre | material — opened from "Primeiros passos" or "+ Guardar" on the home screen
+  const novo = params.get('novo')
+  const novoHandled = useRef(false)
+  useEffect(() => {
+    if (novoHandled.current || !novo) return
+    if (novo === 'semestre' || !selSem) { novoHandled.current = true; setSemModal(true); return }
+    if (novo === 'material') {
+      if (!selSubj) {
+        if (!subjects.some(x => x.semesterId === selSem)) { novoHandled.current = true; setSubjModal(true) }
+        return
+      }
+      novoHandled.current = true
+      setContentModal(true)
+    }
+  }, [novo, selSem, selSubj, subjects])
+
   const curSubjects  = subjects.filter(x => x.semesterId === selSem)
   const curClasses   = classes.filter(x => x.subjectId === selSubj).sort((a, b) => a.date.localeCompare(b.date))
   const curContents  = contents.filter(x =>
@@ -369,10 +387,13 @@ function FaculdadeView({ hubId }: { hubId: string }) {
       </div>
 
       {!selSem ? (
-        <div className={s.emptyState}>
-          <div>📅</div>
-          <div>Crie seu primeiro semestre para começar</div>
-        </div>
+        <EmptyState
+          icon={<CalendarDays size={20} />}
+          title="Nenhum semestre neste hub ainda"
+          actions={[{ label: '+ Semestre', onClick: () => setSemModal(true) }]}
+        >
+          Semestres organizam suas matérias por período. Comece pelo semestre que você está cursando agora; os anteriores podem vir depois.
+        </EmptyState>
       ) : (
         <div className={s.facContent}>
           {/* Subjects sidebar */}
@@ -382,7 +403,7 @@ function FaculdadeView({ hubId }: { hubId: string }) {
               <button className={s.panelAdd} onClick={() => setSubjModal(true)}>+</button>
             </div>
             {curSubjects.length === 0
-              ? <div className={s.panelEmpty}>Nenhuma matéria</div>
+              ? <button className={s.panelEmptyAdd} onClick={() => setSubjModal(true)}>+ Adicionar matéria</button>
               : curSubjects.map(subj => (
                 <div key={subj.id} className={`${s.subjItem} ${selSubj === subj.id ? s.subjActive : ''}`}
                   onClick={() => { setSelSubj(subj.id); setSelClass(null) }}
@@ -398,7 +419,19 @@ function FaculdadeView({ hubId }: { hubId: string }) {
 
           {/* Main content area */}
           {!selSubj ? (
-            <div className={s.emptyState}>Selecione uma matéria</div>
+            curSubjects.length === 0 ? (
+              <EmptyState
+                icon={<BookOpen size={20} />}
+                title="Adicione a primeira matéria deste semestre"
+                actions={[{ label: '+ Matéria', onClick: () => setSubjModal(true) }]}
+              >
+                Cada matéria guarda suas aulas, provas, materiais em PDF e os conceitos que você quer achar depois.
+              </EmptyState>
+            ) : (
+              <EmptyState icon={<BookOpen size={20} />} title="Escolha uma matéria">
+                Clique numa matéria da lista para ver as aulas e os materiais dela.
+              </EmptyState>
+            )
           ) : (
             <div className={s.mainPanel}>
               {(() => {
@@ -420,6 +453,18 @@ function FaculdadeView({ hubId }: { hubId: string }) {
                     </div>
 
                     {/* Class list */}
+                    {curClasses.length === 0 && (
+                      <div className={s.contentSection} style={{ flex: 'none', paddingBottom: 0 }}>
+                        <EmptyState
+                          compact
+                          icon={<CalendarDays size={16} />}
+                          title="Nenhuma aula nesta matéria ainda"
+                          actions={[{ label: '+ Aula', onClick: () => setClassModal(true) }]}
+                        >
+                          Cadastre aulas, provas e trabalhos com data. Eles aparecem no calendário da tela inicial, e cada aula guarda seus materiais e conceitos.
+                        </EmptyState>
+                      </div>
+                    )}
                     <div className={s.classList}>
                       {curClasses.map(cl => (
                         <div
@@ -444,7 +489,19 @@ function FaculdadeView({ hubId }: { hubId: string }) {
                         {selClass ? `Materiais da aula` : 'Materiais da matéria'}
                       </div>
                       {curContents.length === 0 && (
-                        <div className={s.panelEmpty}>Nenhum material adicionado</div>
+                        <EmptyState
+                          compact
+                          icon={<FileText size={16} />}
+                          title={selClass ? 'Nenhum material nesta aula ainda' : 'Nenhum material geral nesta matéria'}
+                          actions={[
+                            { label: '+ Material', onClick: () => setContentModal(true) },
+                            { label: 'Resumir PDF com IA', onClick: () => setPdfModal(true) },
+                          ]}
+                        >
+                          {selClass
+                            ? 'Guarde o PDF dos slides, um link ou seu resumo desta aula. Dá para arrastar o arquivo direto.'
+                            : 'Aqui ficam materiais da matéria inteira, como o plano de ensino. Para guardar algo de uma aula, clique na aula primeiro.'}
+                        </EmptyState>
                       )}
                       {curContents.map(c => (
                         <ContentCard key={c.id} c={c} onDelete={() => removeContent(c.id)} />
@@ -452,6 +509,18 @@ function FaculdadeView({ hubId }: { hubId: string }) {
                     </div>
 
                     {/* Concepts list */}
+                    {selClass && curConcepts.length === 0 && (
+                      <div className={s.contentSection}>
+                        <EmptyState
+                          compact
+                          icon={<Lightbulb size={16} />}
+                          title="Nenhum conceito nesta aula ainda"
+                          actions={[{ label: '+ Conceito', onClick: () => setConceptModal(true) }]}
+                        >
+                          Conceitos são os termos da aula que você quer achar depois pela busca da tela inicial, de qualquer semestre. Um print do slide ajuda a lembrar.
+                        </EmptyState>
+                      </div>
+                    )}
                     {curConcepts.length > 0 && (
                       <div className={s.contentSection}>
                         <div className={s.contentLabel}>Conceitos indexados</div>
