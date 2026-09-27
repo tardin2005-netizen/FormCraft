@@ -6,6 +6,7 @@ import { useContentItemsStore } from '../store/contentItemsStore'
 import { type WorkspaceModule } from '../store/workspacesStore'
 import { type ModuleType, type ModuleLayout } from '../data/contextTemplates'
 import DeleteBtn from '../modules/DeleteBtn'
+import { uploadUserFile, MAX_UPLOAD_MB, type UploadedFile } from '../utils/fileUpload'
 import PdfProcessorModal from '../components/PdfProcessorModal'
 import ScriptsModule from '../modules/ScriptsModule'
 import TroubleshootingModule from '../modules/TroubleshootingModule'
@@ -23,6 +24,9 @@ const CLASS_TYPE_COLOR: Record<ClassItem['type'], string> = {
 }
 const CONTENT_ICON: Record<HubContent['type'], string> = {
   link: '🔗', note: '📝', pdf: '📄', file: '📁',
+}
+const CONTENT_LABEL: Record<HubContent['type'], string> = {
+  link: 'Link', note: 'Nota', pdf: 'PDF', file: 'Arquivo',
 }
 const EMOJIS = ['📚','💡','🔬','🎨','🖥️','📐','📊','⚗️','🌍','🏛️','📝','🎤','🎵','🧪','⚙️']
 const COLORS  = ['#7c6ef7','#4f8ef7','#3ecf8e','#f78c4f','#e46ef7','#facc15','#f43f5e']
@@ -233,7 +237,12 @@ function FaculdadeView({ hubId }: { hubId: string }) {
   const [semForm,  setSemForm]  = useState({ year: CURRENT_YEAR, period: '1' as '1'|'2', name: '' })
   const [subjForm, setSubjForm] = useState({ name: '', emoji: '📚', color: '#7c6ef7', professor: '' })
   const [clsForm,  setClsForm]  = useState({ title: '', type: 'aula' as ClassItem['type'], date: '', notes: '' })
-  const [ctxForm,  setCtxForm]  = useState({ type: 'link' as HubContent['type'], title: '', url: '', content: '' })
+  const [ctxForm,  setCtxForm]  = useState({ type: 'pdf' as HubContent['type'], title: '', url: '', content: '' })
+  const [ctxSource, setCtxSource] = useState<'computer' | 'url'>('computer')
+  const [ctxFile,   setCtxFile]   = useState<File | null>(null)
+  const [ctxUpload, setCtxUpload] = useState({ busy: false, pct: 0, error: '' })
+  const [ctxDrag,   setCtxDrag]   = useState(false)
+  const ctxFileRef = useRef<HTMLInputElement>(null)
   const [cptForm,  setCptForm]  = useState({ termo: '', definicao: '', imageData: '', tags: '' })
   const [cptUploading, setCptUploading] = useState(false)
   const cptImgRef = useRef<HTMLInputElement>(null)
@@ -267,8 +276,36 @@ function FaculdadeView({ hubId }: { hubId: string }) {
     setClassModal(false)
     setClsForm({ title: '', type: 'aula', date: '', notes: '' })
   }
-  function createContent() {
-    if (!ctxForm.title.trim()) return
+  const usesFile = (ctxForm.type === 'pdf' || ctxForm.type === 'file') && ctxSource === 'computer'
+  const canSaveContent = !!ctxForm.title.trim() && !ctxUpload.busy && (!usesFile || !!ctxFile)
+
+  function pickCtxFile(file: File | undefined) {
+    if (!file) return
+    setCtxUpload({ busy: false, pct: 0, error: '' })
+    setCtxFile(file)
+    setCtxForm(f => ({ ...f, title: f.title.trim() ? f.title : file.name.replace(/\.[^.]+$/, '') }))
+  }
+
+  function closeContentModal() {
+    if (ctxUpload.busy) return
+    setContentModal(false)
+    setCtxForm({ type: 'pdf', title: '', url: '', content: '' })
+    setCtxFile(null)
+    setCtxUpload({ busy: false, pct: 0, error: '' })
+  }
+
+  async function createContent() {
+    if (!canSaveContent) return
+    let uploaded: UploadedFile | null = null
+    if (usesFile && ctxFile) {
+      setCtxUpload({ busy: true, pct: 0, error: '' })
+      try {
+        uploaded = await uploadUserFile(ctxFile, pct => setCtxUpload(u => ({ ...u, pct })))
+      } catch (err) {
+        setCtxUpload({ busy: false, pct: 0, error: (err as Error).message })
+        return
+      }
+    }
     addContent({
       hubId,
       semesterId: selSem ?? undefined,
@@ -276,11 +313,12 @@ function FaculdadeView({ hubId }: { hubId: string }) {
       classId: selClass ?? undefined,
       type: ctxForm.type,
       title: ctxForm.title.trim(),
-      url: ctxForm.url || undefined,
+      url: uploaded?.url ?? (ctxForm.url || undefined),
       content: ctxForm.content || undefined,
+      ...(uploaded ? { storagePath: uploaded.storagePath, fileSize: uploaded.size } : {}),
     })
-    setContentModal(false)
-    setCtxForm({ type: 'link', title: '', url: '', content: '' })
+    setCtxUpload({ busy: false, pct: 0, error: '' })
+    closeContentModal()
   }
 
   function handleCptImage(e: React.ChangeEvent<HTMLInputElement>) {
@@ -537,24 +575,80 @@ function FaculdadeView({ hubId }: { hubId: string }) {
         })()}
 
         {contentModal && (
-          <Modal title="Adicionar Material" onClose={() => setContentModal(false)} onSave={createContent} saveLabel="Salvar" disabled={!ctxForm.title.trim()}>
+          <Modal
+            title={selClass ? 'Adicionar material à aula' : 'Adicionar material à matéria'}
+            onClose={closeContentModal}
+            onSave={createContent}
+            saveLabel={ctxUpload.busy ? `Enviando… ${ctxUpload.pct}%` : usesFile ? 'Enviar e salvar' : 'Salvar'}
+            disabled={!canSaveContent}
+          >
             <div className={s.field}>
               <label className={s.label}>Tipo</label>
               <div className={s.typeRow}>
-                {(['link','pdf','note','file'] as HubContent['type'][]).map(t => (
+                {(['pdf','link','note','file'] as HubContent['type'][]).map(t => (
                   <button key={t}
                     className={`${s.typeBtn} ${ctxForm.type === t ? s.typeActive : ''}`}
-                    onClick={() => setCtxForm(f => ({ ...f, type: t }))}
-                  >{CONTENT_ICON[t]} {t}</button>
+                    onClick={() => { setCtxForm(f => ({ ...f, type: t })); setCtxFile(null); setCtxUpload({ busy: false, pct: 0, error: '' }) }}
+                    disabled={ctxUpload.busy}
+                  >{CONTENT_ICON[t]} {CONTENT_LABEL[t]}</button>
                 ))}
               </div>
             </div>
+
+            {(ctxForm.type === 'pdf' || ctxForm.type === 'file') && (
+              <div className={s.field}>
+                <div className={s.sourceToggle} role="tablist">
+                  <button role="tab" aria-selected={ctxSource === 'computer'} className={`${s.sourceBtn} ${ctxSource === 'computer' ? s.sourceActive : ''}`}
+                    onClick={() => setCtxSource('computer')} disabled={ctxUpload.busy}>Do computador</button>
+                  <button role="tab" aria-selected={ctxSource === 'url'} className={`${s.sourceBtn} ${ctxSource === 'url' ? s.sourceActive : ''}`}
+                    onClick={() => setCtxSource('url')} disabled={ctxUpload.busy}>Por link (URL)</button>
+                </div>
+              </div>
+            )}
+
+            {usesFile && (
+              <div className={s.field}>
+                <input ref={ctxFileRef} type="file" hidden
+                  accept={ctxForm.type === 'pdf' ? 'application/pdf,.pdf' : undefined}
+                  onChange={e => { pickCtxFile(e.target.files?.[0]); e.target.value = '' }} />
+                <button
+                  type="button"
+                  className={`${s.dropZone} ${ctxDrag ? s.dropZoneActive : ''}`}
+                  onClick={() => ctxFileRef.current?.click()}
+                  onDragOver={e => { e.preventDefault(); setCtxDrag(true) }}
+                  onDragLeave={() => setCtxDrag(false)}
+                  onDrop={e => { e.preventDefault(); setCtxDrag(false); pickCtxFile(e.dataTransfer.files?.[0]) }}
+                  disabled={ctxUpload.busy}
+                >
+                  {ctxFile ? (
+                    <>
+                      <span className={s.dropIcon}>{ctxForm.type === 'pdf' ? '📄' : '📁'}</span>
+                      <span className={s.dropName}>{ctxFile.name}</span>
+                      <span className={s.dropHint}>{(ctxFile.size / 1024 / 1024).toFixed(1)} MB · clique para trocar</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className={s.dropIcon}>⬆</span>
+                      <span className={s.dropName}>Arraste o {ctxForm.type === 'pdf' ? 'PDF' : 'arquivo'} aqui ou clique para escolher</span>
+                      <span className={s.dropHint}>Até {MAX_UPLOAD_MB} MB</span>
+                    </>
+                  )}
+                </button>
+                {ctxUpload.busy && (
+                  <div className={s.progress} role="progressbar" aria-valuenow={ctxUpload.pct} aria-valuemin={0} aria-valuemax={100}>
+                    <div className={s.progressBar} style={{ width: `${ctxUpload.pct}%` }} />
+                  </div>
+                )}
+                {ctxUpload.error && <p className={s.uploadError}>{ctxUpload.error}</p>}
+              </div>
+            )}
+
             <div className={s.field}>
               <label className={s.label}>Título</label>
               <input className={s.input} placeholder="Nome do material" value={ctxForm.title} autoFocus
                 onChange={e => setCtxForm(f => ({ ...f, title: e.target.value }))} />
             </div>
-            {(ctxForm.type === 'link' || ctxForm.type === 'pdf') && (
+            {(ctxForm.type === 'link' || ((ctxForm.type === 'pdf' || ctxForm.type === 'file') && ctxSource === 'url')) && (
               <div className={s.field}>
                 <label className={s.label}>URL</label>
                 <input className={s.input} placeholder="https://..." value={ctxForm.url}

@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { normList, normHub, normSemester, normSubject, normClass, normHubContent, normConcept } from './normalize'
+import { deleteUserFile } from '../utils/fileUpload'
 import { auth, db } from '../firebase'
 import { doc, setDoc, deleteDoc, collection } from 'firebase/firestore'
 
@@ -73,6 +74,8 @@ export interface HubContent {
   title: string
   url?: string
   content?: string
+  storagePath?: string
+  fileSize?: number
   createdAt: string
 }
 
@@ -150,7 +153,7 @@ function fsDel(col: string, id: string) {
 
 export const useHubsStore = create<HubsStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       hubs: [],
       semesters: [],
       subjects: [],
@@ -222,6 +225,8 @@ export const useHubsStore = create<HubsStore>()(
         fs('hubContents', content)
       },
       removeContent: (id) => {
+        const item = get().contents.find(x => x.id === id)
+        if (item?.storagePath) deleteUserFile(item.storagePath)
         set(s => ({ contents: s.contents.filter(x => x.id !== id) }))
         fsDel('hubContents', id)
       },
