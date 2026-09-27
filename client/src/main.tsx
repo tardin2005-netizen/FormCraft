@@ -4,6 +4,7 @@ import './index.css'
 import App from './App'
 import './hooks/usePwaInstall'
 import './utils/chunkReload'
+import './utils/escapeToClose'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
