@@ -106,20 +106,20 @@ interface HubsStore {
   updateHub: (id: string, updates: Partial<Pick<Hub, 'name' | 'emoji' | 'color'>>) => void
   removeHub: (id: string) => void
 
-  addSemester: (s: Omit<Semester, 'id'>) => void
+  addSemester: (s: Omit<Semester, 'id'>) => Semester
   removeSemester: (id: string) => void
 
-  addSubject: (s: Omit<Subject, 'id'>) => void
+  addSubject: (s: Omit<Subject, 'id'>) => Subject
   updateSubject: (id: string, updates: Partial<Omit<Subject, 'id'>>) => void
   removeSubject: (id: string) => void
 
-  addClassItem: (c: Omit<ClassItem, 'id'>) => void
+  addClassItem: (c: Omit<ClassItem, 'id'>) => ClassItem
   removeClassItem: (id: string) => void
 
   addContent: (c: Omit<HubContent, 'id' | 'createdAt'>) => void
   removeContent: (id: string) => void
 
-  addChat: (c: Omit<HubChat, 'id' | 'createdAt'>) => void
+  addChat: (c: Omit<HubChat, 'id' | 'createdAt'>) => HubChat
   removeChat: (id: string) => void
 
   addChatMessage: (m: Omit<HubChatMessage, 'id' | 'createdAt'>) => void
@@ -185,6 +185,7 @@ export const useHubsStore = create<HubsStore>()(
         const semester: Semester = { ...sem, id: crypto.randomUUID() }
         set(s => ({ semesters: [...s.semesters, semester] }))
         fs('hubSemesters', semester)
+        return semester
       },
       removeSemester: (id) => {
         set(s => ({ semesters: s.semesters.filter(x => x.id !== id) }))
@@ -195,6 +196,7 @@ export const useHubsStore = create<HubsStore>()(
         const subject: Subject = { ...sub, id: crypto.randomUUID() }
         set(s => ({ subjects: [...s.subjects, subject] }))
         fs('hubSubjects', subject)
+        return subject
       },
       updateSubject: (id, updates) => {
         set(s => {
@@ -213,6 +215,7 @@ export const useHubsStore = create<HubsStore>()(
         const item: ClassItem = { ...cl, id: crypto.randomUUID() }
         set(s => ({ classes: [...s.classes, item] }))
         fs('hubClasses', item)
+        return item
       },
       removeClassItem: (id) => {
         set(s => ({ classes: s.classes.filter(x => x.id !== id) }))
@@ -235,6 +238,7 @@ export const useHubsStore = create<HubsStore>()(
         const chat: HubChat = { ...c, id: crypto.randomUUID(), createdAt: new Date().toISOString() }
         set(s => ({ hubChats: [...s.hubChats, chat] }))
         fs('hubChats', chat)
+        return chat
       },
       removeChat: (id) => {
         set(s => ({ hubChats: s.hubChats.filter(x => x.id !== id) }))

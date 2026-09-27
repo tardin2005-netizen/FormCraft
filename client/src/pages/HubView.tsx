@@ -258,21 +258,26 @@ function FaculdadeView({ hubId }: { hubId: string }) {
   const curConcepts  = concepts.filter(x => selClass ? x.classId === selClass : x.subjectId === selSubj)
 
   function createSemester() {
+    const dup = hubSemesters.find(x => x.year === semForm.year && x.period === semForm.period)
+    if (dup) { alert(`${dup.name} já existe neste hub.`); return }
     const name = semForm.name || `${semForm.period}° Sem ${semForm.year}`
-    addSemester({ hubId, name, year: semForm.year, period: semForm.period })
+    const created = addSemester({ hubId, name, year: semForm.year, period: semForm.period })
+    setSelSem(created.id); setSelSubj(null); setSelClass(null)
     setSemModal(false)
     setSemForm({ year: CURRENT_YEAR, period: '1', name: '' })
   }
   function createSubject() {
     if (!selSem || !subjForm.name.trim()) return
-    addSubject({ hubId, semesterId: selSem, name: subjForm.name.trim(), emoji: subjForm.emoji, color: subjForm.color, professor: subjForm.professor || undefined })
+    const created = addSubject({ hubId, semesterId: selSem, name: subjForm.name.trim(), emoji: subjForm.emoji, color: subjForm.color, professor: subjForm.professor || undefined })
+    setSelSubj(created.id); setSelClass(null)
     setSubjModal(false)
     setSubjForm({ name: '', emoji: '📚', color: '#7c6ef7', professor: '' })
   }
   function createClass() {
     if (!selSubj || !clsForm.title.trim()) return
     const sem = selSem!
-    addClassItem({ hubId, semesterId: sem, subjectId: selSubj, title: clsForm.title.trim(), type: clsForm.type, date: clsForm.date || new Date().toISOString().split('T')[0], notes: clsForm.notes || undefined })
+    const createdClass = addClassItem({ hubId, semesterId: sem, subjectId: selSubj, title: clsForm.title.trim(), type: clsForm.type, date: clsForm.date || new Date().toISOString().split('T')[0], notes: clsForm.notes || undefined })
+    setSelClass(createdClass.id)
     setClassModal(false)
     setClsForm({ title: '', type: 'aula', date: '', notes: '' })
   }
@@ -859,7 +864,7 @@ function ChatsView({ hubId }: { hubId: string }) {
   function createChat() {
     if (!newChatName.trim()) return
     const chat = { hubId, name: newChatName.trim(), emoji: newChatEmoji }
-    addChat(chat)
+    setSelChat(addChat(chat).id)
     setNewChatName('')
     setNewChatEmoji('💬')
     setAddChatOpen(false)
