@@ -51,7 +51,7 @@ export const normWorkspace = (w: AnyObj) => ({
 })
 
 export const normConcept = (c: AnyObj) => ({
-  ...c, termo: str(c.termo, 'Sem termo'), definicao: str(c.definicao), tags: arr<string>(c.tags),
+  ...c, termo: str(c.termo, 'Sem termo'), definicao: str(c.definicao), tags: arr<string>(c.tags), sinonimos: arr<string>(c.sinonimos),
   criadoEm: str(c.criadoEm, new Date().toISOString()),
 })
 

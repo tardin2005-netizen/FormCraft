@@ -76,8 +76,8 @@ export function searchAll(query: string, src: Sources): SearchResult[] {
     const subject = src.subjects.find(x => x.id === c.subjectId)
     const hub = src.hubs.find(x => x.id === c.hubId)
     const classItem = src.classes.find(x => x.id === c.classId)
-    const hay = normalize([c.termo, c.definicao, ...c.tags, c.contexto, subject?.name, hub?.name, classItem?.title].filter(Boolean).join(' '))
-    if (matches(hay)) results.push({ r: { kind: 'concept', item: c, subject, classItem }, title: c.termo })
+    const hay = normalize([c.termo, ...(c.sinonimos ?? []), c.definicao, c.comoFunciona, c.ondeUsar, ...c.tags, c.contexto, subject?.name, hub?.name, classItem?.title].filter(Boolean).join(' '))
+    if (matches(hay)) results.push({ r: { kind: 'concept', item: c, subject, classItem }, title: [c.termo, ...(c.sinonimos ?? [])].join(' ') })
   }
 
   for (const p of src.patterns) {

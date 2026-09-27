@@ -5,14 +5,24 @@ import { useHubsStore, type Concept } from '../store/hubsStore'
 import { normalize, conceptHref } from '../utils/globalSearch'
 import { imageToDataUrl } from '../utils/imageData'
 import EmptyState from '../components/EmptyState'
+import RichText, { plainText } from '../components/RichText'
 import s from './Biblioteca.module.css'
+import g from './Conceitos.module.css'
 
 type Filter = 'todos' | 'aulas' | 'avulsos' | `ctx:${string}`
+type Sort = 'az' | 'recentes'
 
 const splitList = (v: string) => v.split(',').map(x => x.trim()).filter(Boolean)
+const letterOf = (termo: string) => {
+  const ch = normalize(termo.trim()).charAt(0).toUpperCase()
+  return /[A-Z]/.test(ch) ? ch : '#'
+}
 
-interface FormState { termo: string; definicao: string; imageData: string; tags: string; contexto: string }
-const EMPTY: FormState = { termo: '', definicao: '', imageData: '', tags: '', contexto: '' }
+interface FormState {
+  termo: string; sinonimos: string; definicao: string; comoFunciona: string; ondeUsar: string
+  imageData: string; tags: string; contexto: string
+}
+const EMPTY: FormState = { termo: '', sinonimos: '', definicao: '', comoFunciona: '', ondeUsar: '', imageData: '', tags: '', contexto: '' }
 
 export default function Conceitos() {
   const { id } = useParams<{ id?: string }>()
@@ -22,6 +32,7 @@ export default function Conceitos() {
 
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<Filter>('todos')
+  const [sort, setSort] = useState<Sort>('az')
   const [editing, setEditing] = useState<Concept | 'new' | null>(null)
 
   useEffect(() => {
@@ -51,19 +62,32 @@ export default function Conceitos() {
         || (filter.startsWith('ctx:') && !c.classId && c.contexto?.trim() === filter.slice(4)))
       .filter(c => {
         if (!tokens.length) return true
-        const hay = normalize([c.termo, c.definicao, ...c.tags, c.contexto, origin(c)].filter(Boolean).join(' '))
+        const hay = normalize([c.termo, ...(c.sinonimos ?? []), c.definicao, c.comoFunciona, c.ondeUsar, ...c.tags, c.contexto, origin(c)].filter(Boolean).join(' '))
         return tokens.every(t => hay.includes(t))
       })
-      .sort((a, b) => b.criadoEm.localeCompare(a.criadoEm))
+      .sort((a, b) => sort === 'az'
+        ? normalize(a.termo).localeCompare(normalize(b.termo))
+        : b.criadoEm.localeCompare(a.criadoEm))
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [concepts, query, filter, subjects, classes])
+  }, [concepts, query, filter, sort, subjects, classes])
+
+  // Glossary groups: one per initial letter (A–Z order); a single group when sorting by recent.
+  const groups = useMemo(() => {
+    if (sort !== 'az') return [{ letter: '', items: visible }]
+    const map = new Map<string, Concept[]>()
+    for (const c of visible) { const l = letterOf(c.termo); map.set(l, [...(map.get(l) ?? []), c]) }
+    return [...map.entries()].map(([letter, items]) => ({ letter, items }))
+  }, [visible, sort])
 
   const detail = id ? concepts.find(c => c.id === id) ?? null : null
 
   function save(f: FormState) {
     const data = {
       termo: f.termo.trim(),
+      sinonimos: splitList(f.sinonimos),
       definicao: f.definicao.trim(),
+      comoFunciona: f.comoFunciona.trim() || undefined,
+      ondeUsar: f.ondeUsar.trim() || undefined,
       imageData: f.imageData || undefined,
       tags: splitList(f.tags),
     }
@@ -96,50 +120,94 @@ export default function Conceitos() {
       <header className={s.topBar}>
         <div className={s.topLeft}>
           <h1 className={s.pageTitle}>Conceitos</h1>
-          <p className={s.pageSub}>Os termos que você quer achar depois, de uma aula, do trabalho ou de qualquer assunto. Todos entram na busca da tela inicial.</p>
+          <p className={s.pageSub}>Seu glossário: os termos que você quer achar depois, de uma aula, do trabalho ou de qualquer assunto. Todos entram na busca da tela inicial.</p>
         </div>
         <button className={s.primaryBtn} onClick={() => setEditing('new')}>+ Conceito</button>
       </header>
 
       {concepts.length > 0 && (
         <div className={s.toolbar}>
-          <input
-            id="conceitos-filtro"
-            className={s.filterInput}
-            placeholder="Filtrar por termo, definição, tag ou contexto…"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-          />
+          <div className={g.toolRow}>
+            <input
+              id="conceitos-filtro"
+              className={s.filterInput}
+              placeholder="Filtrar por termo, sinônimo, definição, tag ou contexto…"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+            />
+            <div className={g.sortToggle} role="radiogroup" aria-label="Ordem">
+              <button role="radio" aria-checked={sort === 'az'} className={sort === 'az' ? g.sortOn : ''} onClick={() => setSort('az')}>A–Z</button>
+              <button role="radio" aria-checked={sort === 'recentes'} className={sort === 'recentes' ? g.sortOn : ''} onClick={() => setSort('recentes')}>Recentes</button>
+            </div>
+          </div>
           <div className={s.catRow}>
             {chips.map(([f, label]) => (
               <button key={f} className={`${s.catChip} ${filter === f ? s.catChipActive : ''}`} onClick={() => setFilter(f)}>{label}</button>
             ))}
           </div>
+          {sort === 'az' && groups.length > 1 && (
+            <nav className={g.letters} aria-label="Ir para a letra">
+              {groups.map(({ letter }) => (
+                <a key={letter} href={`#letra-${letter}`} onClick={e => { e.preventDefault(); document.getElementById(`letra-${letter}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }}>{letter}</a>
+              ))}
+            </nav>
+          )}
         </div>
       )}
 
       {concepts.length === 0 ? (
         <EmptyState
           icon={<Lightbulb size={20} />}
-          title="Nenhum conceito ainda"
+          title="Seu glossário está vazio"
           actions={[{ label: '+ Conceito', onClick: () => setEditing('new') }]}
         >
-          Guarde aqui qualquer termo que você quer achar depois, com uma definição curta e, se quiser, a imagem do slide. Conceitos criados dentro de uma aula também aparecem aqui.
+          Guarde aqui qualquer termo que você quer achar depois: o que é, como funciona, onde usar e outros nomes para a mesma coisa. Conceitos criados dentro de uma aula também aparecem aqui.
         </EmptyState>
       ) : visible.length === 0 ? (
         <p className={s.noMatch}>Nenhum conceito bate com esse filtro.</p>
       ) : (
-        <div className={s.grid}>
-          {visible.map(c => (
-            <button key={c.id} className={s.card} onClick={() => navigate(`/conceitos/${c.id}`)}>
-              {c.imageData && <div className={s.cardImg}><img src={c.imageData} alt={c.termo} /></div>}
-              <div className={s.cardBody}>
-                <span className={s.cardCat}>{c.classId ? 'Aula' : 'Conceito'}</span>
-                <div className={s.cardTitle}>{c.termo}</div>
-                <div className={s.cardDef}>{c.definicao}</div>
+        <div className={g.glossary}>
+          {groups.map(({ letter, items }) => (
+            <section key={letter || 'all'} className={g.group} aria-labelledby={letter ? `letra-${letter}` : undefined}>
+              {letter && <h2 id={`letra-${letter}`} className={g.letter}>{letter}</h2>}
+              {sort === 'az' ? (
+                <ul className={g.entries}>
+                  {items.map(c => (
+                    <li key={c.id}>
+                      <button className={g.entry} onClick={() => navigate(`/conceitos/${c.id}`)}>
+                        <span className={g.entryTerm}>
+                          <b>{c.termo}</b>
+                          {!!c.sinonimos?.length && <span>{c.sinonimos.join(' · ')}</span>}
+                        </span>
+                        <span className={g.entryDef}>{plainText(c.definicao)}</span>
+                        <span className={g.entryMeta}>
+                          {c.imageData && <img src={c.imageData} alt="" className={g.entryThumb} />}
+                          <span className={g.entryOrigin}>{origin(c)}</span>
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+              <div className={s.grid}>
+                {items.map(c => (
+                  <button key={c.id} className={s.card} onClick={() => navigate(`/conceitos/${c.id}`)}>
+                    {c.imageData && <div className={s.cardImg}><img src={c.imageData} alt={c.termo} /></div>}
+                    <div className={s.cardBody}>
+                      <span className={s.cardCat}>{c.classId ? 'Aula' : (c.contexto || 'Conceito')}</span>
+                      <div className={s.cardTitle}>{c.termo}</div>
+                      <div className={s.cardDef}>{plainText(c.definicao)}</div>
+                    </div>
+                    <div className={s.cardFoot}>
+                      {c.sinonimos?.length
+                        ? <>também: {c.sinonimos.slice(0, 2).join(', ')}{c.sinonimos.length > 2 ? ` +${c.sinonimos.length - 2}` : ''}</>
+                        : origin(c)}
+                    </div>
+                  </button>
+                ))}
               </div>
-              <div className={s.cardFoot}>{origin(c)}</div>
-            </button>
+              )}
+            </section>
           ))}
         </div>
       )}
@@ -149,16 +217,37 @@ export default function Conceitos() {
           <article className={s.detail} onClick={e => e.stopPropagation()}>
             <div className={s.detailHead}>
               <div>
-                <span className={s.cardCat}>{detail.classId ? 'Conceito de aula' : 'Conceito'}</span>
+                <span className={s.cardCat}>{detail.classId ? 'Conceito de aula' : (detail.contexto || 'Conceito')}</span>
                 <h2 className={s.detailTitle}>{detail.termo}</h2>
               </div>
               <button className={s.iconBtn} onClick={() => navigate('/conceitos')} aria-label="Fechar">✕</button>
             </div>
+
+            {!!detail.sinonimos?.length && (
+              <div className={s.chipRow}>
+                <span className={s.chipLabel}>Também chamado de</span>
+                {detail.sinonimos.map(x => <span key={x} className={s.chip}>{x}</span>)}
+              </div>
+            )}
+
             {detail.imageData && <div className={s.detailImg}><img src={detail.imageData} alt={detail.termo} /></div>}
+
             <section className={s.detailSection}>
-              <h3>Definição</h3>
-              <p>{detail.definicao}</p>
+              <h3>O que é</h3>
+              <RichText text={detail.definicao} />
             </section>
+            {detail.comoFunciona && (
+              <section className={s.detailSection}>
+                <h3>Como funciona</h3>
+                <RichText text={detail.comoFunciona} />
+              </section>
+            )}
+            {detail.ondeUsar && (
+              <section className={s.detailSection}>
+                <h3>Onde usar</h3>
+                <RichText text={detail.ondeUsar} />
+              </section>
+            )}
             <section className={s.detailSection}>
               <h3>Origem</h3>
               <p>{origin(detail)}</p>
@@ -178,7 +267,8 @@ export default function Conceitos() {
       {editing && (
         <ConceptForm
           initial={editing === 'new' ? EMPTY : {
-            termo: editing.termo, definicao: editing.definicao, imageData: editing.imageData ?? '',
+            termo: editing.termo, sinonimos: (editing.sinonimos ?? []).join(', '), definicao: editing.definicao,
+            comoFunciona: editing.comoFunciona ?? '', ondeUsar: editing.ondeUsar ?? '', imageData: editing.imageData ?? '',
             tags: editing.tags.join(', '), contexto: editing.contexto ?? '',
           }}
           linkedTo={editing !== 'new' && editing.classId ? origin(editing) : null}
@@ -202,6 +292,7 @@ function ConceptForm({ initial, linkedTo, contexts, isNew, onClose, onSave }: {
   const imgRef = useRef<HTMLInputElement>(null)
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => setF(prev => ({ ...prev, [k]: v }))
   const valid = !!f.termo.trim() && !!f.definicao.trim()
+  const textHint = 'Linha em branco separa parágrafos; comece a linha com * ou - para virar lista.'
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -227,14 +318,34 @@ function ConceptForm({ initial, linkedTo, contexts, isNew, onClose, onSave }: {
 
         <label className={s.field}>
           <span className={s.label}>Termo *</span>
-          <input id="conceito-termo" className={s.input} autoFocus placeholder="ex: Brand equity, Persona, Churn"
+          <input id="conceito-termo" className={s.input} autoFocus placeholder="ex: PWA, Brand equity, Churn"
             value={f.termo} onChange={e => set('termo', e.target.value)} />
         </label>
 
         <label className={s.field}>
-          <span className={s.label}>Definição * (1-2 frases)</span>
-          <textarea id="conceito-definicao" className={`${s.input} ${s.textarea}`} rows={3} placeholder="Explique com suas palavras…"
+          <span className={s.label}>Também chamado de (separados por vírgula)</span>
+          <input id="conceito-sinonimos" className={s.input} placeholder="ex: Progressive Web App, App instalável"
+            value={f.sinonimos} onChange={e => set('sinonimos', e.target.value)} />
+          <span className={s.hint}>A busca encontra o conceito por qualquer um desses nomes.</span>
+        </label>
+
+        <label className={s.field}>
+          <span className={s.label}>O que é *</span>
+          <textarea id="conceito-definicao" className={`${s.input} ${s.textarea}`} rows={4} placeholder="A definição em 1 ou 2 frases."
             value={f.definicao} onChange={e => set('definicao', e.target.value)} />
+        </label>
+
+        <label className={s.field}>
+          <span className={s.label}>Como funciona (opcional)</span>
+          <textarea id="conceito-como" className={`${s.input} ${s.textarea}`} rows={5} placeholder="Detalhes, passos, onde fica configurado…"
+            value={f.comoFunciona} onChange={e => set('comoFunciona', e.target.value)} />
+          <span className={s.hint}>{textHint}</span>
+        </label>
+
+        <label className={s.field}>
+          <span className={s.label}>Onde usar (opcional)</span>
+          <textarea id="conceito-onde" className={`${s.input} ${s.textarea}`} rows={3} placeholder="Casos de uso e exemplos práticos."
+            value={f.ondeUsar} onChange={e => set('ondeUsar', e.target.value)} />
         </label>
 
         {linkedTo ? (
@@ -254,12 +365,12 @@ function ConceptForm({ initial, linkedTo, contexts, isNew, onClose, onSave }: {
 
         <label className={s.field}>
           <span className={s.label}>Tags (separadas por vírgula)</span>
-          <input id="conceito-tags" className={s.input} placeholder="ex: branding, métricas"
+          <input id="conceito-tags" className={s.input} placeholder="ex: design, pwa"
             value={f.tags} onChange={e => set('tags', e.target.value)} />
         </label>
 
         <div className={s.field}>
-          <span className={s.label}>Imagem (print do slide, opcional)</span>
+          <span className={s.label}>Imagem (print ou exemplo, opcional)</span>
           <input ref={imgRef} type="file" accept="image/*" hidden onChange={e => { onImage(e.target.files?.[0]); e.target.value = '' }} />
           {f.imageData ? (
             <div className={s.imgPreview}>
