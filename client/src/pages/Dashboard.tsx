@@ -83,6 +83,10 @@ function GitHubWidget() {
   )
 }
 
+function normalize(str: string) {
+  return str.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+}
+
 export default function Dashboard() {
   const navigate = useNavigate()
   const { onOpenSearch } = useOutletContext<OutletCtx>()
@@ -91,7 +95,7 @@ export default function Dashboard() {
   const { items } = useAreaItemsStore()
   const { workspaces } = useWorkspacesStore()
   const { links } = useLinksStore()
-  const { hubs } = useHubsStore()
+  const { hubs, semesters, subjects, classes, concepts } = useHubsStore()
   const [showWorkspaceCreator, setShowWorkspaceCreator] = useState(false)
 
   const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
@@ -102,7 +106,25 @@ export default function Dashboard() {
     .slice(0, 5)
 
   const [heroQuery,    setHeroQuery]    = useState('')
+  const [conceptQuery, setConceptQuery] = useState('')
   const [showGH,       setShowGH]       = useState(false)
+
+  const conceptResults = conceptQuery.trim().length < 1 ? [] : (() => {
+    const q = normalize(conceptQuery)
+    return concepts.filter(c => {
+      const subj = subjects.find(x => x.id === c.subjectId)
+      const hub  = hubs.find(x => x.id === c.hubId)
+      const cls  = classes.find(x => x.id === c.classId)
+      return (
+        normalize(c.termo).includes(q) ||
+        normalize(c.definicao).includes(q) ||
+        c.tags.some(t => normalize(t).includes(q)) ||
+        (subj && normalize(subj.name).includes(q)) ||
+        (hub && normalize(hub.name).includes(q)) ||
+        (cls && normalize(cls.title).includes(q))
+      )
+    })
+  })()
   const [newAreaModal, setNewAreaModal] = useState(false)
   const [newArea,      setNewArea]      = useState({ emoji: '📁', title: '', desc: '', color: '#7c6ef7' })
   const [modalPos,     setModalPos]     = useState({ x: 0, y: 0 })
@@ -160,6 +182,68 @@ export default function Dashboard() {
             </button>
           ))}
         </div>
+      </section>
+
+      {/* Concept search */}
+      <section className={s.conceptSearchSection}>
+        <div className={s.conceptSearchRow}>
+          <span className={s.conceptSearchIcon}>🔍</span>
+          <input
+            className={s.conceptSearchInput}
+            placeholder="Buscar conceitos de todas as matérias e semestres…"
+            value={conceptQuery}
+            onChange={e => setConceptQuery(e.target.value)}
+          />
+          {conceptQuery && (
+            <button className={s.conceptSearchClear} onClick={() => setConceptQuery('')}>✕</button>
+          )}
+        </div>
+        {conceptQuery.trim().length > 0 && (
+          <div className={s.conceptResultsArea}>
+            {conceptResults.length === 0 ? (
+              <div className={s.conceptEmpty}>
+                <span>🔎</span>
+                <p>Nenhum conceito indexado com esse termo ainda.</p>
+                <p className={s.conceptEmptyHint}>O conteúdo pode existir — apenas não foi indexado como conceito. Abra a matéria, selecione uma aula e clique em + Conceito para indexar.</p>
+              </div>
+            ) : (
+              <div className={s.conceptGrid}>
+                {conceptResults.map(c => {
+                  const subj = subjects.find(x => x.id === c.subjectId)
+                  const cls  = classes.find(x => x.id === c.classId)
+                  const q = normalize(conceptQuery)
+                  function highlight(text: string) {
+                    const norm = normalize(text)
+                    const idx  = norm.indexOf(q)
+                    if (idx === -1) return <>{text}</>
+                    return <>{text.slice(0, idx)}<mark className={s.mark}>{text.slice(idx, idx + q.length)}</mark>{text.slice(idx + q.length)}</>
+                  }
+                  return (
+                    <button
+                      key={c.id}
+                      className={s.conceptCard}
+                      onClick={() => navigate(`/hub/${c.hubId}`)}
+                    >
+                      {c.imageData && (
+                        <div className={s.conceptCardImg}>
+                          <img src={c.imageData} alt={c.termo} />
+                        </div>
+                      )}
+                      <div className={s.conceptCardBody}>
+                        <div className={s.conceptCardTermo}>{highlight(c.termo)}</div>
+                        <div className={s.conceptCardDef}>{c.definicao}</div>
+                      </div>
+                      <div className={s.conceptCardFoot}>
+                        {subj?.name ?? '—'}
+                        {cls ? ` · ${cls.title}` : ''}
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </section>
 
       {/* Stats */}

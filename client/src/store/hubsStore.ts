@@ -75,6 +75,19 @@ export interface HubContent {
   createdAt: string
 }
 
+export interface Concept {
+  id: string
+  hubId: string
+  semesterId: string
+  subjectId: string
+  classId: string
+  termo: string
+  definicao: string
+  imageData?: string
+  tags: string[]
+  criadoEm: string
+}
+
 interface HubsStore {
   hubs: Hub[]
   semesters: Semester[]
@@ -83,6 +96,7 @@ interface HubsStore {
   contents: HubContent[]
   hubChats: HubChat[]
   hubChatMessages: HubChatMessage[]
+  concepts: Concept[]
 
   addHub: (h: Omit<Hub, 'id' | 'createdAt'>) => void
   updateHub: (id: string, updates: Partial<Pick<Hub, 'name' | 'emoji' | 'color'>>) => void
@@ -107,6 +121,9 @@ interface HubsStore {
   addChatMessage: (m: Omit<HubChatMessage, 'id' | 'createdAt'>) => void
   removeChatMessage: (id: string) => void
 
+  addConcept: (c: Omit<Concept, 'id' | 'criadoEm'>) => void
+  removeConcept: (id: string) => void
+
   hydrateHubs: (hubs: Hub[]) => void
   hydrateSemesters: (s: Semester[]) => void
   hydrateSubjects: (s: Subject[]) => void
@@ -114,6 +131,7 @@ interface HubsStore {
   hydrateContents: (c: HubContent[]) => void
   hydrateChats: (c: HubChat[]) => void
   hydrateChatMessages: (c: HubChatMessage[]) => void
+  hydrateConcepts: (c: Concept[]) => void
 }
 
 function d(uid: string, col: string, id: string) {
@@ -139,6 +157,7 @@ export const useHubsStore = create<HubsStore>()(
       contents: [],
       hubChats: [],
       hubChatMessages: [],
+      concepts: [],
 
       addHub: (h) => {
         const hub: Hub = { ...h, id: crypto.randomUUID(), createdAt: new Date().toISOString() }
@@ -226,6 +245,16 @@ export const useHubsStore = create<HubsStore>()(
         fsDel('hubChatMessages', id)
       },
 
+      addConcept: (c) => {
+        const concept: Concept = { ...c, id: crypto.randomUUID(), criadoEm: new Date().toISOString() }
+        set(s => ({ concepts: [...s.concepts, concept] }))
+        fs('hubConcepts', concept)
+      },
+      removeConcept: (id) => {
+        set(s => ({ concepts: s.concepts.filter(x => x.id !== id) }))
+        fsDel('hubConcepts', id)
+      },
+
       hydrateHubs: (hubs) => set({ hubs }),
       hydrateSemesters: (semesters) => set({ semesters }),
       hydrateSubjects: (subjects) => set({ subjects }),
@@ -233,6 +262,7 @@ export const useHubsStore = create<HubsStore>()(
       hydrateContents: (contents) => set({ contents }),
       hydrateChats: (hubChats) => set({ hubChats }),
       hydrateChatMessages: (hubChatMessages) => set({ hubChatMessages }),
+      hydrateConcepts: (concepts) => set({ concepts }),
     }),
     { name: 'formcraft-hubs' }
   )

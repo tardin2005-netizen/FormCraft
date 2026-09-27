@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useHubsStore, type Semester, type Subject, type ClassItem, type HubContent } from '../store/hubsStore'
+import { useHubsStore, type Semester, type Subject, type ClassItem, type HubContent, type Concept } from '../store/hubsStore'
 import { useContentItemsStore } from '../store/contentItemsStore'
 import { type WorkspaceModule } from '../store/workspacesStore'
 import { type ModuleType, type ModuleLayout } from '../data/contextTemplates'
@@ -171,14 +171,38 @@ function ContentCard({ c, onDelete }: { c: HubContent; onDelete: () => void }) {
   )
 }
 
+/* ─── Concept card (read-only, inline) ─── */
+function ConceptCard({ concept, onDelete }: { concept: Concept; onDelete: () => void }) {
+  return (
+    <div className={s.conceptCard}>
+      {concept.imageData && (
+        <div className={s.conceptImgWrap}>
+          <img src={concept.imageData} alt={concept.termo} className={s.conceptImg} />
+        </div>
+      )}
+      <div className={s.conceptBody}>
+        <div className={s.conceptTermo}>{concept.termo}</div>
+        <div className={s.conceptDef}>{concept.definicao}</div>
+        {concept.tags.length > 0 && (
+          <div className={s.conceptTags}>
+            {concept.tags.map(t => <span key={t} className={s.conceptTag}>{t}</span>)}
+          </div>
+        )}
+      </div>
+      <DeleteBtn onConfirm={onDelete} />
+    </div>
+  )
+}
+
 /* ─── Faculdade template ─── */
 function FaculdadeView({ hubId }: { hubId: string }) {
   const {
-    semesters, subjects, classes, contents,
+    semesters, subjects, classes, contents, concepts,
     addSemester, removeSemester,
     addSubject, removeSubject,
     addClassItem, removeClassItem,
     addContent, removeContent,
+    addConcept, removeConcept,
   } = useHubsStore()
 
   const hubSemesters = semesters.filter(s => s.hubId === hubId)
@@ -197,26 +221,31 @@ function FaculdadeView({ hubId }: { hubId: string }) {
   }, [selSem, subjects])
 
   // Modals
-  const [semModal,     setSemModal]     = useState(false)
-  const [subjModal,    setSubjModal]    = useState(false)
-  const [classModal,   setClassModal]   = useState(false)
-  const [contentModal, setContentModal] = useState(false)
-  const [pdfModal,     setPdfModal]     = useState(false)
+  const [semModal,       setSemModal]       = useState(false)
+  const [subjModal,      setSubjModal]      = useState(false)
+  const [classModal,     setClassModal]     = useState(false)
+  const [contentModal,   setContentModal]   = useState(false)
+  const [pdfModal,       setPdfModal]       = useState(false)
+  const [conceptModal,   setConceptModal]   = useState(false)
 
   // Forms
   const [semForm,  setSemForm]  = useState({ year: CURRENT_YEAR, period: '1' as '1'|'2', name: '' })
   const [subjForm, setSubjForm] = useState({ name: '', emoji: '📚', color: '#7c6ef7', professor: '' })
   const [clsForm,  setClsForm]  = useState({ title: '', type: 'aula' as ClassItem['type'], date: '', notes: '' })
   const [ctxForm,  setCtxForm]  = useState({ type: 'link' as HubContent['type'], title: '', url: '', content: '' })
+  const [cptForm,  setCptForm]  = useState({ termo: '', definicao: '', imageData: '', tags: '' })
+  const [cptUploading, setCptUploading] = useState(false)
+  const cptImgRef = useRef<HTMLInputElement>(null)
 
   const [ctxMenu, setCtxMenu] = useState<CtxMenuState | null>(null)
   const closeCtx = useCallback(() => setCtxMenu(null), [])
 
-  const curSubjects = subjects.filter(x => x.semesterId === selSem)
-  const curClasses  = classes.filter(x => x.subjectId === selSubj).sort((a, b) => a.date.localeCompare(b.date))
-  const curContents = contents.filter(x =>
+  const curSubjects  = subjects.filter(x => x.semesterId === selSem)
+  const curClasses   = classes.filter(x => x.subjectId === selSubj).sort((a, b) => a.date.localeCompare(b.date))
+  const curContents  = contents.filter(x =>
     selClass ? x.classId === selClass : (x.subjectId === selSubj && !x.classId)
   )
+  const curConcepts  = concepts.filter(x => selClass ? x.classId === selClass : x.subjectId === selSubj)
 
   function createSemester() {
     const name = semForm.name || `${semForm.period}° Sem ${semForm.year}`
@@ -251,6 +280,34 @@ function FaculdadeView({ hubId }: { hubId: string }) {
     })
     setContentModal(false)
     setCtxForm({ type: 'link', title: '', url: '', content: '' })
+  }
+
+  function handleCptImage(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 1.5 * 1024 * 1024) { alert('Imagem muito grande (máx 1.5 MB). Comprime antes de enviar.'); return }
+    setCptUploading(true)
+    const reader = new FileReader()
+    reader.onload = () => { setCptForm(f => ({ ...f, imageData: reader.result as string })); setCptUploading(false) }
+    reader.readAsDataURL(file)
+  }
+
+  function createConcept() {
+    if (!cptForm.termo.trim() || !cptForm.definicao.trim()) return
+    if (!selSubj || !selClass || !selSem) return
+    const tags = cptForm.tags.split(',').map(t => t.trim()).filter(Boolean)
+    addConcept({
+      hubId,
+      semesterId: selSem,
+      subjectId: selSubj,
+      classId: selClass,
+      termo: cptForm.termo.trim(),
+      definicao: cptForm.definicao.trim(),
+      imageData: cptForm.imageData || undefined,
+      tags,
+    })
+    setConceptModal(false)
+    setCptForm({ termo: '', definicao: '', imageData: '', tags: '' })
   }
 
   return (
@@ -313,6 +370,7 @@ function FaculdadeView({ hubId }: { hubId: string }) {
                       <div className={s.mainActions}>
                         <button className={s.actionBtn} onClick={() => setContentModal(true)}>+ Material</button>
                         <button className={s.actionBtn} onClick={() => setClassModal(true)}>+ Aula</button>
+                        <button className={s.actionBtn} onClick={() => setConceptModal(true)} disabled={!selClass}>+ Conceito</button>
                         <button className={s.actionBtnPdf} onClick={() => setPdfModal(true)}>📄 PDF</button>
                       </div>
                     </div>
@@ -348,6 +406,18 @@ function FaculdadeView({ hubId }: { hubId: string }) {
                         <ContentCard key={c.id} c={c} onDelete={() => removeContent(c.id)} />
                       ))}
                     </div>
+
+                    {/* Concepts list */}
+                    {curConcepts.length > 0 && (
+                      <div className={s.contentSection}>
+                        <div className={s.contentLabel}>Conceitos indexados</div>
+                        <div className={s.conceptList}>
+                          {curConcepts.map(c => (
+                            <ConceptCard key={c.id} concept={c} onDelete={() => removeConcept(c.id)} />
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </>
                 )
               })()}
@@ -496,6 +566,49 @@ function FaculdadeView({ hubId }: { hubId: string }) {
                 <textarea className={`${s.input} ${s.textarea}`} placeholder="Sua nota..."
                   value={ctxForm.content} onChange={e => setCtxForm(f => ({ ...f, content: e.target.value }))} rows={4} />
               </div>
+            )}
+          </Modal>
+        )}
+
+        {conceptModal && (
+          <Modal
+            title="Novo Conceito"
+            onClose={() => { setConceptModal(false); setCptForm({ termo: '', definicao: '', imageData: '', tags: '' }) }}
+            onSave={createConcept}
+            saveLabel="Salvar"
+            disabled={!cptForm.termo.trim() || !cptForm.definicao.trim() || !selClass}
+          >
+            <div className={s.field}>
+              <label className={s.label}>Termo *</label>
+              <input className={s.input} placeholder="ex: Herança, Polimorfismo, HTTP..." autoFocus
+                value={cptForm.termo} onChange={e => setCptForm(f => ({ ...f, termo: e.target.value }))} />
+            </div>
+            <div className={s.field}>
+              <label className={s.label}>Definição * (1-2 frases)</label>
+              <textarea className={`${s.input} ${s.textarea}`} placeholder="Explique em 1-2 frases o que é esse conceito..."
+                value={cptForm.definicao} onChange={e => setCptForm(f => ({ ...f, definicao: e.target.value }))} rows={3} />
+            </div>
+            <div className={s.field}>
+              <label className={s.label}>Imagem (print do slide)</label>
+              <input ref={cptImgRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleCptImage} />
+              {cptForm.imageData ? (
+                <div className={s.cptImgPreview}>
+                  <img src={cptForm.imageData} alt="preview" className={s.cptImgThumb} />
+                  <button className={s.cptImgRemove} onClick={() => setCptForm(f => ({ ...f, imageData: '' }))}>✕ Remover</button>
+                </div>
+              ) : (
+                <button className={s.uploadBtn} onClick={() => cptImgRef.current?.click()} disabled={cptUploading}>
+                  {cptUploading ? 'Carregando…' : '📷 Escolher imagem'}
+                </button>
+              )}
+            </div>
+            <div className={s.field}>
+              <label className={s.label}>Tags (separadas por vírgula)</label>
+              <input className={s.input} placeholder="ex: OOP, back-end, algoritmo"
+                value={cptForm.tags} onChange={e => setCptForm(f => ({ ...f, tags: e.target.value }))} />
+            </div>
+            {!selClass && (
+              <p className={s.cptHint}>Selecione uma aula antes de criar um conceito.</p>
             )}
           </Modal>
         )}

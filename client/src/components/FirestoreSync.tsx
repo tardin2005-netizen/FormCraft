@@ -80,6 +80,10 @@ export default function FirestoreSync() {
         snap => safe('hubChatMessages', snap.docs.map(d => d.data() as any), d => useHubsStore.getState().hydrateChatMessages(d))
       ),
       onSnapshot(
+        collection(db, 'users', uid, 'hubConcepts'),
+        snap => safe('hubConcepts', snap.docs.map(d => d.data() as any), d => useHubsStore.getState().hydrateConcepts(d))
+      ),
+      onSnapshot(
         doc(db, 'users', uid, 'meta', 'savedTools'),
         snap => {
           if (snap.exists()) useSavedToolsStore.getState().hydrate(snap.data().saved ?? [])
