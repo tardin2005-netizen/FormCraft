@@ -76,7 +76,7 @@ export function searchAll(query: string, src: Sources): SearchResult[] {
     const subject = src.subjects.find(x => x.id === c.subjectId)
     const hub = src.hubs.find(x => x.id === c.hubId)
     const classItem = src.classes.find(x => x.id === c.classId)
-    const hay = normalize([c.termo, c.definicao, ...c.tags, subject?.name, hub?.name, classItem?.title].filter(Boolean).join(' '))
+    const hay = normalize([c.termo, c.definicao, ...c.tags, c.contexto, subject?.name, hub?.name, classItem?.title].filter(Boolean).join(' '))
     if (matches(hay)) results.push({ r: { kind: 'concept', item: c, subject, classItem }, title: c.termo })
   }
 
@@ -87,4 +87,11 @@ export function searchAll(query: string, src: Sources): SearchResult[] {
 
   const rank = (title: string) => (normalize(title).includes(q) ? 0 : 1)
   return results.sort((a, b) => rank(a.title) - rank(b.title)).map(x => x.r)
+}
+
+/** Where a concept opens: its class inside the hub, or the Conceitos page for standalone ones. */
+export function conceptHref(c: Pick<Concept, 'id' | 'hubId' | 'semesterId' | 'subjectId' | 'classId'>) {
+  return c.classId && c.hubId
+    ? `/hub/${c.hubId}?sem=${c.semesterId ?? ''}&subj=${c.subjectId ?? ''}&cls=${c.classId}`
+    : `/conceitos/${c.id}`
 }

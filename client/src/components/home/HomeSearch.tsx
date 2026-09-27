@@ -1,18 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, Plus, X, Link2, StickyNote, FileUp, GraduationCap, Sparkles, Wrench, Layers } from 'lucide-react'
+import { Search, Plus, X, Link2, StickyNote, FileUp, GraduationCap, Sparkles, Wrench, Layers, Lightbulb } from 'lucide-react'
 import { useHubsStore } from '../../store/hubsStore'
 import { useLibraryStore } from '../../store/libraryStore'
 import { useLinksStore } from '../../store/linksStore'
 import { ALL_TOOLS } from '../../data/tools'
-import { normalize, searchAll, searchTools } from '../../utils/globalSearch'
+import { normalize, searchAll, searchTools, conceptHref } from '../../utils/globalSearch'
 import VoiceSearch from '../VoiceSearch'
 import s from './Home.module.css'
 
-export type Scope = 'tudo' | 'faculdade' | 'biblioteca' | 'ferramentas'
+export type Scope = 'tudo' | 'conceitos' | 'faculdade' | 'biblioteca' | 'ferramentas'
 
 const SCOPES: { id: Scope; label: string; Icon: typeof Layers; placeholder: string; examples: string[] }[] = [
   { id: 'tudo', label: 'Tudo', Icon: Layers, placeholder: 'Buscar em aulas, Biblioteca, ferramentas e links…', examples: ['brand equity', 'funil', 'hover', 'gerar vídeo com IA'] },
+  { id: 'conceitos', label: 'Conceitos', Icon: Lightbulb, placeholder: 'Buscar termo, definição ou tag em todos os seus conceitos…', examples: ['brand equity', 'funil', 'persona'] },
   { id: 'faculdade', label: 'Faculdade', Icon: GraduationCap, placeholder: 'Buscar conceito, aula ou matéria de qualquer semestre…', examples: ['brand equity', 'prova', 'Gestão de Marcas'] },
   { id: 'biblioteca', label: 'Biblioteca', Icon: Sparkles, placeholder: 'Buscar padrão de design, efeito ou técnica…', examples: ['hover', 'card flutuante', 'animações'] },
   { id: 'ferramentas', label: 'Ferramentas', Icon: Wrench, placeholder: 'Descreva o que precisa fazer: gerar narração, editar vídeo…', examples: ['gerar vídeo com IA', 'criar artes e posts', 'analisar métricas', 'gerar narração'] },
@@ -61,7 +62,10 @@ export default function HomeSearch({ query, setQuery, onSaveLink, onQuickNote }:
     const tokens = normalize(q).split(/\s+/).filter(Boolean)
     const has = (...f: (string | undefined)[]) => { const hay = normalize(f.filter(Boolean).join(' ')); return tokens.every(t => hay.includes(t)) }
     const all = searchAll(q, { concepts, hubs, subjects, classes, patterns })
-    const cards = all.filter(r => scope === 'tudo' || (scope === 'faculdade' ? r.kind === 'concept' : scope === 'biblioteca' ? r.kind === 'pattern' : false))
+    const cards = all.filter(r => scope === 'tudo'
+      || (scope === 'conceitos' && r.kind === 'concept')
+      || (scope === 'faculdade' && r.kind === 'concept' && !!r.item.classId)
+      || (scope === 'biblioteca' && r.kind === 'pattern'))
     const aulas = scope === 'tudo' || scope === 'faculdade'
       ? classes.filter(c => has(c.title, subjects.find(x => x.id === c.subjectId)?.name)).slice(0, 6)
       : []
@@ -101,6 +105,7 @@ export default function HomeSearch({ query, setQuery, onSaveLink, onQuickNote }:
             {addOpen && (
               <div className={s.addMenu} role="menu">
                 <button role="menuitem" onClick={() => { setAddOpen(false); onSaveLink() }}><Link2 size={15} /> Link</button>
+                <button role="menuitem" onClick={() => { setAddOpen(false); navigate('/conceitos?novo=1') }}><Lightbulb size={15} /> Conceito</button>
                 <button role="menuitem" onClick={() => { setAddOpen(false); onQuickNote() }}><StickyNote size={15} /> Nota rápida</button>
                 <button role="menuitem" disabled={!facHub} onClick={() => { setAddOpen(false); if (facHub) navigate(`/hub/${facHub.id}?novo=material`) }}>
                   <FileUp size={15} /> PDF numa aula
@@ -143,13 +148,15 @@ export default function HomeSearch({ query, setQuery, onSaveLink, onQuickNote }:
               {res.cards.length > 0 && (
                 <div className={s.cardGrid}>
                   {res.cards.map(r => r.kind === 'concept' ? (
-                    <button key={r.item.id} className={s.rCard} onClick={() => navigate(`/hub/${r.item.hubId}?sem=${r.item.semesterId}&subj=${r.item.subjectId}&cls=${r.item.classId}`)}>
+                    <button key={r.item.id} className={s.rCard} onClick={() => navigate(conceptHref(r.item))}>
                       {r.item.imageData && <div className={s.rImg}><img src={r.item.imageData} alt={r.item.termo} /></div>}
                       <div className={s.rBody}>
                         <span className={s.rTitle}><Highlight text={r.item.termo} query={q} /></span>
                         <span className={s.rText}>{r.item.definicao}</span>
                       </div>
-                      <span className={s.rFoot}><span className={s.chip}>Matéria</span>{r.subject?.name ?? '—'}{r.classItem ? ` · ${r.classItem.title}` : ''}</span>
+                      <span className={s.rFoot}>{r.item.classId
+                        ? <><span className={s.chip}>Aula</span>{r.subject?.name ?? '—'}{r.classItem ? ` · ${r.classItem.title}` : ''}</>
+                        : <><span className={s.chip}>Conceito</span>{r.item.contexto || 'Avulso'}</>}</span>
                     </button>
                   ) : (
                     <button key={r.item.id} className={s.rCard} onClick={() => navigate(`/biblioteca/${r.item.id}`)}>

@@ -6,7 +6,7 @@ import { useCollectionsStore } from '../store/collectionsStore'
 import { useHubsStore } from '../store/hubsStore'
 import { useLibraryStore } from '../store/libraryStore'
 import { ALL_TOOLS } from '../data/tools'
-import { normalize, searchAll, searchTools } from '../utils/globalSearch'
+import { normalize, searchAll, searchTools, conceptHref } from '../utils/globalSearch'
 import s from './SearchPalette.module.css'
 
 interface Props { onClose: () => void; initialQuery?: string }
@@ -75,9 +75,9 @@ export default function SearchPalette({ onClose, initialQuery = '' }: Props) {
     searchAll(query, { concepts, hubs, subjects, classes, patterns }).slice(0, 8).forEach(r => {
       if (r.kind === 'concept') {
         const c = r.item
-        out.push({ key: 'k' + c.id, group: 'Conceitos das aulas', icon: '💡', label: c.termo,
-          sub: [r.subject?.name, r.classItem?.title].filter(Boolean).join(' · '),
-          run: () => go(`/hub/${c.hubId}?sem=${c.semesterId}&subj=${c.subjectId}&cls=${c.classId}`) })
+        out.push({ key: 'k' + c.id, group: 'Conceitos', icon: '💡', label: c.termo,
+          sub: c.classId ? [r.subject?.name, r.classItem?.title].filter(Boolean).join(' · ') : (c.contexto || 'Conceito avulso'),
+          run: () => go(conceptHref(c)) })
       } else {
         const p = r.item
         out.push({ key: 'p' + p.id, group: 'Biblioteca', icon: '✦', label: p.nomePrincipal, sub: p.categoria, run: () => go(`/biblioteca/${p.id}`) })

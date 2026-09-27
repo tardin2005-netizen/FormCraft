@@ -79,12 +79,15 @@ export interface HubContent {
   createdAt: string
 }
 
+/** A term worth finding later. Linked to a class (aula) or standalone ("avulso"). */
 export interface Concept {
   id: string
-  hubId: string
-  semesterId: string
-  subjectId: string
-  classId: string
+  hubId?: string
+  semesterId?: string
+  subjectId?: string
+  classId?: string
+  /** Free-text context for standalone concepts, e.g. "Marketing", "Trabalho". */
+  contexto?: string
   termo: string
   definicao: string
   imageData?: string
@@ -125,7 +128,8 @@ interface HubsStore {
   addChatMessage: (m: Omit<HubChatMessage, 'id' | 'createdAt'>) => void
   removeChatMessage: (id: string) => void
 
-  addConcept: (c: Omit<Concept, 'id' | 'criadoEm'>) => void
+  addConcept: (c: Omit<Concept, 'id' | 'criadoEm'>) => Concept
+  updateConcept: (id: string, patch: Partial<Omit<Concept, 'id' | 'criadoEm'>>) => void
   removeConcept: (id: string) => void
 
   hydrateHubs: (hubs: Hub[]) => void
@@ -259,6 +263,14 @@ export const useHubsStore = create<HubsStore>()(
         const concept: Concept = { ...c, id: crypto.randomUUID(), criadoEm: new Date().toISOString() }
         set(s => ({ concepts: [...s.concepts, concept] }))
         fs('hubConcepts', concept)
+        return concept
+      },
+      updateConcept: (id, patch) => {
+        const current = get().concepts.find(x => x.id === id)
+        if (!current) return
+        const updated: Concept = { ...current, ...patch }
+        set(s => ({ concepts: s.concepts.map(x => x.id === id ? updated : x) }))
+        fs('hubConcepts', updated)
       },
       removeConcept: (id) => {
         set(s => ({ concepts: s.concepts.filter(x => x.id !== id) }))

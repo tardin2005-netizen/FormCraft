@@ -17,6 +17,7 @@ import Tarefas from './pages/Tarefas'
 import ToolLibrary from './pages/ToolLibrary'
 import Salvos from './pages/Salvos'
 import Biblioteca from './pages/Biblioteca'
+import Conceitos from './pages/Conceitos'
 
 function LoadingScreen() {
   return (
@@ -48,6 +49,8 @@ function AppRoutes() {
           <Route path="/area/:id/chat/:chatId"      element={<ChatView />} />
           <Route path="/hubs"          element={<Hubs />} />
           <Route path="/hub/:id"       element={<HubView />} />
+          <Route path="/conceitos"      element={<Conceitos />} />
+          <Route path="/conceitos/:id"  element={<Conceitos />} />
           <Route path="/biblioteca"     element={<Biblioteca />} />
           <Route path="/biblioteca/:id" element={<Biblioteca />} />
           <Route path="/tarefas"       element={<Tarefas />} />
