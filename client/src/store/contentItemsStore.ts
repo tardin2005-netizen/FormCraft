@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { normList, normContentItem } from './normalize'
 import { auth, db } from '../firebase'
 import { doc, setDoc, deleteDoc } from 'firebase/firestore'
 import { type ModuleType } from '../data/contextTemplates'
@@ -73,8 +74,8 @@ export const useContentItemsStore = create<ContentItemsStore>()(
       getByModule: (moduleId) => get().items.filter(i => i.moduleId === moduleId),
       getByWorkspace: (workspaceId) => get().items.filter(i => i.workspaceId === workspaceId),
 
-      hydrate: (items) => set({ items }),
+      hydrate: (items) => set({ items: normList(items, normContentItem) as any }),
     }),
-    { name: 'formcraft-content-items' }
+    { name: 'formcraft-content-items', merge: (p: any, c) => ({ ...c, ...p, items: normList(p?.items, normContentItem) as any }) }
   )
 )

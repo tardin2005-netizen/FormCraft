@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { normList, normPattern } from './normalize'
 import { auth, db } from '../firebase'
 import { doc, setDoc, deleteDoc } from 'firebase/firestore'
 
@@ -135,8 +136,8 @@ export const useLibraryStore = create<LibraryStore>()(
         if (get().patterns.length > 0) return
         DEFAULT_PATTERNS.forEach(p => get().addPattern(p))
       },
-      hydrate: (patterns) => set({ patterns, seeded: true }),
+      hydrate: (patterns) => set({ patterns: normList(patterns, normPattern) as any, seeded: true }),
     }),
-    { name: 'formcraft-library' }
+    { name: 'formcraft-library', merge: (p: any, c) => ({ ...c, ...p, patterns: normList(p?.patterns, normPattern) as any }) }
   )
 )

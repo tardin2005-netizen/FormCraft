@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { normList, normHub, normSemester, normSubject, normClass, normHubContent, normConcept } from './normalize'
 import { auth, db } from '../firebase'
 import { doc, setDoc, deleteDoc, collection } from 'firebase/firestore'
 
@@ -255,16 +256,25 @@ export const useHubsStore = create<HubsStore>()(
         fsDel('hubConcepts', id)
       },
 
-      hydrateHubs: (hubs) => set({ hubs }),
-      hydrateSemesters: (semesters) => set({ semesters }),
-      hydrateSubjects: (subjects) => set({ subjects }),
-      hydrateClasses: (classes) => set({ classes }),
-      hydrateContents: (contents) => set({ contents }),
+      hydrateHubs: (hubs) => set({ hubs: normList(hubs, normHub) as any }),
+      hydrateSemesters: (semesters) => set({ semesters: normList(semesters, normSemester) as any }),
+      hydrateSubjects: (subjects) => set({ subjects: normList(subjects, normSubject) as any }),
+      hydrateClasses: (classes) => set({ classes: normList(classes, normClass) as any }),
+      hydrateContents: (contents) => set({ contents: normList(contents, normHubContent) as any }),
       hydrateChats: (hubChats) => set({ hubChats }),
       hydrateChatMessages: (hubChatMessages) => set({ hubChatMessages }),
-      hydrateConcepts: (concepts) => set({ concepts }),
+      hydrateConcepts: (concepts) => set({ concepts: normList(concepts, normConcept) as any }),
     }),
-    { name: 'formcraft-hubs' }
+    {
+      name: 'formcraft-hubs',
+      merge: (p: any, c) => ({
+        ...c, ...p,
+        hubs: normList(p?.hubs, normHub) as any, semesters: normList(p?.semesters, normSemester) as any,
+        subjects: normList(p?.subjects, normSubject) as any, classes: normList(p?.classes, normClass) as any,
+        contents: normList(p?.contents, normHubContent) as any, concepts: normList(p?.concepts, normConcept) as any,
+        hubChats: Array.isArray(p?.hubChats) ? p.hubChats : [], hubChatMessages: Array.isArray(p?.hubChatMessages) ? p.hubChatMessages : [],
+      }),
+    }
   )
 )
 
