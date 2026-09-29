@@ -24,6 +24,7 @@ import DesignSystemsModule from '../modules/DesignSystemsModule'
 import ComponentsModule from '../modules/ComponentsModule'
 import AccessibilityModule from '../modules/AccessibilityModule'
 import HeuristicsModule from '../modules/HeuristicsModule'
+import VideoEffectsLibrary from '../modules/VideoEffectsLibrary'
 import GenericModule from '../modules/GenericModule'
 import s from './WorkspaceView.module.css'
 
@@ -62,6 +63,7 @@ function ModuleContent({ module, workspaceId }: { module: WorkspaceModule; works
     case 'components':       return <ComponentsModule {...props} />
     case 'accessibility':    return <AccessibilityModule {...props} />
     case 'heuristics':       return <HeuristicsModule {...props} />
+    case 'video-effects':    return <VideoEffectsLibrary {...props} />
     default:                 return <GenericModule {...props} />
   }
 }
