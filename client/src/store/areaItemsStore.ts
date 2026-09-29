@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { normList, normAreaItem } from './normalize'
 import { auth, db } from '../firebase'
 import { doc, setDoc, deleteDoc } from 'firebase/firestore'
 
@@ -41,8 +42,8 @@ export const useAreaItemsStore = create<AreaItemsStore>()(
         if (uid) deleteDoc(d(uid, id)).catch(() => {})
       },
       getByArea: (areaId) => get().items.filter(i => i.areaId === areaId),
-      hydrate: (items) => set({ items }),
+      hydrate: (items) => set({ items: normList(items, normAreaItem) as any }),
     }),
-    { name: 'formcraft-area-items' }
+    { name: 'formcraft-area-items', merge: (p: any, c) => ({ ...c, ...p, items: normList(p?.items, normAreaItem) as any }) }
   )
 )

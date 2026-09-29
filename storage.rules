@@ -1,0 +1,14 @@
+rules_version = '2';
+
+// Each user can only read and write files inside their own folder.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /users/{uid}/{allPaths=**} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow delete: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.size < 25 * 1024 * 1024;
+    }
+  }
+}

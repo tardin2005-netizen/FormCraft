@@ -1,11 +1,18 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useHubsStore, type Semester, type Subject, type ClassItem, type HubContent } from '../store/hubsStore'
+import { useHubsStore, type Semester, type Subject, type ClassItem, type HubContent, type Concept } from '../store/hubsStore'
 import { useContentItemsStore } from '../store/contentItemsStore'
 import { type WorkspaceModule } from '../store/workspacesStore'
 import { type ModuleType, type ModuleLayout } from '../data/contextTemplates'
 import DeleteBtn from '../modules/DeleteBtn'
+import EmptyState from '../components/EmptyState'
+import RichText from '../components/RichText'
+import { imageToDataUrl } from '../utils/imageData'
+import { CalendarDays, BookOpen, FileText, Lightbulb } from 'lucide-react'
+import { uploadUserFile, MAX_UPLOAD_MB, type UploadedFile } from '../utils/fileUpload'
+import { ref as storageRef, getDownloadURL } from 'firebase/storage'
+import { storage } from '../firebase'
 import PdfProcessorModal from '../components/PdfProcessorModal'
 import ScriptsModule from '../modules/ScriptsModule'
 import TroubleshootingModule from '../modules/TroubleshootingModule'
@@ -24,6 +31,9 @@ const CLASS_TYPE_COLOR: Record<ClassItem['type'], string> = {
 const CONTENT_ICON: Record<HubContent['type'], string> = {
   link: '🔗', note: '📝', pdf: '📄', file: '📁',
 }
+const CONTENT_LABEL: Record<HubContent['type'], string> = {
+  link: 'Link', note: 'Nota', pdf: 'PDF', file: 'Arquivo',
+}
 const EMOJIS = ['📚','💡','🔬','🎨','🖥️','📐','📊','⚗️','🌍','🏛️','📝','🎤','🎵','🧪','⚙️']
 const COLORS  = ['#7c6ef7','#4f8ef7','#3ecf8e','#f78c4f','#e46ef7','#facc15','#f43f5e']
 const CURRENT_YEAR = new Date().getFullYear()
@@ -39,27 +49,62 @@ interface ContentBlock {
   items?: string[]
 }
 
-function PdfViewer({ url, title }: { url: string; title: string }) {
+function PdfViewer({ url, title, onFixUrl, onReplace }: {
+  url: string; title: string; onFixUrl: (url: string) => void; onReplace: () => void
+}) {
   const [expanded, setExpanded] = useState(true)
+  const path = storagePathFromUrl(url)
+  // A Storage link without its access token only works while the bucket allows public reads.
+  const needsToken = !!path && !/[?&]token=/.test(url)
+  const [src, setSrc] = useState(needsToken ? '' : url)
+  const [failed, setFailed] = useState(false)
+
+  useEffect(() => {
+    if (!needsToken || !path) { setSrc(url); setFailed(false); return }
+    let alive = true
+    getDownloadURL(storageRef(storage, path))
+      .then(fresh => { if (!alive) return; setSrc(fresh); onFixUrl(fresh) })
+      .catch(() => { if (alive) setFailed(true) })
+    return () => { alive = false }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [url])
+
   return (
     <div className={s.pdfContainer}>
       <div className={s.pdfHeader}>
         <button className={s.pdfToggle} onClick={() => setExpanded(v => !v)}>
           {expanded ? '▲ Recolher slides' : '▼ Ver slides'}
         </button>
-        <a href={url} target="_blank" rel="noopener noreferrer" className={s.pdfOpenLink}>
-          Abrir PDF ↗
-        </a>
+        {src && (
+          <a href={src} target="_blank" rel="noopener noreferrer" className={s.pdfOpenLink}>
+            Abrir PDF ↗
+          </a>
+        )}
       </div>
-      {expanded && (
-        <iframe
-          src={url + '#toolbar=0&navpanes=0&scrollbar=1'}
-          className={s.pdfFrame}
-          title={title}
-        />
-      )}
+      {expanded && (failed ? (
+        <div className={s.pdfError} role="alert">
+          <b>Este PDF não abre mais pelo link salvo.</b>
+          <span>
+            Ele está no Firebase Storage, mas o link foi salvo sem a chave de acesso e as regras atuais do
+            Storage não liberam a leitura dele. O arquivo continua lá. Envie o PDF de novo pelo computador
+            para gerar um link que funciona.
+          </span>
+          <button className={s.pdfErrorBtn} onClick={onReplace}>Enviar o PDF de novo</button>
+        </div>
+      ) : src ? (
+        <iframe src={src + '#toolbar=0&navpanes=0&scrollbar=1'} className={s.pdfFrame} title={title} />
+      ) : (
+        <div className={s.pdfLoading}>Abrindo PDF…</div>
+      ))}
     </div>
   )
+}
+
+/** Object path inside this project's Storage bucket, if the URL points there. */
+function storagePathFromUrl(url: string): string | null {
+  if (url.startsWith('gs://')) return url.replace(/^gs:\/\/[^/]+\//, '') || null
+  const m = url.match(/^https:\/\/firebasestorage\.googleapis\.com\/v0\/b\/[^/]+\/o\/([^?#]+)/)
+  return m ? decodeURIComponent(m[1]) : null
 }
 
 function parseContent(raw: string): ContentBlock[] {
@@ -125,6 +170,22 @@ function ContentCard({ c, onDelete }: { c: HubContent; onDelete: () => void }) {
   const [collapsed, setCollapsed] = useState(false)
   const blocks = c.content ? parseContent(c.content) : null
   const isPdf = c.type === 'pdf' && !!c.url
+  const { updateContent } = useHubsStore()
+  const replaceRef = useRef<HTMLInputElement>(null)
+  const [replacing, setReplacing] = useState<number | null>(null)
+
+  async function replaceFile(file: File | undefined) {
+    if (!file) return
+    setReplacing(0)
+    try {
+      const up = await uploadUserFile(file, pct => setReplacing(pct))
+      updateContent(c.id, { url: up.url, storagePath: up.storagePath, fileSize: up.size })
+    } catch (err) {
+      alert((err as Error).message)
+    } finally {
+      setReplacing(null)
+    }
+  }
 
   return (
     <div className={s.contentCard}>
@@ -143,7 +204,20 @@ function ContentCard({ c, onDelete }: { c: HubContent; onDelete: () => void }) {
         <DeleteBtn onConfirm={onDelete} />
       </div>
 
-      {isPdf && <PdfViewer url={c.url!} title={c.title} />}
+      {isPdf && (
+        <>
+          <input ref={replaceRef} type="file" accept="application/pdf,.pdf" hidden
+            onChange={e => { replaceFile(e.target.files?.[0]); e.target.value = '' }} />
+          {replacing !== null
+            ? <div className={s.pdfLoading}>Enviando PDF… {replacing}%</div>
+            : <PdfViewer
+                url={c.url!}
+                title={c.title}
+                onFixUrl={url => updateContent(c.id, { url })}
+                onReplace={() => replaceRef.current?.click()}
+              />}
+        </>
+      )}
 
       {blocks && !collapsed && (
         <div className={s.cardBlocks}>
@@ -171,22 +245,47 @@ function ContentCard({ c, onDelete }: { c: HubContent; onDelete: () => void }) {
   )
 }
 
+/* ─── Concept card (read-only, inline) ─── */
+function ConceptCard({ concept, onDelete }: { concept: Concept; onDelete: () => void }) {
+  return (
+    <div className={s.conceptCard}>
+      {concept.imageData && (
+        <div className={s.conceptImgWrap}>
+          <img src={concept.imageData} alt={concept.termo} className={s.conceptImg} />
+        </div>
+      )}
+      <div className={s.conceptBody}>
+        <div className={s.conceptTermo}>{concept.termo}</div>
+        <RichText text={concept.definicao} className={s.conceptDef} />
+        {concept.tags.length > 0 && (
+          <div className={s.conceptTags}>
+            {concept.tags.map(t => <span key={t} className={s.conceptTag}>{t}</span>)}
+          </div>
+        )}
+      </div>
+      <DeleteBtn onConfirm={onDelete} />
+    </div>
+  )
+}
+
 /* ─── Faculdade template ─── */
 function FaculdadeView({ hubId }: { hubId: string }) {
   const {
-    semesters, subjects, classes, contents,
+    semesters, subjects, classes, contents, concepts,
     addSemester, removeSemester,
     addSubject, removeSubject,
     addClassItem, removeClassItem,
     addContent, removeContent,
+    addConcept, removeConcept,
   } = useHubsStore()
 
   const hubSemesters = semesters.filter(s => s.hubId === hubId)
     .sort((a, b) => a.year !== b.year ? a.year - b.year : Number(a.period) - Number(b.period))
 
-  const [selSem, setSelSem]     = useState<string | null>(hubSemesters[0]?.id ?? null)
-  const [selSubj, setSelSubj]   = useState<string | null>(null)
-  const [selClass, setSelClass] = useState<string | null>(null)
+  const [params, setParams] = useSearchParams()
+  const [selSem, setSelSem]     = useState<string | null>(params.get('sem') ?? hubSemesters[0]?.id ?? null)
+  const [selSubj, setSelSubj]   = useState<string | null>(params.get('subj'))
+  const [selClass, setSelClass] = useState<string | null>(params.get('cls'))
 
   // Auto-select first subject so content is visible on refresh
   useEffect(() => {
@@ -197,48 +296,112 @@ function FaculdadeView({ hubId }: { hubId: string }) {
   }, [selSem, subjects])
 
   // Modals
-  const [semModal,     setSemModal]     = useState(false)
-  const [subjModal,    setSubjModal]    = useState(false)
-  const [classModal,   setClassModal]   = useState(false)
-  const [contentModal, setContentModal] = useState(false)
-  const [pdfModal,     setPdfModal]     = useState(false)
+  const [semModal,       setSemModal]       = useState(false)
+  const [subjModal,      setSubjModal]      = useState(false)
+  const [classModal,     setClassModal]     = useState(false)
+  const [contentModal,   setContentModal]   = useState(false)
+  const [pdfModal,       setPdfModal]       = useState(false)
+  const [conceptModal,   setConceptModal]   = useState(false)
 
   // Forms
   const [semForm,  setSemForm]  = useState({ year: CURRENT_YEAR, period: '1' as '1'|'2', name: '' })
   const [subjForm, setSubjForm] = useState({ name: '', emoji: '📚', color: '#7c6ef7', professor: '' })
   const [clsForm,  setClsForm]  = useState({ title: '', type: 'aula' as ClassItem['type'], date: '', notes: '' })
-  const [ctxForm,  setCtxForm]  = useState({ type: 'link' as HubContent['type'], title: '', url: '', content: '' })
+  const [ctxForm,  setCtxForm]  = useState({ type: 'pdf' as HubContent['type'], title: '', url: '', content: '' })
+  const [ctxSource, setCtxSource] = useState<'computer' | 'url'>('computer')
+  const [ctxFile,   setCtxFile]   = useState<File | null>(null)
+  const [ctxUpload, setCtxUpload] = useState({ busy: false, pct: 0, error: '' })
+  const [ctxDrag,   setCtxDrag]   = useState(false)
+  const ctxFileRef = useRef<HTMLInputElement>(null)
+  const [cptForm,  setCptForm]  = useState({ termo: '', definicao: '', imageData: '', tags: '' })
+  const [cptUploading, setCptUploading] = useState(false)
+  const cptImgRef = useRef<HTMLInputElement>(null)
 
   const [ctxMenu, setCtxMenu] = useState<CtxMenuState | null>(null)
   const closeCtx = useCallback(() => setCtxMenu(null), [])
 
-  const curSubjects = subjects.filter(x => x.semesterId === selSem)
-  const curClasses  = classes.filter(x => x.subjectId === selSubj).sort((a, b) => a.date.localeCompare(b.date))
-  const curContents = contents.filter(x =>
+  // ?novo=semestre | material — opened from "Primeiros passos" or "+ Guardar" on the home screen
+  const novo = params.get('novo')
+  const novoHandled = useRef(false)
+  useEffect(() => {
+    if (novoHandled.current || !novo) return
+    // Consume the param so switching tabs (which remounts this view) doesn't reopen the modal.
+    const consume = () => {
+      novoHandled.current = true
+      setParams(p => { const next = new URLSearchParams(p); next.delete('novo'); return next }, { replace: true })
+    }
+    if (novo === 'semestre' || !selSem) { consume(); setSemModal(true); return }
+    if (novo === 'material') {
+      if (!selSubj) {
+        if (!subjects.some(x => x.semesterId === selSem)) { consume(); setSubjModal(true) }
+        return
+      }
+      consume()
+      setContentModal(true)
+    }
+  }, [novo, selSem, selSubj, subjects, setParams])
+
+  const curSubjects  = subjects.filter(x => x.semesterId === selSem)
+  const curClasses   = classes.filter(x => x.subjectId === selSubj).sort((a, b) => a.date.localeCompare(b.date))
+  const curContents  = contents.filter(x =>
     selClass ? x.classId === selClass : (x.subjectId === selSubj && !x.classId)
   )
+  const curConcepts  = concepts.filter(x => selClass ? x.classId === selClass : x.subjectId === selSubj)
 
   function createSemester() {
+    const dup = hubSemesters.find(x => x.year === semForm.year && x.period === semForm.period)
+    if (dup) { alert(`${dup.name} já existe neste hub.`); return }
     const name = semForm.name || `${semForm.period}° Sem ${semForm.year}`
-    addSemester({ hubId, name, year: semForm.year, period: semForm.period })
+    const created = addSemester({ hubId, name, year: semForm.year, period: semForm.period })
+    setSelSem(created.id); setSelSubj(null); setSelClass(null)
     setSemModal(false)
     setSemForm({ year: CURRENT_YEAR, period: '1', name: '' })
   }
   function createSubject() {
     if (!selSem || !subjForm.name.trim()) return
-    addSubject({ hubId, semesterId: selSem, name: subjForm.name.trim(), emoji: subjForm.emoji, color: subjForm.color, professor: subjForm.professor || undefined })
+    const created = addSubject({ hubId, semesterId: selSem, name: subjForm.name.trim(), emoji: subjForm.emoji, color: subjForm.color, professor: subjForm.professor || undefined })
+    setSelSubj(created.id); setSelClass(null)
     setSubjModal(false)
     setSubjForm({ name: '', emoji: '📚', color: '#7c6ef7', professor: '' })
   }
   function createClass() {
     if (!selSubj || !clsForm.title.trim()) return
     const sem = selSem!
-    addClassItem({ hubId, semesterId: sem, subjectId: selSubj, title: clsForm.title.trim(), type: clsForm.type, date: clsForm.date || new Date().toISOString().split('T')[0], notes: clsForm.notes || undefined })
+    const createdClass = addClassItem({ hubId, semesterId: sem, subjectId: selSubj, title: clsForm.title.trim(), type: clsForm.type, date: clsForm.date || new Date().toISOString().split('T')[0], notes: clsForm.notes || undefined })
+    setSelClass(createdClass.id)
     setClassModal(false)
     setClsForm({ title: '', type: 'aula', date: '', notes: '' })
   }
-  function createContent() {
-    if (!ctxForm.title.trim()) return
+  const usesFile = (ctxForm.type === 'pdf' || ctxForm.type === 'file') && ctxSource === 'computer'
+  const canSaveContent = !!ctxForm.title.trim() && !ctxUpload.busy && (!usesFile || !!ctxFile)
+
+  function pickCtxFile(file: File | undefined) {
+    if (!file) return
+    setCtxUpload({ busy: false, pct: 0, error: '' })
+    setCtxFile(file)
+    setCtxForm(f => ({ ...f, title: f.title.trim() ? f.title : file.name.replace(/\.[^.]+$/, '') }))
+  }
+
+  function closeContentModal() {
+    if (ctxUpload.busy) return
+    setContentModal(false)
+    setCtxForm({ type: 'pdf', title: '', url: '', content: '' })
+    setCtxFile(null)
+    setCtxUpload({ busy: false, pct: 0, error: '' })
+  }
+
+  async function createContent() {
+    if (!canSaveContent) return
+    let uploaded: UploadedFile | null = null
+    if (usesFile && ctxFile) {
+      setCtxUpload({ busy: true, pct: 0, error: '' })
+      try {
+        uploaded = await uploadUserFile(ctxFile, pct => setCtxUpload(u => ({ ...u, pct })))
+      } catch (err) {
+        setCtxUpload({ busy: false, pct: 0, error: (err as Error).message })
+        return
+      }
+    }
     addContent({
       hubId,
       semesterId: selSem ?? undefined,
@@ -246,11 +409,45 @@ function FaculdadeView({ hubId }: { hubId: string }) {
       classId: selClass ?? undefined,
       type: ctxForm.type,
       title: ctxForm.title.trim(),
-      url: ctxForm.url || undefined,
+      url: uploaded?.url ?? (ctxForm.url || undefined),
       content: ctxForm.content || undefined,
+      ...(uploaded ? { storagePath: uploaded.storagePath, fileSize: uploaded.size } : {}),
     })
-    setContentModal(false)
-    setCtxForm({ type: 'link', title: '', url: '', content: '' })
+    setCtxUpload({ busy: false, pct: 0, error: '' })
+    closeContentModal()
+  }
+
+  async function handleCptImage(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setCptUploading(true)
+    try {
+      const imageData = await imageToDataUrl(file)
+      setCptForm(f => ({ ...f, imageData }))
+    } catch (err) {
+      alert((err as Error).message)
+    } finally {
+      setCptUploading(false)
+    }
+  }
+
+  function createConcept() {
+    if (!cptForm.termo.trim() || !cptForm.definicao.trim()) return
+    if (!selSubj || !selClass || !selSem) return
+    const tags = cptForm.tags.split(',').map(t => t.trim()).filter(Boolean)
+    addConcept({
+      hubId,
+      semesterId: selSem,
+      subjectId: selSubj,
+      classId: selClass,
+      termo: cptForm.termo.trim(),
+      definicao: cptForm.definicao.trim(),
+      imageData: cptForm.imageData || undefined,
+      tags,
+    })
+    setConceptModal(false)
+    setCptForm({ termo: '', definicao: '', imageData: '', tags: '' })
   }
 
   return (
@@ -268,10 +465,13 @@ function FaculdadeView({ hubId }: { hubId: string }) {
       </div>
 
       {!selSem ? (
-        <div className={s.emptyState}>
-          <div>📅</div>
-          <div>Crie seu primeiro semestre para começar</div>
-        </div>
+        <EmptyState
+          icon={<CalendarDays size={20} />}
+          title="Nenhum semestre neste hub ainda"
+          actions={[{ label: '+ Semestre', onClick: () => setSemModal(true) }]}
+        >
+          Semestres organizam suas matérias por período. Comece pelo semestre que você está cursando agora; os anteriores podem vir depois.
+        </EmptyState>
       ) : (
         <div className={s.facContent}>
           {/* Subjects sidebar */}
@@ -281,7 +481,7 @@ function FaculdadeView({ hubId }: { hubId: string }) {
               <button className={s.panelAdd} onClick={() => setSubjModal(true)}>+</button>
             </div>
             {curSubjects.length === 0
-              ? <div className={s.panelEmpty}>Nenhuma matéria</div>
+              ? <button className={s.panelEmptyAdd} onClick={() => setSubjModal(true)}>+ Adicionar matéria</button>
               : curSubjects.map(subj => (
                 <div key={subj.id} className={`${s.subjItem} ${selSubj === subj.id ? s.subjActive : ''}`}
                   onClick={() => { setSelSubj(subj.id); setSelClass(null) }}
@@ -297,7 +497,19 @@ function FaculdadeView({ hubId }: { hubId: string }) {
 
           {/* Main content area */}
           {!selSubj ? (
-            <div className={s.emptyState}>Selecione uma matéria</div>
+            curSubjects.length === 0 ? (
+              <EmptyState
+                icon={<BookOpen size={20} />}
+                title="Adicione a primeira matéria deste semestre"
+                actions={[{ label: '+ Matéria', onClick: () => setSubjModal(true) }]}
+              >
+                Cada matéria guarda suas aulas, provas, materiais em PDF e os conceitos que você quer achar depois.
+              </EmptyState>
+            ) : (
+              <EmptyState icon={<BookOpen size={20} />} title="Escolha uma matéria">
+                Clique numa matéria da lista para ver as aulas e os materiais dela.
+              </EmptyState>
+            )
           ) : (
             <div className={s.mainPanel}>
               {(() => {
@@ -313,11 +525,24 @@ function FaculdadeView({ hubId }: { hubId: string }) {
                       <div className={s.mainActions}>
                         <button className={s.actionBtn} onClick={() => setContentModal(true)}>+ Material</button>
                         <button className={s.actionBtn} onClick={() => setClassModal(true)}>+ Aula</button>
+                        <button className={s.actionBtn} onClick={() => setConceptModal(true)} disabled={!selClass}>+ Conceito</button>
                         <button className={s.actionBtnPdf} onClick={() => setPdfModal(true)}>📄 PDF</button>
                       </div>
                     </div>
 
                     {/* Class list */}
+                    {curClasses.length === 0 && (
+                      <div className={s.contentSection} style={{ flex: 'none', paddingBottom: 0 }}>
+                        <EmptyState
+                          compact
+                          icon={<CalendarDays size={16} />}
+                          title="Nenhuma aula nesta matéria ainda"
+                          actions={[{ label: '+ Aula', onClick: () => setClassModal(true) }]}
+                        >
+                          Cadastre aulas, provas e trabalhos com data. Eles aparecem no calendário da tela inicial, e cada aula guarda seus materiais e conceitos.
+                        </EmptyState>
+                      </div>
+                    )}
                     <div className={s.classList}>
                       {curClasses.map(cl => (
                         <div
@@ -342,12 +567,48 @@ function FaculdadeView({ hubId }: { hubId: string }) {
                         {selClass ? `Materiais da aula` : 'Materiais da matéria'}
                       </div>
                       {curContents.length === 0 && (
-                        <div className={s.panelEmpty}>Nenhum material adicionado</div>
+                        <EmptyState
+                          compact
+                          icon={<FileText size={16} />}
+                          title={selClass ? 'Nenhum material nesta aula ainda' : 'Nenhum material geral nesta matéria'}
+                          actions={[
+                            { label: '+ Material', onClick: () => setContentModal(true) },
+                            { label: 'Resumir PDF com IA', onClick: () => setPdfModal(true) },
+                          ]}
+                        >
+                          {selClass
+                            ? 'Guarde o PDF dos slides, um link ou seu resumo desta aula. Dá para arrastar o arquivo direto.'
+                            : 'Aqui ficam materiais da matéria inteira, como o plano de ensino. Para guardar algo de uma aula, clique na aula primeiro.'}
+                        </EmptyState>
                       )}
                       {curContents.map(c => (
                         <ContentCard key={c.id} c={c} onDelete={() => removeContent(c.id)} />
                       ))}
                     </div>
+
+                    {/* Concepts list */}
+                    {selClass && curConcepts.length === 0 && (
+                      <div className={s.contentSection}>
+                        <EmptyState
+                          compact
+                          icon={<Lightbulb size={16} />}
+                          title="Nenhum conceito nesta aula ainda"
+                          actions={[{ label: '+ Conceito', onClick: () => setConceptModal(true) }]}
+                        >
+                          Conceitos são os termos da aula que você quer achar depois pela busca da tela inicial, de qualquer semestre. Um print do slide ajuda a lembrar.
+                        </EmptyState>
+                      </div>
+                    )}
+                    {curConcepts.length > 0 && (
+                      <div className={s.contentSection}>
+                        <div className={s.contentLabel}>Conceitos indexados</div>
+                        <div className={s.conceptList}>
+                          {curConcepts.map(c => (
+                            <ConceptCard key={c.id} concept={c} onDelete={() => removeConcept(c.id)} />
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </>
                 )
               })()}
@@ -466,24 +727,80 @@ function FaculdadeView({ hubId }: { hubId: string }) {
         })()}
 
         {contentModal && (
-          <Modal title="Adicionar Material" onClose={() => setContentModal(false)} onSave={createContent} saveLabel="Salvar" disabled={!ctxForm.title.trim()}>
+          <Modal
+            title={selClass ? 'Adicionar material à aula' : 'Adicionar material à matéria'}
+            onClose={closeContentModal}
+            onSave={createContent}
+            saveLabel={ctxUpload.busy ? `Enviando… ${ctxUpload.pct}%` : usesFile ? 'Enviar e salvar' : 'Salvar'}
+            disabled={!canSaveContent}
+          >
             <div className={s.field}>
               <label className={s.label}>Tipo</label>
               <div className={s.typeRow}>
-                {(['link','pdf','note','file'] as HubContent['type'][]).map(t => (
+                {(['pdf','link','note','file'] as HubContent['type'][]).map(t => (
                   <button key={t}
                     className={`${s.typeBtn} ${ctxForm.type === t ? s.typeActive : ''}`}
-                    onClick={() => setCtxForm(f => ({ ...f, type: t }))}
-                  >{CONTENT_ICON[t]} {t}</button>
+                    onClick={() => { setCtxForm(f => ({ ...f, type: t })); setCtxFile(null); setCtxUpload({ busy: false, pct: 0, error: '' }) }}
+                    disabled={ctxUpload.busy}
+                  >{CONTENT_ICON[t]} {CONTENT_LABEL[t]}</button>
                 ))}
               </div>
             </div>
+
+            {(ctxForm.type === 'pdf' || ctxForm.type === 'file') && (
+              <div className={s.field}>
+                <div className={s.sourceToggle} role="tablist">
+                  <button role="tab" aria-selected={ctxSource === 'computer'} className={`${s.sourceBtn} ${ctxSource === 'computer' ? s.sourceActive : ''}`}
+                    onClick={() => setCtxSource('computer')} disabled={ctxUpload.busy}>Do computador</button>
+                  <button role="tab" aria-selected={ctxSource === 'url'} className={`${s.sourceBtn} ${ctxSource === 'url' ? s.sourceActive : ''}`}
+                    onClick={() => setCtxSource('url')} disabled={ctxUpload.busy}>Por link (URL)</button>
+                </div>
+              </div>
+            )}
+
+            {usesFile && (
+              <div className={s.field}>
+                <input ref={ctxFileRef} type="file" hidden
+                  accept={ctxForm.type === 'pdf' ? 'application/pdf,.pdf' : undefined}
+                  onChange={e => { pickCtxFile(e.target.files?.[0]); e.target.value = '' }} />
+                <button
+                  type="button"
+                  className={`${s.dropZone} ${ctxDrag ? s.dropZoneActive : ''}`}
+                  onClick={() => ctxFileRef.current?.click()}
+                  onDragOver={e => { e.preventDefault(); setCtxDrag(true) }}
+                  onDragLeave={() => setCtxDrag(false)}
+                  onDrop={e => { e.preventDefault(); setCtxDrag(false); pickCtxFile(e.dataTransfer.files?.[0]) }}
+                  disabled={ctxUpload.busy}
+                >
+                  {ctxFile ? (
+                    <>
+                      <span className={s.dropIcon}>{ctxForm.type === 'pdf' ? '📄' : '📁'}</span>
+                      <span className={s.dropName}>{ctxFile.name}</span>
+                      <span className={s.dropHint}>{(ctxFile.size / 1024 / 1024).toFixed(1)} MB · clique para trocar</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className={s.dropIcon}>⬆</span>
+                      <span className={s.dropName}>Arraste o {ctxForm.type === 'pdf' ? 'PDF' : 'arquivo'} aqui ou clique para escolher</span>
+                      <span className={s.dropHint}>Até {MAX_UPLOAD_MB} MB</span>
+                    </>
+                  )}
+                </button>
+                {ctxUpload.busy && (
+                  <div className={s.progress} role="progressbar" aria-valuenow={ctxUpload.pct} aria-valuemin={0} aria-valuemax={100}>
+                    <div className={s.progressBar} style={{ width: `${ctxUpload.pct}%` }} />
+                  </div>
+                )}
+                {ctxUpload.error && <p className={s.uploadError}>{ctxUpload.error}</p>}
+              </div>
+            )}
+
             <div className={s.field}>
               <label className={s.label}>Título</label>
               <input className={s.input} placeholder="Nome do material" value={ctxForm.title} autoFocus
                 onChange={e => setCtxForm(f => ({ ...f, title: e.target.value }))} />
             </div>
-            {(ctxForm.type === 'link' || ctxForm.type === 'pdf') && (
+            {(ctxForm.type === 'link' || ((ctxForm.type === 'pdf' || ctxForm.type === 'file') && ctxSource === 'url')) && (
               <div className={s.field}>
                 <label className={s.label}>URL</label>
                 <input className={s.input} placeholder="https://..." value={ctxForm.url}
@@ -496,6 +813,49 @@ function FaculdadeView({ hubId }: { hubId: string }) {
                 <textarea className={`${s.input} ${s.textarea}`} placeholder="Sua nota..."
                   value={ctxForm.content} onChange={e => setCtxForm(f => ({ ...f, content: e.target.value }))} rows={4} />
               </div>
+            )}
+          </Modal>
+        )}
+
+        {conceptModal && (
+          <Modal
+            title="Novo Conceito"
+            onClose={() => { setConceptModal(false); setCptForm({ termo: '', definicao: '', imageData: '', tags: '' }) }}
+            onSave={createConcept}
+            saveLabel="Salvar"
+            disabled={!cptForm.termo.trim() || !cptForm.definicao.trim() || !selClass}
+          >
+            <div className={s.field}>
+              <label className={s.label}>Termo *</label>
+              <input className={s.input} placeholder="ex: Herança, Polimorfismo, HTTP..." autoFocus
+                value={cptForm.termo} onChange={e => setCptForm(f => ({ ...f, termo: e.target.value }))} />
+            </div>
+            <div className={s.field}>
+              <label className={s.label}>Definição *</label>
+              <textarea className={`${s.input} ${s.textarea}`} placeholder="Explique em 1-2 frases o que é esse conceito..."
+                value={cptForm.definicao} onChange={e => setCptForm(f => ({ ...f, definicao: e.target.value }))} rows={6} />
+            </div>
+            <div className={s.field}>
+              <label className={s.label}>Imagem (print do slide)</label>
+              <input ref={cptImgRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleCptImage} />
+              {cptForm.imageData ? (
+                <div className={s.cptImgPreview}>
+                  <img src={cptForm.imageData} alt="preview" className={s.cptImgThumb} />
+                  <button className={s.cptImgRemove} onClick={() => setCptForm(f => ({ ...f, imageData: '' }))}>✕ Remover</button>
+                </div>
+              ) : (
+                <button className={s.uploadBtn} onClick={() => cptImgRef.current?.click()} disabled={cptUploading}>
+                  {cptUploading ? 'Carregando…' : '📷 Escolher imagem'}
+                </button>
+              )}
+            </div>
+            <div className={s.field}>
+              <label className={s.label}>Tags (separadas por vírgula)</label>
+              <input className={s.input} placeholder="ex: OOP, back-end, algoritmo"
+                value={cptForm.tags} onChange={e => setCptForm(f => ({ ...f, tags: e.target.value }))} />
+            </div>
+            {!selClass && (
+              <p className={s.cptHint}>Selecione uma aula antes de criar um conceito.</p>
             )}
           </Modal>
         )}
@@ -651,7 +1011,7 @@ function ChatsView({ hubId }: { hubId: string }) {
   function createChat() {
     if (!newChatName.trim()) return
     const chat = { hubId, name: newChatName.trim(), emoji: newChatEmoji }
-    addChat(chat)
+    setSelChat(addChat(chat).id)
     setNewChatName('')
     setNewChatEmoji('💬')
     setAddChatOpen(false)

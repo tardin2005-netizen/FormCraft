@@ -186,3 +186,10 @@
 }
 .saveBtn:disabled { opacity: .4; cursor: not-allowed; }
 .saveBtn:not(:disabled):hover { opacity: .85; }
+
+@media (max-width: 768px) {
+  .header { flex-wrap: wrap; gap: 12px; padding: 16px 16px 12px; }
+  .headerLeft { flex: 1 1 100%; min-width: 0; }
+  .headerActions { flex: 1 1 100%; }
+  .headerActions > * { flex: 1; }
+}

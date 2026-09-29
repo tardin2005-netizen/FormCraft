@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { normList, normTask } from './normalize'
 import { auth, db } from '../firebase'
 import { doc, setDoc, deleteDoc, collection } from 'firebase/firestore'
 
@@ -55,7 +56,7 @@ export const useTasksStore = create<TasksStore>()(
     (set, get) => ({
       tasks: [],
 
-      hydrate: (tasks) => set({ tasks }),
+      hydrate: (tasks) => set({ tasks: normList(tasks, normTask) as any }),
 
       addTask: (data) => {
         const task: Task = {
@@ -89,6 +90,6 @@ export const useTasksStore = create<TasksStore>()(
         deleteFromFirestore(id)
       },
     }),
-    { name: 'formcraft-tasks' }
+    { name: 'formcraft-tasks', merge: (p: any, c) => ({ ...c, ...p, tasks: normList(p?.tasks, normTask) as any }) }
   )
 )

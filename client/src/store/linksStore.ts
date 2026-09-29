@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { normList, normLink } from './normalize'
 import { auth, db } from '../firebase'
 import { doc, setDoc, deleteDoc } from 'firebase/firestore'
 
@@ -50,9 +51,9 @@ export const useLinksStore = create<LinksStore>()(
         const uid = auth.currentUser?.uid
         if (uid) deleteDoc(d(uid, id)).catch(() => {})
       },
-      hydrate: (links) => set({ links }),
+      hydrate: (links) => set({ links: normList(links, normLink) as any }),
     }),
-    { name: 'formcraft-links' }
+    { name: 'formcraft-links', merge: (p: any, c) => ({ ...c, ...p, links: normList(p?.links, normLink) as any }) }
   )
 )
 

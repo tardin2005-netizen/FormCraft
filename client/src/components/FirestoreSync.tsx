@@ -1,16 +1,35 @@
 import { useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { db } from '../firebase'
-import { collection, onSnapshot, query, orderBy, doc } from 'firebase/firestore'
+import { collection, onSnapshot, query, orderBy, doc, type QuerySnapshot } from 'firebase/firestore'
 import { useLinksStore } from '../store/linksStore'
 import { useCollectionsStore } from '../store/collectionsStore'
 import { useAreasStore } from '../store/areasStore'
 import { useAreaItemsStore } from '../store/areaItemsStore'
 import { useHubsStore } from '../store/hubsStore'
 import { useSavedToolsStore } from '../store/savedToolsStore'
-import { useWorkspacesStore } from '../store/workspacesStore'
 import { useContentItemsStore } from '../store/contentItemsStore'
 import { useTasksStore } from '../store/tasksStore'
+import { useLibraryStore } from '../store/libraryStore'
+import { useRescueStore } from '../store/rescueStore'
+
+const LOCAL: Record<string, () => unknown[]> = {
+  links: () => useLinksStore.getState().links,
+  collections: () => useCollectionsStore.getState().collections,
+  areas: () => useAreasStore.getState().areas,
+  areaItems: () => useAreaItemsStore.getState().items,
+  hubs: () => useHubsStore.getState().hubs,
+  hubSemesters: () => useHubsStore.getState().semesters,
+  hubSubjects: () => useHubsStore.getState().subjects,
+  hubClasses: () => useHubsStore.getState().classes,
+  hubContents: () => useHubsStore.getState().contents,
+  hubChats: () => useHubsStore.getState().hubChats,
+  hubChatMessages: () => useHubsStore.getState().hubChatMessages,
+  hubConcepts: () => useHubsStore.getState().concepts,
+  contentItems: () => useContentItemsStore.getState().items,
+  tasks: () => useTasksStore.getState().tasks,
+  designPatterns: () => useLibraryStore.getState().patterns,
+}
 
 export default function FirestoreSync() {
   const { user } = useAuth()
@@ -24,8 +43,23 @@ export default function FirestoreSync() {
     // localStorage data that was never uploaded to Firestore).
     // On subsequent snapshots: always hydrate so deletions propagate correctly.
     const initialized = new Set<string>()
+    const checked = new Set<string>()
+    useRescueStore.getState().load(uid)
 
-    function safe<T>(key: string, docs: T[], fn: (data: T[]) => void) {
+    // Before the cloud data replaces this browser's cache, keep a copy of items that exist only here
+    // (writes that never reached Firestore). The user decides whether to send them to the cloud.
+    function detectLocalOnly(key: string, snap: QuerySnapshot, docs: { id: string }[]) {
+      if (checked.has(key) || snap.metadata.fromCache || snap.metadata.hasPendingWrites) return
+      checked.add(key)
+      const serverIds = new Set(docs.map(d => d.id))
+      const local = (LOCAL[key]?.() ?? []) as { id?: string }[]
+      const orphans = local.filter(i => i && typeof i.id === 'string' && !serverIds.has(i.id))
+      useRescueStore.getState().add(uid, key, orphans as never)
+    }
+
+    function safe(key: string, snap: QuerySnapshot, fn: (data: any[]) => void) {
+      const docs = snap.docs.map(d => ({ ...d.data(), id: d.id }))
+      detectLocalOnly(key, snap, docs)
       if (initialized.has(key)) {
         fn(docs)
       } else {
@@ -37,47 +71,63 @@ export default function FirestoreSync() {
     const unsubs = [
       onSnapshot(
         query(collection(db, 'users', uid, 'links'), orderBy('savedAt', 'desc')),
-        snap => safe('links', snap.docs.map(d => d.data() as any), d => useLinksStore.getState().hydrate(d))
+        snap => safe('links', snap, d => useLinksStore.getState().hydrate(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'collections'),
-        snap => safe('collections', snap.docs.map(d => d.data() as any), d => useCollectionsStore.getState().hydrate(d))
+        snap => safe('collections', snap, d => useCollectionsStore.getState().hydrate(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'areas'),
-        snap => safe('areas', snap.docs.map(d => d.data() as any), d => useAreasStore.getState().hydrate(d))
+        snap => safe('areas', snap, d => useAreasStore.getState().hydrate(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'areaItems'),
-        snap => safe('areaItems', snap.docs.map(d => d.data() as any), d => useAreaItemsStore.getState().hydrate(d))
+        snap => safe('areaItems', snap, d => useAreaItemsStore.getState().hydrate(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'hubs'),
-        snap => safe('hubs', snap.docs.map(d => d.data() as any), d => useHubsStore.getState().hydrateHubs(d))
+        snap => safe('hubs', snap, d => useHubsStore.getState().hydrateHubs(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'hubSemesters'),
-        snap => safe('hubSemesters', snap.docs.map(d => d.data() as any), d => useHubsStore.getState().hydrateSemesters(d))
+        snap => safe('hubSemesters', snap, d => useHubsStore.getState().hydrateSemesters(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'hubSubjects'),
-        snap => safe('hubSubjects', snap.docs.map(d => d.data() as any), d => useHubsStore.getState().hydrateSubjects(d))
+        snap => safe('hubSubjects', snap, d => useHubsStore.getState().hydrateSubjects(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'hubClasses'),
-        snap => safe('hubClasses', snap.docs.map(d => d.data() as any), d => useHubsStore.getState().hydrateClasses(d))
+        snap => safe('hubClasses', snap, d => useHubsStore.getState().hydrateClasses(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'hubContents'),
-        snap => safe('hubContents', snap.docs.map(d => d.data() as any), d => useHubsStore.getState().hydrateContents(d))
+        snap => safe('hubContents', snap, d => useHubsStore.getState().hydrateContents(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'hubChats'),
-        snap => safe('hubChats', snap.docs.map(d => d.data() as any), d => useHubsStore.getState().hydrateChats(d))
+        snap => safe('hubChats', snap, d => useHubsStore.getState().hydrateChats(d))
       ),
       onSnapshot(
         query(collection(db, 'users', uid, 'hubChatMessages'), orderBy('createdAt', 'asc')),
-        snap => safe('hubChatMessages', snap.docs.map(d => d.data() as any), d => useHubsStore.getState().hydrateChatMessages(d))
+        snap => safe('hubChatMessages', snap, d => useHubsStore.getState().hydrateChatMessages(d))
+      ),
+      onSnapshot(
+        collection(db, 'users', uid, 'hubConcepts'),
+        snap => safe('hubConcepts', snap, d => useHubsStore.getState().hydrateConcepts(d))
+      ),
+      onSnapshot(
+        collection(db, 'users', uid, 'designPatterns'),
+        snap => {
+          const lib = useLibraryStore.getState()
+          const docs = snap.docs.map(d => ({ ...d.data(), id: d.id }) as any)
+          detectLocalOnly('designPatterns', snap, docs)
+          if (docs.length > 0) return lib.hydrate(docs)
+          if (snap.metadata.fromCache) return
+          if (lib.seeded) lib.hydrate([])
+          else lib.seedDefaults()
+        }
       ),
       onSnapshot(
         doc(db, 'users', uid, 'meta', 'savedTools'),
@@ -86,16 +136,12 @@ export default function FirestoreSync() {
         }
       ),
       onSnapshot(
-        collection(db, 'users', uid, 'workspaces'),
-        snap => safe('workspaces', snap.docs.map(d => d.data() as any), d => useWorkspacesStore.getState().hydrate(d))
-      ),
-      onSnapshot(
         collection(db, 'users', uid, 'contentItems'),
-        snap => safe('contentItems', snap.docs.map(d => d.data() as any), d => useContentItemsStore.getState().hydrate(d))
+        snap => safe('contentItems', snap, d => useContentItemsStore.getState().hydrate(d))
       ),
       onSnapshot(
         collection(db, 'users', uid, 'tasks'),
-        snap => safe('tasks', snap.docs.map(d => d.data() as any), d => useTasksStore.getState().hydrate(d))
+        snap => safe('tasks', snap, d => useTasksStore.getState().hydrate(d))
       ),
     ]
 

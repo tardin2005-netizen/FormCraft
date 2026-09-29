@@ -25,5 +25,10 @@
     "@vitejs/plugin-react": "^4.3.1",
     "typescript": "^5.5.3",
     "vite": "^5.4.0"
+  },
+  "allowScripts": {
+    "@firebase/util@1.15.3": true,
+    "esbuild@0.21.5": true,
+    "protobufjs@7.6.6": true
   }
 }

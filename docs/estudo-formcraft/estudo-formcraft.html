@@ -1,0 +1,715 @@
+<title>Estudo do FormCraft</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  color-scheme: dark;
+  --ground: #15171c;
+  --surface: #1d2027;
+  --surface-2: #262a33;
+  --rule: #2f343e;
+  --ink: #ece9e2;
+  --ink-2: #a3a6ae;
+  --ink-3: #7b7f89;
+  --marca: #f2d544;
+  --marca-soft: rgba(242, 213, 68, .16);
+  --marca-ink: #1b1a12;
+  --tinta: #8aa8ff;
+  --ok: #5fc48a;
+  --warn: #e8a33d;
+  --crit: #ef6461;
+  --btn: #ece9e2;
+  --btn-ink: #15171c;
+  --shadow: 0 1px 0 rgba(255,255,255,.03), 0 12px 32px rgba(0,0,0,.35);
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --ground: #f6f5f1; --surface: #ffffff; --surface-2: #efede7; --rule: #dcd9d0;
+    --ink: #1a1c22; --ink-2: #555963; --ink-3: #7c808a;
+    --marca: #f7dc45; --marca-soft: rgba(247, 220, 69, .45); --marca-ink: #1b1a12;
+    --tinta: #2f55d4; --ok: #2e8a57; --warn: #a96808; --crit: #c23b38;
+    --btn: #1a1c22; --btn-ink: #f6f5f1;
+    --shadow: 0 1px 0 rgba(0,0,0,.02), 0 10px 28px rgba(30,30,20,.10);
+  }
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --ground: #f6f5f1; --surface: #ffffff; --surface-2: #efede7; --rule: #dcd9d0;
+  --ink: #1a1c22; --ink-2: #555963; --ink-3: #7c808a;
+  --marca: #f7dc45; --marca-soft: rgba(247, 220, 69, .45); --marca-ink: #1b1a12;
+  --tinta: #2f55d4; --ok: #2e8a57; --warn: #a96808; --crit: #c23b38;
+  --btn: #1a1c22; --btn-ink: #f6f5f1;
+  --shadow: 0 1px 0 rgba(0,0,0,.02), 0 10px 28px rgba(30,30,20,.10);
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--ground); color: var(--ink);
+  font-family: var(--body); font-size: 16px; line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 980px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 96px; }
+a { color: var(--tinta); text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; border-radius: 4px; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+h1 { font-size: clamp(34px, 6vw, 56px); font-weight: 800; line-height: 1.02; }
+h2 { font-size: clamp(24px, 3.4vw, 32px); font-weight: 700; line-height: 1.15; }
+h3 { font-size: 19px; font-weight: 700; line-height: 1.3; }
+p { margin: 0; max-width: 68ch; }
+.muted { color: var(--ink-2); }
+.meta { font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+mark, .hl { background: var(--marca-soft); color: inherit; padding: 0 .15em; border-radius: 2px; box-shadow: inset 0 -.55em 0 var(--marca-soft); }
+code, .code { font-family: var(--mono); font-size: .88em; background: var(--surface-2); padding: .1em .4em; border-radius: 4px; }
+
+/* header */
+.masthead { display: grid; gap: 18px; padding-bottom: 28px; border-bottom: 1px solid var(--rule); }
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 700; font-size: 18px; }
+.brand svg { width: 30px; height: 30px; color: var(--ink); }
+.lede { font-size: 19px; color: var(--ink-2); max-width: 62ch; }
+.lede strong { color: var(--ink); font-weight: 600; }
+
+.toc { display: flex; flex-wrap: wrap; gap: 6px 8px; margin-top: 6px; }
+.toc a {
+  font-size: 14px; color: var(--ink); text-decoration: none; padding: 5px 11px;
+  border: 1px solid var(--rule); border-radius: 999px;
+}
+.toc a:hover { border-color: var(--ink-3); background: var(--surface); }
+
+section { padding-top: 56px; display: grid; gap: 20px; scroll-margin-top: 16px; }
+.sec-head { display: grid; gap: 8px; }
+
+/* action box */
+.todo {
+  background: var(--surface); border: 1px solid var(--rule); border-left: 4px solid var(--marca);
+  border-radius: 10px; padding: 20px 22px; display: grid; gap: 14px; box-shadow: var(--shadow);
+}
+.todo ol { margin: 0; padding-left: 20px; display: grid; gap: 14px; }
+.todo li { padding-left: 4px; }
+.cmd { display: flex; align-items: stretch; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.cmd pre {
+  flex: 1 1 320px; min-width: 0; margin: 0; overflow-x: auto; font-family: var(--mono); font-size: 13px;
+  background: var(--ground); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 12px; color: var(--ink);
+}
+.copy {
+  font-family: var(--body); font-size: 13px; font-weight: 600; cursor: pointer;
+  background: var(--btn); color: var(--btn-ink); border: 0; border-radius: 8px; padding: 0 14px; min-height: 40px;
+}
+
+/* stats row */
+.facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.fact { border-top: 2px solid var(--ink); padding-top: 10px; display: grid; gap: 2px; }
+.fact b { font-family: var(--display); font-size: 34px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.fact span { font-size: 14px; color: var(--ink-2); }
+
+/* tables */
+.table-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; min-width: 640px; }
+th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); background: var(--surface-2); }
+tr:last-child td { border-bottom: 0; }
+td .code { white-space: nowrap; }
+.sev { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+.sev::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.sev.crit { color: var(--crit); } .sev.high { color: var(--warn); } .sev.mid { color: var(--tinta); } .sev.low { color: var(--ink-3); }
+
+/* idea list */
+.tier { display: grid; gap: 12px; }
+.tier-label { display: flex; align-items: baseline; gap: 10px; }
+.ideas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.idea {
+  background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 16px 18px;
+  display: grid; gap: 8px; align-content: start;
+}
+.idea h3 { font-size: 17px; }
+.idea p { font-size: 15px; color: var(--ink-2); }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .04em; padding: 2px 8px; border-radius: 4px;
+  background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--rule);
+}
+.tag.src { color: var(--ink); }
+.tag.effort-s { color: var(--ok); } .tag.effort-m { color: var(--warn); } .tag.effort-l { color: var(--crit); }
+
+/* mockup frame */
+.frame {
+  border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; background: var(--surface-2);
+}
+.frame-bar {
+  display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--rule);
+  font-family: var(--mono); font-size: 11px; color: var(--ink-3); background: var(--surface);
+}
+.frame-bar i { width: 9px; height: 9px; border-radius: 50%; background: var(--rule); display: inline-block; }
+.frame-body { padding: 0; }
+.option-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; }
+.pick { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; background: var(--marca); color: var(--marca-ink); padding: 3px 8px; border-radius: 4px; font-weight: 500; }
+
+/* shared mock atoms */
+.m-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 44px; border-radius: 8px; font-weight: 600; font-size: 15px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); cursor: default; font-family: var(--body); }
+.m-btn.primary { background: var(--btn); color: var(--btn-ink); border-color: var(--btn); }
+.m-input { display: grid; gap: 5px; }
+.m-input label { font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
+.m-input div { min-height: 44px; border-radius: 8px; border: 1px solid var(--rule); background: var(--ground); display: flex; align-items: center; padding: 0 12px; color: var(--ink-3); font-size: 15px; }
+.m-or { display: flex; align-items: center; gap: 10px; color: var(--ink-3); font-size: 12px; font-family: var(--mono); }
+.m-or::before, .m-or::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+.m-fine { font-size: 12px; color: var(--ink-3); text-align: center; }
+.g { width: 18px; height: 18px; flex-shrink: 0; }
+
+/* login A */
+.loginA { display: grid; place-items: center; padding: 48px 16px; min-height: 480px;
+  background-image: linear-gradient(var(--rule) 1px, transparent 1px); background-size: 100% 32px; background-position: 0 14px; }
+.cardA {
+  width: 100%; max-width: 380px; background: var(--surface); border: 1px solid var(--rule); border-radius: 6px 14px 14px 14px;
+  padding: 26px 24px 22px; display: grid; gap: 14px; position: relative; box-shadow: var(--shadow);
+}
+.cardA::before {
+  content: "FORMCRAFT"; position: absolute; top: -24px; left: -1px; height: 24px; padding: 0 12px;
+  display: flex; align-items: center; font-family: var(--mono); font-size: 11px; letter-spacing: .12em;
+  background: var(--surface); border: 1px solid var(--rule); border-bottom: 0; border-radius: 8px 8px 0 0; color: var(--ink-2);
+}
+.cardA h3 { font-size: 24px; }
+
+/* login B */
+.loginB { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); min-height: 520px; }
+.loginB .left { padding: 36px 32px; display: grid; gap: 14px; align-content: center; background: var(--surface); }
+.loginB .left h3 { font-size: 28px; }
+.loginB .right { background: var(--ground); border-left: 1px solid var(--rule); padding: 28px; display: grid; align-content: center; gap: 12px; position: relative; overflow: hidden; }
+.preview-search { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 10px 14px; font-size: 15px; }
+.preview-search b { font-weight: 600; }
+.preview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.pcard { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 12px; display: grid; gap: 6px; font-size: 13px; }
+.pcard .t { font-weight: 700; font-family: var(--display); font-size: 15px; }
+.pcard .d { color: var(--ink-2); line-height: 1.45; }
+.pcard .o { font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); letter-spacing: .04em; }
+.pcard .o.lib { color: var(--marca-ink); background: var(--marca); padding: 1px 6px; border-radius: 3px; justify-self: start; }
+.quote { font-size: 13.5px; color: var(--ink-2); border-left: 2px solid var(--marca); padding-left: 10px; }
+
+/* onboarding C */
+.onb { padding: 32px 24px; display: grid; gap: 18px; background: var(--surface); }
+.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.step { border: 1px solid var(--rule); border-radius: 10px; padding: 16px; display: grid; gap: 8px; background: var(--ground); }
+.step .n { font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+.step.done { border-color: var(--ok); }
+.step.done .n { color: var(--ok); }
+.step.now { border-color: var(--marca); box-shadow: 0 0 0 3px var(--marca-soft); }
+.progress { height: 6px; background: var(--surface-2); border-radius: 6px; overflow: hidden; }
+.progress i { display: block; height: 100%; width: 38%; background: var(--marca); }
+
+/* identity */
+.diag { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 28px; margin: 0; padding: 0; list-style: none; }
+.diag li { display: grid; grid-template-columns: 22px 1fr; gap: 8px; font-size: 15px; color: var(--ink-2); }
+.diag li::before { content: "✕"; color: var(--crit); font-weight: 700; }
+.diag li b { color: var(--ink); font-weight: 600; }
+.swatches { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.sw { border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.sw .c { height: 64px; }
+.sw .l { padding: 8px 10px; display: grid; gap: 1px; font-size: 13px; }
+.sw .l b { font-weight: 600; }
+.sw .l span { font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+.type-spec { display: grid; gap: 14px; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 20px 22px; }
+.type-spec .row { display: grid; grid-template-columns: 150px 1fr; gap: 16px; align-items: baseline; }
+.type-spec .row + .row { border-top: 1px dashed var(--rule); padding-top: 14px; }
+.ts-display { font-family: var(--display); font-weight: 800; font-size: 34px; line-height: 1.05; }
+.ts-body { font-size: 16px; }
+.ts-mono { font-family: var(--mono); font-size: 13px; letter-spacing: .06em; text-transform: uppercase; }
+
+.compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.old-hero {
+  background: #0e0e10; color: #e8e8f0; padding: 28px 18px; text-align: center; display: grid; gap: 10px; justify-items: center;
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif; min-height: 300px; align-content: center;
+}
+.old-hero h4 { margin: 0; font-size: 20px; }
+.old-hero p { font-size: 12px; color: #9999b0; }
+.old-hero .bar { width: 100%; max-width: 330px; display: flex; background: #18181b; border: 1px solid #2a2a32; border-radius: 10px; overflow: hidden; font-size: 12px; }
+.old-hero .bar span { flex: 1; padding: 10px; color: #9999b0; text-align: left; }
+.old-hero .bar b { background: #7c6ef7; color: #fff; padding: 10px 12px; }
+.old-hero .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; font-size: 11px; }
+.old-hero .chips span { border: 1px solid #2a2a32; border-radius: 99px; padding: 3px 9px; color: #c4c4d4; }
+.new-hero { background: var(--ground); padding: 24px 20px; display: grid; gap: 14px; min-height: 300px; align-content: start; }
+.new-hero .date { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; color: var(--ink-3); text-transform: uppercase; }
+.new-hero h4 { margin: 0; font-family: var(--display); font-size: 24px; font-weight: 800; line-height: 1.1; }
+.omni { display: grid; gap: 8px; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 12px 14px; }
+.omni .q { font-size: 15px; }
+.omni .row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.omni .scope { font-family: var(--mono); font-size: 11px; padding: 3px 8px; border: 1px solid var(--rule); border-radius: 4px; color: var(--ink-2); }
+.omni .scope.on { background: var(--ink); color: var(--ground); border-color: var(--ink); }
+.omni .plus { margin-left: auto; font-size: 12px; color: var(--ink-2); }
+.today { display: grid; gap: 6px; }
+.today .item { display: grid; grid-template-columns: 58px 1fr auto; gap: 10px; align-items: center; font-size: 14px; padding: 8px 0; border-top: 1px solid var(--rule); }
+.today .item .when { font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+.today .item .k { font-family: var(--mono); font-size: 10.5px; padding: 2px 6px; border-radius: 3px; border: 1px solid var(--rule); color: var(--ink-2); }
+.today .item .k.prova { color: var(--crit); border-color: currentColor; }
+
+.logo-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: stretch; }
+.logo-tile { flex: 1 1 200px; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 20px; display: grid; gap: 10px; justify-items: start; }
+.logo-tile svg { width: 56px; height: 56px; color: var(--ink); }
+.logo-tile .app-icon { width: 64px; height: 64px; border-radius: 16px; background: var(--ink); color: var(--ground); display: grid; place-items: center; }
+.logo-tile .app-icon svg { width: 40px; height: 40px; color: var(--ground); }
+
+/* mobile phone mock */
+.phones { display: flex; flex-wrap: wrap; gap: 18px; }
+.phone { width: 230px; max-width: 100%; border: 1px solid var(--rule); border-radius: 28px; padding: 10px; background: var(--surface); }
+.screen { border-radius: 20px; background: var(--ground); height: 380px; position: relative; overflow: hidden; display: grid; align-content: start; gap: 8px; padding: 14px 12px; font-size: 12px; }
+.screen .ttl { font-family: var(--display); font-weight: 700; font-size: 15px; }
+.chiprow { display: flex; gap: 6px; overflow: hidden; }
+.chiprow span { flex-shrink: 0; border: 1px solid var(--rule); border-radius: 99px; padding: 4px 9px; font-size: 11px; color: var(--ink-2); }
+.chiprow span.on { background: var(--marca-soft); color: var(--ink); border-color: var(--marca); }
+.btnrow { display: flex; gap: 6px; }
+.btnrow span { border: 1px solid var(--rule); border-radius: 6px; padding: 5px 8px; font-size: 11px; white-space: nowrap; }
+.navbar { position: absolute; left: 8px; right: 8px; bottom: 8px; display: grid; grid-template-columns: repeat(5, 1fr); background: var(--surface); border: 1px solid var(--rule); border-radius: 16px; padding: 6px 4px; font-size: 8.5px; font-family: var(--mono); text-transform: uppercase; color: var(--ink-3); text-align: center; }
+.navbar span.on { color: var(--ink); }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--surface); border-top: 1px solid var(--rule); border-radius: 16px 16px 0 0; padding: 10px 10px 58px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.sheet span { background: var(--surface-2); border-radius: 8px; padding: 10px 4px; text-align: center; font-size: 10.5px; }
+.shade { position: absolute; inset: 0; background: rgba(0,0,0,.35); }
+
+.steps-list { margin: 0; padding-left: 22px; display: grid; gap: 10px; }
+.steps-list li::marker { font-family: var(--mono); color: var(--ink-3); }
+.note { font-size: 14px; color: var(--ink-2); background: var(--surface); border: 1px dashed var(--rule); border-radius: 8px; padding: 12px 14px; }
+
+footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--rule); color: var(--ink-3); font-size: 14px; display: grid; gap: 6px; }
+
+@media (max-width: 760px) {
+  .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ideas, .diag, .compare { grid-template-columns: 1fr; }
+  .loginB { grid-template-columns: 1fr; }
+  .loginB .right { border-left: 0; border-top: 1px solid var(--rule); }
+  .steps { grid-template-columns: 1fr; }
+  .swatches { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .type-spec .row { grid-template-columns: 1fr; gap: 4px; }
+  .wrap { padding-block: 24px 64px; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <path d="M4 10.5V26a1.5 1.5 0 0 0 1.5 1.5h21A1.5 1.5 0 0 0 28 26V12a1.5 1.5 0 0 0-1.5-1.5H15l-2.4-3.2a1.5 1.5 0 0 0-1.2-.6H5.5A1.5 1.5 0 0 0 4 8.2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+        <rect x="8.5" y="16" width="15" height="4.5" rx="1" fill="#f2d544"/>
+        <path d="M8.5 23.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      FormCraft
+    </div>
+    <p class="meta">Estudo noturno · 27 set 2026 · 8 commits locais, nada publicado</p>
+    <h1>O que eu encontrei, corrigi e proponho para o FormCraft</h1>
+    <p class="lede">Testei o app inteiro no desktop e no celular com dados realistas, incluindo dados antigos. <strong>Achei a causa da "tela bugada"</strong> e mais 11 problemas, corrigi todos, adicionei o <strong>upload de PDF do computador</strong> e deixei o app usável no celular. Mais abaixo estão as ideias tiradas das suas imagens e do Mobbin, três propostas de login e uma proposta de identidade visual própria.</p>
+    <nav class="toc" aria-label="Seções">
+      <a href="#fazer">O que você precisa fazer</a>
+      <a href="#bugs">Bugs corrigidos</a>
+      <a href="#pendentes">Pendências</a>
+      <a href="#mobile">Celular</a>
+      <a href="#ideias">Ideias</a>
+      <a href="#login">Login</a>
+      <a href="#identidade">Identidade visual</a>
+      <a href="#ordem">Ordem sugerida</a>
+    </nav>
+  </header>
+
+  <section id="fazer">
+    <div class="facts" aria-label="Resumo">
+      <div class="fact"><b>12</b><span>bugs encontrados e corrigidos</span></div>
+      <div class="fact"><b>8</b><span>commits prontos para publicar</span></div>
+      <div class="fact"><b>13</b><span>telas testadas, desktop e celular</span></div>
+      <div class="fact"><b>15</b><span>ideias de funcionalidade</span></div>
+    </div>
+
+    <div class="todo">
+      <h2>O que você precisa fazer</h2>
+      <ol>
+        <li>
+          <b>Publicar os commits.</b> O push direto para <code>main</code> é bloqueado para mim, então fica com você. O GitHub Actions faz o deploy do site sozinho em seguida.
+          <div class="cmd">
+            <pre id="cmd-push">git -C "D:\Project in claude\FORMCRAFT\.claude\worktrees\documento-analise-publicacao-0bb328" push origin HEAD:main</pre>
+            <button class="copy" type="button" data-copy="cmd-push">Copiar</button>
+          </div>
+        </li>
+        <li>
+          <b>Publicar as regras do Storage uma vez</b>, senão o envio de PDF é recusado. O bucket já existe; faltam só as regras (arquivo <code>storage.rules</code>, cada usuário lê e grava apenas a própria pasta). Rode na pasta do projeto com o Firebase CLI logado, ou cole o conteúdo em Firebase Console → Storage → Regras.
+          <div class="cmd">
+            <pre id="cmd-rules">firebase deploy --only storage</pre>
+            <button class="copy" type="button" data-copy="cmd-rules">Copiar</button>
+          </div>
+        </li>
+        <li>
+          <b>Testar com a sua conta</b> depois do deploy: enviar um PDF em uma aula, abrir Tarefas, Inbox e Coleções. Se algo travar, a tela de erro nova tem "Detalhes técnicos"; me mande esse texto.
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="bugs">
+    <div class="sec-head">
+      <p class="meta">Tudo reproduzido no navegador antes de corrigir</p>
+      <h2>Bugs encontrados e corrigidos</h2>
+      <p class="muted">A causa da tela bugada eram duas coisas juntas: o app não tinha nenhuma proteção contra erro (um erro em qualquer tela apagava o app inteiro), e dados salvos antes de alguns campos existirem, como links sem tags e tarefas sem subtarefas, quebravam três páginas. Reproduzi as duas.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Gravidade</th><th>O que acontecia</th><th>Como ficou</th><th>Commit</th></tr></thead>
+        <tbody>
+          <tr><td><span class="sev crit">Crítico</span></td><td>Qualquer erro deixava a tela inteira em branco, sem saída.</td><td>Tela de erro com "Tentar de novo" por página e por modal; o resto do app continua funcionando.</td><td><span class="code">f4dec0c</span></td></tr>
+          <tr><td><span class="sev crit">Crítico</span></td><td>Tarefas, Inbox e Coleções quebravam com dados antigos (sem <code>tags</code>, <code>subtasks</code>, <code>name</code>).</td><td>Todo dado é completado com valores padrão ao carregar, venha do Firestore ou do cache.</td><td><span class="code">ca5ca42</span></td></tr>
+          <tr><td><span class="sev high">Alto</span></td><td>No celular, Coleções, Salvos, Ferramentas e Configurações não tinham como ser abertos.</td><td>Botão "Mais" na barra inferior abre o resto do menu.</td><td><span class="code">eaa28eb</span></td></tr>
+          <tr><td><span class="sev high">Alto</span></td><td>No celular, a tela de Hub cortava "+ Material", "+ Aula" e "PDF" para fora da tela.</td><td>Matérias viram uma faixa de chips e as ações cabem inteiras.</td><td><span class="code">eaa28eb</span></td></tr>
+          <tr><td><span class="sev high">Alto</span></td><td>Configurações mostravam "João Ramiro" e seu e-mail fixos no código; "Sair da conta" não fazia nada.</td><td>Mostra a conta logada de verdade e o botão sai.</td><td><span class="code">eaa28eb</span></td></tr>
+          <tr><td><span class="sev high">Alto</span></td><td>Matéria criada não ficava selecionada, então a aula seguinte ia para a matéria errada.</td><td>Semestre, matéria, aula e canal novos ficam selecionados.</td><td><span class="code">f60350f</span></td></tr>
+          <tr><td><span class="sev mid">Médio</span></td><td>"Encontrar" na tela inicial não tinha ação; o texto digitado se perdia; os chips abriam a busca vazia.</td><td>Enter, "Encontrar" e os chips abrem a busca já com o texto.</td><td><span class="code">ee9a1f5</span></td></tr>
+          <tr><td><span class="sev mid">Médio</span></td><td>A busca ⌘K não achava ferramentas, hubs, conceitos nem padrões, e Enter não abria o resultado.</td><td>Busca global com recomendação de ferramenta por intenção ("gerar narração" traz ferramentas de voz).</td><td><span class="code">ee9a1f5</span></td></tr>
+          <tr><td><span class="sev mid">Médio</span></td><td>Modais de Hubs e o seletor de ícones abriam no canto da tela.</td><td>Centralizados.</td><td><span class="code">ee9a1f5</span></td></tr>
+          <tr><td><span class="sev mid">Médio</span></td><td>A busca ⌘K não tinha botão no celular.</td><td>Ícone de lupa no topo.</td><td><span class="code">eaa28eb</span></td></tr>
+          <tr><td><span class="sev low">Baixo</span></td><td>Dava para criar o mesmo semestre duas vezes.</td><td>Aviso em vez de duplicar.</td><td><span class="code">f60350f</span></td></tr>
+          <tr><td><span class="sev low">Baixo</span></td><td>"Resetar conta" dizia apagar tudo, mas os dados voltavam da nuvem.</td><td>Virou "Limpar cache deste navegador", com texto correto.</td><td><span class="code">eaa28eb</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted">Funcionalidade nova: <b>+ Material</b> aceita PDF e arquivos do computador (arrastar ou escolher, barra de progresso, até 25 MB, título preenchido pelo nome do arquivo). PDF virou o tipo padrão. Commit <span class="code">7689983</span>.</p>
+  </section>
+
+  <section id="pendentes">
+    <div class="sec-head">
+      <h2>Pendências que encontrei e não mexi</h2>
+      <p class="muted">Deixei de fora porque exigem uma decisão sua ou mudança maior.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Gravidade</th><th>Onde</th><th>O que acontece</th><th>Sugestão</th></tr></thead>
+        <tbody>
+          <tr><td><span class="sev mid">Médio</span></td><td>Todo o app</td><td>O código do site vai num arquivo só de 1,48 MB (o leitor de PDF entra junto). No celular com 4G a primeira abertura demora.</td><td>Carregar cada página e o leitor de PDF só quando forem usados.</td></tr>
+          <tr><td><span class="sev mid">Médio</span></td><td>Tela inicial</td><td>Duas caixas de busca uma embaixo da outra (a de IA e a de conceitos) confundem.</td><td>Uma caixa só, com escopo. Veja a ideia 1.</td></tr>
+          <tr><td><span class="sev mid">Médio</span></td><td>Inbox</td><td>O tipo PDF ainda só aceita URL.</td><td>Reaproveitar o upload que já fiz para as aulas.</td></tr>
+          <tr><td><span class="sev mid">Médio</span></td><td>Coleções</td><td>Ao abrir uma coleção, a grade se reorganiza e um card errado fica destacado.</td><td>Abrir a coleção como página própria ou painel fixo.</td></tr>
+          <tr><td><span class="sev low">Baixo</span></td><td>Chat de IA</td><td>Qualquer falha aparece como "Verifique sua conexão", mesmo quando é outro problema.</td><td>Mensagens de erro por tipo de falha.</td></tr>
+          <tr><td><span class="sev low">Baixo</span></td><td>Busca de ferramentas</td><td>"editar foto" não encontra o Lightroom (a descrição diz "edição").</td><td>Ampliar a lista de sinônimos com o uso.</td></tr>
+          <tr><td><span class="sev low">Baixo</span></td><td>Hub</td><td>O React avisa sobre um campo que muda de controlado para não controlado.</td><td>Revisar valores iniciais dos formulários.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="mobile">
+    <div class="sec-head">
+      <h2>No celular</h2>
+      <p class="muted">Medi todas as telas a 375 px de largura procurando elementos que vazavam. Os problemas eram a navegação incompleta, a tela de Hub e o topo do Inbox. O resto já se adaptava razoavelmente.</p>
+    </div>
+    <div class="phones" aria-label="Maquete das mudanças no celular">
+      <div class="phone">
+        <div class="screen">
+          <span class="ttl">Faculdade Senac</span>
+          <div class="chiprow"><span class="on">1° Sem 2025</span><span>1° Sem 2026</span><span>+</span></div>
+          <div class="chiprow"><span class="on">📊 Gestão de Marcas</span><span>💻 Estratégias Digitais</span></div>
+          <div class="btnrow"><span>+ Material</span><span>+ Aula</span><span>+ Conceito</span></div>
+          <div class="pcard"><span class="o">AULA 02 · 10 MAR</span><span class="t">Brand equity</span></div>
+          <div class="navbar"><span>Início</span><span class="on">Hubs</span><span>Bibl.</span><span>Tarefas</span><span>Mais</span></div>
+        </div>
+      </div>
+      <div class="phone">
+        <div class="screen">
+          <span class="ttl">Início</span>
+          <div class="pcard"><span class="d">Conteúdo da página ao fundo</span></div>
+          <div class="shade"></div>
+          <div class="sheet"><span>Inbox</span><span>Coleções</span><span>Salvos</span><span>Ferramentas</span><span>Config.</span><span>Tema</span></div>
+          <div class="navbar"><span>Início</span><span>Hubs</span><span>Bibl.</span><span>Tarefas</span><span class="on">Mais</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="muted">À esquerda: matérias e semestres viram faixas roláveis e as ações cabem na tela. À direita: o botão "Mais" abre o resto do menu, com atalhos para salvar link, nota rápida e trocar o tema.</p>
+  </section>
+
+  <section id="ideias">
+    <div class="sec-head">
+      <p class="meta">Fontes: suas imagens (GetYourGuide, Base, v0) e o Mobbin (folk, Remote, Sana AI, Calendly, Mintlify)</p>
+      <h2>Ideias de funcionalidade</h2>
+      <p class="muted">Filtrei pelo que faz sentido para um caderno pessoal de faculdade e referências, e deixei de fora o que só serve para loja ou carteira de cripto. O Mobbin no plano grátis mostra só duas telas por categoria; o resto vem das imagens que você mandou e da minha análise do app. A última imagem que você mandou é do v0 (da Vercel), não do Perplexity, mas a ideia de busca é a mesma.</p>
+    </div>
+
+    <div class="tier">
+      <div class="tier-label"><h3>Fazer primeiro</h3><span class="meta">alto valor, esforço baixo ou médio</span></div>
+      <div class="ideas">
+        <article class="idea">
+          <h3>1. Uma caixa só na tela inicial</h3>
+          <p>Trocar as duas buscas por um campo grande: "O que você quer encontrar ou guardar?". Ele teria escopo (Tudo, Faculdade, Biblioteca, Ferramentas), um + para anexar PDF, link ou nota, e o microfone.</p>
+          <div class="tags"><span class="tag src">v0</span><span class="tag src">Perplexity</span><span class="tag effort-m">esforço médio</span></div>
+        </article>
+        <article class="idea">
+          <h3>2. Revisão de conceitos</h3>
+          <p>Modo flashcard com os Conceitos que você indexa: mostra o termo, você tenta lembrar e vira para ver a definição e a imagem do slide. Os que você erra voltam antes. Aproveita o que você já cadastra depois de cada aula.</p>
+          <div class="tags"><span class="tag src">ideia própria</span><span class="tag effort-m">esforço médio</span></div>
+        </article>
+        <article class="idea">
+          <h3>3. Provas e trabalhos na tela inicial</h3>
+          <p>As aulas já têm tipo (aula, trabalho, prova) e data. Um bloco "Próximos 14 dias" no topo mostraria o que vem, com contagem regressiva, sem abrir cada matéria.</p>
+          <div class="tags"><span class="tag src">Base</span><span class="tag src">Calendly</span><span class="tag effort-s">esforço baixo</span></div>
+        </article>
+        <article class="idea">
+          <h3>4. Menu de perfil organizado</h3>
+          <p>Como no GetYourGuide: Conta, Aparência com três opções (Claro, Escuro, Sistema), Atalhos de teclado, Instalar app e Sair. Hoje o tema só tem claro e escuro, e não segue o celular.</p>
+          <div class="tags"><span class="tag src">GetYourGuide</span><span class="tag effort-s">esforço baixo</span></div>
+        </article>
+        <article class="idea">
+          <h3>5. Nova tela de login</h3>
+          <p>Hoje é só um botão Google num fundo escuro. Três propostas na próxima seção, com recomendação.</p>
+          <div class="tags"><span class="tag src">folk</span><span class="tag src">Sana AI</span><span class="tag src">Remote</span><span class="tag effort-s">esforço baixo</span></div>
+        </article>
+        <article class="idea">
+          <h3>6. Estados vazios que ensinam</h3>
+          <p>Cada tela vazia com uma frase do que ela faz e um botão da ação certa ("Nenhum conceito nesta aula ainda. + Conceito"), como a Base faz com "You don't have any coins".</p>
+          <div class="tags"><span class="tag src">Base</span><span class="tag src">v0</span><span class="tag effort-s">esforço baixo</span></div>
+        </article>
+      </div>
+    </div>
+
+    <div class="tier">
+      <div class="tier-label"><h3>Depois</h3><span class="meta">bom valor, esforço maior</span></div>
+      <div class="ideas">
+        <article class="idea">
+          <h3>7. Página de aula em modo leitura</h3>
+          <p>O material da aula lido como documento: título grande, índice lateral, destaques em marca-texto, conceitos da aula no rodapé. É o estilo rico da sua "Central de Conteúdo Senac", no lugar de cards empilhados.</p>
+          <div class="tags"><span class="tag src">Mintlify</span><span class="tag effort-l">esforço alto</span></div>
+        </article>
+        <article class="idea">
+          <h3>8. IA sugere conceitos a partir do PDF</h3>
+          <p>O processador de PDF já existe. Ele pode propor 5 a 10 conceitos com definição; você só aprova ou edita. O cadastro manual depois de cada aula cai para um minuto.</p>
+          <div class="tags"><span class="tag src">ideia própria</span><span class="tag effort-m">esforço médio</span></div>
+        </article>
+        <article class="idea">
+          <h3>9. Primeiros passos após o login</h3>
+          <p>Três passos com progresso: criar o hub da faculdade, adicionar o semestre atual e enviar o primeiro PDF. Serve para quem mais você convidar a usar o app.</p>
+          <div class="tags"><span class="tag src">Calendly</span><span class="tag src">GetYourGuide</span><span class="tag effort-m">esforço médio</span></div>
+        </article>
+        <article class="idea">
+          <h3>10. Recentes e Favoritos na barra lateral</h3>
+          <p>As últimas aulas, padrões e áreas que você abriu, e uma seção de favoritos recolhível, como a barra do v0.</p>
+          <div class="tags"><span class="tag src">v0</span><span class="tag effort-m">esforço médio</span></div>
+        </article>
+        <article class="idea">
+          <h3>11. Nota rápida vai para a aula de hoje</h3>
+          <p>Como as aulas têm data, a nota rápida (⌘N) pode sugerir "Enviar para Aula 05 · Estratégias Digitais" quando você estiver no horário de uma aula.</p>
+          <div class="tags"><span class="tag src">ideia própria</span><span class="tag effort-m">esforço médio</span></div>
+        </article>
+        <article class="idea">
+          <h3>12. Dica que muda embaixo da busca</h3>
+          <p>Uma linha discreta que alterna dicas úteis ("Digite #tag para filtrar", "Arraste um PDF para uma aula"), como o carrossel do GetYourGuide.</p>
+          <div class="tags"><span class="tag src">GetYourGuide</span><span class="tag effort-s">esforço baixo</span></div>
+        </article>
+      </div>
+    </div>
+
+    <div class="tier">
+      <div class="tier-label"><h3>Talvez</h3><span class="meta">avaliar se vale</span></div>
+      <div class="ideas">
+        <article class="idea">
+          <h3>13. Aviso "Instale o app"</h3>
+          <p>Card dispensável na barra lateral para instalar o PWA, como o "Get the mobile app" da Base. O manifesto e os ícones já existem.</p>
+          <div class="tags"><span class="tag src">Base</span><span class="tag effort-s">esforço baixo</span></div>
+        </article>
+        <article class="idea">
+          <h3>14. Login por e-mail sem senha</h3>
+          <p>Link mágico por e-mail além do Google. Precisa ativar "Link por e-mail" no Firebase. Apple exige conta de desenvolvedor paga, então não recomendo.</p>
+          <div class="tags"><span class="tag src">folk</span><span class="tag src">GetYourGuide</span><span class="tag effort-m">esforço médio</span></div>
+        </article>
+        <article class="idea">
+          <h3>15. Resumo com números úteis</h3>
+          <p>Trocar "Itens salvos, Áreas, Coleções" por números que mudam o seu dia: aulas desta semana, conceitos para revisar, próxima prova.</p>
+          <div class="tags"><span class="tag src">Base</span><span class="tag effort-s">esforço baixo</span></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="login">
+    <div class="sec-head">
+      <p class="meta">Maquetes, nada disso está no app</p>
+      <h2>Três propostas de login</h2>
+      <p class="muted">As maquetes já usam a identidade proposta na próxima seção e mudam junto com o tema claro ou escuro do seu navegador. Minha recomendação é a <b>B</b> no computador, que no celular vira a <b>A</b> automaticamente.</p>
+    </div>
+
+    <div class="option-head"><h3>A. Ficha</h3><span class="meta">inspirado no folk</span></div>
+    <p class="muted">Centralizado e mínimo, como uma ficha de fichário sobre papel pautado. A aba com o nome é a marca.</p>
+    <div class="frame" aria-label="Maquete de login A">
+      <div class="frame-bar"><i></i><i></i><i></i>formcraft.app/login</div>
+      <div class="frame-body loginA">
+        <div class="cardA">
+          <h3>Entrar no seu caderno</h3>
+          <p class="muted" style="font-size:14.5px">Aulas, PDFs, conceitos e referências da faculdade num lugar só.</p>
+          <div class="m-btn primary"><svg class="g" viewBox="0 0 18 18" aria-hidden="true"><path d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.87 2.68-6.62z" fill="#4285F4"/><path d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.83.86-3.04.86-2.34 0-4.33-1.58-5.04-3.71H.96v2.33A9 9 0 0 0 9 18z" fill="#34A853"/><path d="M3.96 10.71A5.4 5.4 0 0 1 3.68 9c0-.6.1-1.17.28-1.71V4.96H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.04z" fill="#FBBC05"/><path d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.58-2.59A9 9 0 0 0 .96 4.96l3 2.33C4.67 5.16 6.66 3.58 9 3.58z" fill="#EA4335"/></svg>Continuar com Google</div>
+          <div class="m-or">ou</div>
+          <div class="m-input"><label>E-mail</label><div>voce@email.com</div></div>
+          <div class="m-btn">Enviar link de acesso</div>
+          <p class="m-fine">Ao entrar você aceita os Termos e a Política de Privacidade.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="option-head"><h3>B. Vitrine</h3><span class="pick">Recomendada</span></div>
+    <p class="muted">Formulário à esquerda. À direita, o próprio app com a busca de conceitos e padrões funcionando, como a Sana AI mostra o produto. Quem chega entende o FormCraft antes de entrar.</p>
+    <div class="frame" aria-label="Maquete de login B">
+      <div class="frame-bar"><i></i><i></i><i></i>formcraft.app/login</div>
+      <div class="frame-body loginB">
+        <div class="left">
+          <p class="meta">FormCraft</p>
+          <h3>Tudo que você estudou, a uma busca de distância.</h3>
+          <p class="muted" style="font-size:15px">Guarde PDFs e resumos por aula e ache qualquer conceito de qualquer semestre.</p>
+          <div class="m-btn primary"><svg class="g" viewBox="0 0 18 18" aria-hidden="true"><path d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.87 2.68-6.62z" fill="#4285F4"/><path d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.83.86-3.04.86-2.34 0-4.33-1.58-5.04-3.71H.96v2.33A9 9 0 0 0 9 18z" fill="#34A853"/><path d="M3.96 10.71A5.4 5.4 0 0 1 3.68 9c0-.6.1-1.17.28-1.71V4.96H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.04z" fill="#FBBC05"/><path d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.58-2.59A9 9 0 0 0 .96 4.96l3 2.33C4.67 5.16 6.66 3.58 9 3.58z" fill="#EA4335"/></svg>Continuar com Google</div>
+          <p class="m-fine" style="text-align:left">Seus dados ficam na sua conta. Só você vê.</p>
+        </div>
+        <div class="right" aria-hidden="true">
+          <div class="preview-search">🔎 <span><b>brand</b> equity</span></div>
+          <div class="preview-grid">
+            <div class="pcard"><span class="o">GESTÃO DE MARCAS · AULA 02</span><span class="t"><mark>Brand</mark> equity</span><span class="d">Valor que a marca agrega ao produto além do funcional.</span></div>
+            <div class="pcard"><span class="o">ESTRATÉGIAS DIGITAIS · AULA 05</span><span class="t">Funil de vendas</span><span class="d">Jornada do cliente do primeiro contato até a compra.</span></div>
+            <div class="pcard"><span class="o lib">BIBLIOTECA · CARD</span><span class="t">Floating Card</span><span class="d">Card solto sobre o fundo, com sombra e profundidade.</span></div>
+            <div class="pcard"><span class="o">PROVA 1 · EM 6 DIAS</span><span class="t">Estratégias Digitais</span><span class="d">Conteúdo: aulas 01 a 05.</span></div>
+          </div>
+          <p class="quote">Busca em todos os semestres de uma vez: aulas, Biblioteca e provas no mesmo resultado.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="option-head"><h3>C. Primeiros passos</h3><span class="meta">aparece depois do primeiro login</span></div>
+    <p class="muted">Complementa A ou B. Três passos com progresso, como o onboarding do Calendly; some sozinho quando termina.</p>
+    <div class="frame" aria-label="Maquete de primeiros passos">
+      <div class="frame-bar"><i></i><i></i><i></i>formcraft.app</div>
+      <div class="frame-body onb">
+        <div style="display:grid;gap:6px">
+          <p class="meta">1 de 3 concluído</p>
+          <h3 style="font-size:24px">Monte seu caderno em 2 minutos</h3>
+          <div class="progress"><i></i></div>
+        </div>
+        <div class="steps">
+          <div class="step done"><span class="n">✓ FEITO</span><b>Criar o hub da faculdade</b><span class="muted" style="font-size:14px">Faculdade Senac</span></div>
+          <div class="step now"><span class="n">AGORA</span><b>Adicionar o semestre atual</b><span class="muted" style="font-size:14px">e as matérias dele</span><div class="m-btn primary" style="min-height:36px;font-size:14px">Adicionar semestre</div></div>
+          <div class="step"><span class="n">DEPOIS</span><b>Enviar o primeiro PDF</b><span class="muted" style="font-size:14px">arraste o slide de uma aula</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="identidade">
+    <div class="sec-head">
+      <p class="meta">Proposta, nada aplicado</p>
+      <h2>Identidade visual: Fichário</h2>
+      <p class="muted">Você disse que o site está com cara de inteligência artificial. Concordo, e dá para apontar o porquê: são as mesmas escolhas padrão de milhares de apps gerados.</p>
+    </div>
+
+    <ul class="diag">
+      <li><span><b>Roxo #7c6ef7 sobre quase-preto.</b> É a combinação mais comum de apps feitos com IA.</span></li>
+      <li><span><b>Emojis como ícones</b> em menus, cards e botões, misturados com os ícones de linha do menu.</span></li>
+      <li><span><b>Logo ⬡</b>: um hexágono genérico que não diz nada sobre o app.</span></li>
+      <li><span><b>Hero centralizado</b> "O que você precisa agora?", com chips embaixo, igual a todo chat de IA.</span></li>
+      <li><span><b>Brilhos desfocados</b> roxo e verde no fundo do login.</span></li>
+      <li><span><b>Fonte do sistema</b> e o mesmo raio, borda e sombra em todos os blocos, sem hierarquia.</span></li>
+    </ul>
+
+    <p>A proposta parte do que o FormCraft é: um fichário de estudante. <span class="hl">Fichas de biblioteca, papel pautado e marca-texto</span> viram a linguagem visual. O amarelo de marca-texto é a assinatura, usado só onde você marcaria algo num caderno: o termo encontrado na busca, o item selecionado, a próxima prova. Este documento inteiro já usa essa identidade, nos dois temas.</p>
+
+    <div class="swatches" aria-label="Paleta">
+      <div class="sw"><div class="c" style="background:#15171c"></div><div class="l"><b>Grafite</b><span>#15171C fundo</span></div></div>
+      <div class="sw"><div class="c" style="background:#ece9e2"></div><div class="l"><b>Papel</b><span>#ECE9E2 texto</span></div></div>
+      <div class="sw"><div class="c" style="background:#f2d544"></div><div class="l"><b>Marca-texto</b><span>#F2D544 destaque</span></div></div>
+      <div class="sw"><div class="c" style="background:#8aa8ff"></div><div class="l"><b>Tinta azul</b><span>#8AA8FF links</span></div></div>
+      <div class="sw"><div class="c" style="background:#f6f5f1"></div><div class="l"><b>Folha</b><span>#F6F5F1 tema claro</span></div></div>
+    </div>
+
+    <div class="type-spec" aria-label="Tipografia">
+      <div class="row"><span class="meta">Títulos · Bricolage Grotesque</span><span class="ts-display">Estratégias Digitais</span></div>
+      <div class="row"><span class="meta">Texto · Figtree</span><span class="ts-body">Funil de vendas: modelo que representa a jornada do cliente do primeiro contato até a compra.</span></div>
+      <div class="row"><span class="meta">Fichas · IBM Plex Mono</span><span class="ts-mono">Aula 05 · 12 mar 2026 · Prova em 6 dias</span></div>
+    </div>
+
+    <div class="logo-row">
+      <div class="logo-tile">
+        <svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M4 10.5V26a1.5 1.5 0 0 0 1.5 1.5h21A1.5 1.5 0 0 0 28 26V12a1.5 1.5 0 0 0-1.5-1.5H15l-2.4-3.2a1.5 1.5 0 0 0-1.2-.6H5.5A1.5 1.5 0 0 0 4 8.2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><rect x="8.5" y="16" width="15" height="4.5" rx="1" fill="#f2d544"/><path d="M8.5 23.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <b>Símbolo</b>
+        <span class="muted" style="font-size:14px">Uma ficha com aba e uma linha marcada. Substitui o ⬡.</span>
+      </div>
+      <div class="logo-tile">
+        <div class="app-icon"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M4 10.5V26a1.5 1.5 0 0 0 1.5 1.5h21A1.5 1.5 0 0 0 28 26V12a1.5 1.5 0 0 0-1.5-1.5H15l-2.4-3.2a1.5 1.5 0 0 0-1.2-.6H5.5A1.5 1.5 0 0 0 4 8.2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><rect x="8.5" y="16" width="15" height="4.5" rx="1" fill="#f2d544"/><path d="M8.5 23.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <b>Ícone do app</b>
+        <span class="muted" style="font-size:14px">Para o PWA e a aba do navegador.</span>
+      </div>
+      <div class="logo-tile">
+        <span style="font-family:var(--display);font-weight:800;font-size:30px;line-height:1">Form<span class="hl">Craft</span></span>
+        <b>Nome</b>
+        <span class="muted" style="font-size:14px">Bricolage extra-negrito, com o marca-texto como gesto.</span>
+      </div>
+    </div>
+
+    <div class="sec-head" style="margin-top:8px">
+      <h3>Antes e depois da tela inicial</h3>
+      <p class="muted">À esquerda, a tela de hoje. À direita, a proposta: começa pelo seu dia, tem uma busca só, com escopo, e usa a data e o nome da matéria como informação.</p>
+    </div>
+    <div class="compare">
+      <div class="frame">
+        <div class="frame-bar"><i></i><i></i><i></i>hoje</div>
+        <div class="old-hero">
+          <h4>O que você precisa agora?</h4>
+          <p>Descreva ou fale sua dor e o FormCraft recomenda a ferramenta certa com IA.</p>
+          <div class="bar"><span>💬 ex: gerar vídeo com IA…</span><b>Encontrar</b></div>
+          <div class="chips"><span>🎬 gerar vídeo com IA</span><span>✏️ criar artes e posts</span><span>📊 analisar métricas</span></div>
+          <div class="bar"><span>🔍 Buscar conceitos das aulas…</span></div>
+        </div>
+      </div>
+      <div class="frame">
+        <div class="frame-bar"><i></i><i></i><i></i>proposta</div>
+        <div class="new-hero">
+          <span class="date">Sábado, 27 set · 3° semestre</span>
+          <h4>Bom dia. Prova em 5 dias.</h4>
+          <div class="omni">
+            <span class="q">Encontrar ou guardar <mark>funil</mark>…</span>
+            <div class="row"><span class="scope on">Tudo</span><span class="scope">Faculdade</span><span class="scope">Biblioteca</span><span class="scope">Ferramentas</span><span class="plus">＋ PDF · link · nota</span></div>
+          </div>
+          <div class="today">
+            <p class="meta">Próximos 14 dias</p>
+            <div class="item"><span class="when">29 SET</span><span>Aula 06 · Estratégias Digitais</span><span class="k">aula</span></div>
+            <div class="item"><span class="when">02 OUT</span><span>Prova 1 · Estratégias Digitais</span><span class="k prova">prova</span></div>
+            <div class="item"><span class="when">08 OUT</span><span>Entrega · Planejamento de Marketing</span><span class="k">trabalho</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="note">Para aplicar: trocar os tokens em <code>client/src/index.css</code> (cores e fontes), trocar emojis de interface por ícones de linha (o app já usa lucide-react no menu), substituir o ⬡ pelo símbolo e o favicon, e manter o seletor de cor de destaque só para quem quiser, com o marca-texto como padrão. É uma mudança grande em muitos arquivos CSS; recomendo fazer por etapas, começando pela tela inicial e pelo login.</p>
+  </section>
+
+  <section id="ordem">
+    <div class="sec-head">
+      <h2>Ordem sugerida</h2>
+      <p class="muted">Cada passo depende do anterior estar no ar.</p>
+    </div>
+    <ol class="steps-list">
+      <li><b>Publicar os 8 commits e as regras do Storage</b>, e testar com sua conta (seção 1).</li>
+      <li><b>Login B e menu de perfil</b> (ideias 4 e 5), porque são pequenos e visíveis.</li>
+      <li><b>Identidade Fichário na tela inicial</b>, junto com a caixa única de busca e o bloco "Próximos 14 dias" (ideias 1 e 3).</li>
+      <li><b>Revisão de conceitos e sugestão de conceitos por IA</b> (ideias 2 e 8), que tornam o app um lugar de estudo e não só de arquivo.</li>
+      <li><b>Leitura de aula</b> e divisão do código por página (ideia 7 e pendência de carregamento).</li>
+    </ol>
+  </section>
+
+  <footer>
+    <span>Como testei: servidor local com usuário simulado e dados de teste, incluindo registros antigos sem alguns campos. Nenhum dado real da sua conta foi lido ou alterado.</span>
+    <span>Arquivos: <code>docs/estudo-formcraft/</code> no worktree <code>documento-analise-publicacao-0bb328</code>.</span>
+  </footer>
+</div>
+
+<script>
+document.querySelectorAll('.copy').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var pre = document.getElementById(btn.getAttribute('data-copy'));
+    var text = pre.textContent;
+    function selectIt() {
+      var r = document.createRange(); r.selectNodeContents(pre);
+      var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      btn.textContent = 'Selecionado';
+    }
+    try {
+      navigator.clipboard.writeText(text).then(function () { btn.textContent = 'Copiado'; }, selectIt);
+    } catch (e) { selectIt(); }
+    setTimeout(function () { btn.textContent = 'Copiar'; }, 2000);
+  });
+});
+</script>

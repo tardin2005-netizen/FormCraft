@@ -1,16 +1,16 @@
 import { useState, useRef } from 'react'
-import { Link, useNavigate, useOutletContext } from 'react-router-dom'
+import { Link, useOutletContext } from 'react-router-dom'
 import { useAreasStore } from '../store/areasStore'
 import { useCollectionsStore } from '../store/collectionsStore'
 import { useAreaItemsStore } from '../store/areaItemsStore'
-import { useWorkspacesStore } from '../store/workspacesStore'
 import { useLinksStore } from '../store/linksStore'
 import { useHubsStore } from '../store/hubsStore'
-import WorkspaceCreator from '../components/WorkspaceCreator'
-import VoiceSearch from '../components/VoiceSearch'
+import HomeSearch from '../components/home/HomeSearch'
+import Upcoming from '../components/home/Upcoming'
+import FirstSteps from '../components/home/FirstSteps'
 import s from './Dashboard.module.css'
 
-interface OutletCtx { onOpenSearch: () => void }
+interface OutletCtx { onOpenSaveLink: () => void; onOpenQuickNote: () => void }
 
 type GHCommit = { sha: string; commit: { message: string; author: { date: string } } }
 type GHRepo   = { stargazers_count: number; open_issues_count: number; pushed_at: string; description: string | null }
@@ -28,13 +28,6 @@ function timeAgo(dateStr: string) {
   if (d < 7) return `${d} dias`
   return `${Math.floor(d / 7)} semanas`
 }
-
-const CHIPS = [
-  { emoji: '🎬', label: 'gerar vídeo com IA' },
-  { emoji: '✏️', label: 'criar artes e posts' },
-  { emoji: '📊', label: 'analisar métricas' },
-  { emoji: '🎤', label: 'gerar narração' },
-]
 
 const EMOJI_LIST = ['🎨','💻','📚','🎵','💼','🌱','🚀','⚡','🔥','🌍','🎯','🧠','📊','🏆','🎮','✏️','📷','🎬','🔬','💡']
 
@@ -84,15 +77,12 @@ function GitHubWidget() {
 }
 
 export default function Dashboard() {
-  const navigate = useNavigate()
-  const { onOpenSearch } = useOutletContext<OutletCtx>()
+  const { onOpenSaveLink, onOpenQuickNote } = useOutletContext<OutletCtx>()
   const { areas, addArea, removeArea } = useAreasStore()
   const { collections } = useCollectionsStore()
   const { items } = useAreaItemsStore()
-  const { workspaces } = useWorkspacesStore()
   const { links } = useLinksStore()
   const { hubs } = useHubsStore()
-  const [showWorkspaceCreator, setShowWorkspaceCreator] = useState(false)
 
   const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
   const thisWeekCount = items.filter(i => new Date(i.createdAt).getTime() > oneWeekAgo).length
@@ -101,8 +91,10 @@ export default function Dashboard() {
     .sort((a, b) => (b.savedAt ?? 0) - (a.savedAt ?? 0))
     .slice(0, 5)
 
-  const [heroQuery,    setHeroQuery]    = useState('')
+  const [query,        setQuery]        = useState('')
   const [showGH,       setShowGH]       = useState(false)
+
+  const searching = query.trim().length > 0
   const [newAreaModal, setNewAreaModal] = useState(false)
   const [newArea,      setNewArea]      = useState({ emoji: '📁', title: '', desc: '', color: '#7c6ef7' })
   const [modalPos,     setModalPos]     = useState({ x: 0, y: 0 })
@@ -134,34 +126,12 @@ export default function Dashboard() {
 
   return (
     <div className={s.page}>
-      {/* Hero search */}
-      <section className={s.hero}>
-        <h1 className={s.heroTitle}>O que você precisa agora?</h1>
-        <p className={s.heroSub}>Descreva ou fale sua dor e o FormCraft recomenda a ferramenta certa com IA.</p>
-        <div className={s.heroSearch}>
-          <span className={s.heroSearchIcon}>💬</span>
-          <input
-            className={s.heroInput}
-            placeholder="ex: gerar vídeo com IA, analisar métricas do instagram..."
-            value={heroQuery}
-            onChange={e => setHeroQuery(e.target.value)}
-            onFocus={onOpenSearch}
-          />
-          <button className={s.heroBtn}>Encontrar</button>
-        </div>
-        <div className={s.voiceRow}>
-          <VoiceSearch />
-          <span className={s.voiceHint}>ou fale sua dor — a IA recomenda a ferramenta certa</span>
-        </div>
-        <div className={s.chips}>
-          {CHIPS.map(c => (
-            <button key={c.label} className={s.chip} onClick={onOpenSearch}>
-              {c.emoji} {c.label}
-            </button>
-          ))}
-        </div>
-      </section>
+      <FirstSteps />
 
+      <HomeSearch query={query} setQuery={setQuery} onSaveLink={onOpenSaveLink} onQuickNote={onOpenQuickNote} />
+
+      {!searching && <>
+      <Upcoming />
       {/* Stats */}
       <div className={s.stats}>
         {[
@@ -225,41 +195,6 @@ export default function Dashboard() {
               <span>+</span>
               <span>Novo Hub</span>
             </Link>
-          </div>
-        )}
-      </section>
-
-      {/* Workspaces adaptativos */}
-      <section className={s.section}>
-        <div className={s.sectionRow}>
-          <div>
-            <h2 className={s.sectionTitle}>Workspaces</h2>
-            <p className={s.sectionDesc}>Ambientes de trabalho personalizados com módulos — ferramentas, tarefas, notas e fluxos reunidos num só lugar.</p>
-          </div>
-          <button className={s.newAreaBtn} onClick={() => setShowWorkspaceCreator(true)}>+ Novo espaço</button>
-        </div>
-        {workspaces.length === 0 ? (
-          <button className={s.wsEmptyCard} onClick={() => setShowWorkspaceCreator(true)}>
-            <span className={s.wsEmptyPlus}>+</span>
-            <span className={s.wsEmptyTitle}>Criar primeiro workspace</span>
-            <span className={s.wsEmptyDesc}>Design, Faculdade, TI, Marketing — o FormCraft se adapta ao seu contexto.</span>
-          </button>
-        ) : (
-          <div className={s.wsGrid}>
-            {workspaces.map(ws => (
-              <button key={ws.id} className={s.wsCard} onClick={() => navigate(`/workspace/${ws.id}`)}>
-                <div className={s.wsCardBar} style={{ background: ws.color }} />
-                <div className={s.wsCardBody}>
-                  <div className={s.wsCardIcon}>{ws.icon}</div>
-                  <div className={s.wsCardName}>{ws.name}</div>
-                  <div className={s.wsCardModules}>{ws.modules.filter(m => m.type !== 'overview').length} módulos</div>
-                </div>
-              </button>
-            ))}
-            <button className={s.areaCardAdd} onClick={() => setShowWorkspaceCreator(true)}>
-              <span className={s.addPlusIcon}>+</span>
-              <span>Novo espaço</span>
-            </button>
           </div>
         )}
       </section>
@@ -329,10 +264,7 @@ export default function Dashboard() {
         </section>
       )}
 
-      {/* Workspace Creator */}
-      {showWorkspaceCreator && (
-        <WorkspaceCreator onClose={() => setShowWorkspaceCreator(false)} />
-      )}
+      </>}
 
       {/* Modal nova área */}
       {newAreaModal && (

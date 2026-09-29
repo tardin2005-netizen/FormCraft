@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useThemeStore, ACCENT_COLORS } from '../store/themeStore'
 import type { Accent } from '../store/themeStore'
+import { useAuth } from '../contexts/AuthContext'
 import s from './Settings.module.css'
 
 const ACCENT_LABELS: Record<Accent, string> = {
@@ -52,13 +53,12 @@ export default function Settings() {
 
   const [pendingTheme,  setPendingTheme]  = useState(theme)
   const [pendingAccent, setPendingAccent] = useState(accent)
-  const [pendingName,   setPendingName]   = useState('João Ramiro')
   const [saved,         setSaved]         = useState(false)
+  const { user, signOut } = useAuth()
+  const displayName = user?.displayName || user?.email?.split('@')[0] || 'Usuário'
+  const initials = displayName.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
 
-  const isDirty =
-    pendingTheme !== theme ||
-    pendingAccent !== accent ||
-    pendingName !== 'João Ramiro'
+  const isDirty = pendingTheme !== theme || pendingAccent !== accent
 
   function handleSave() {
     setTheme(pendingTheme)
@@ -131,40 +131,39 @@ export default function Settings() {
 
           <div className={s.accountCard}>
             <div className={s.accountAvatar} style={{ background: ACCENT_COLORS[pendingAccent].accent }}>
-              JT
+              {user?.photoURL
+                ? <img src={user.photoURL} alt="" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', borderRadius: 'inherit', objectFit: 'cover' }} />
+                : initials}
             </div>
             <div className={s.accountInfo}>
-              <input
-                className={s.accountNameInput}
-                value={pendingName}
-                onChange={e => setPendingName(e.target.value)}
-              />
-              <div className={s.accountEmail}>tardin2005@gmail.com</div>
+              <div className={s.accountNameInput}>{displayName}</div>
+              <div className={s.accountEmail}>{user?.email ?? ''}</div>
             </div>
           </div>
 
-          <button className={s.logoutBtn}>→ Sair da conta</button>
+          <button className={s.logoutBtn} onClick={() => { if (confirm('Sair da sua conta?')) signOut() }}>→ Sair da conta</button>
         </section>
 
         {/* Dados */}
         <section className={s.section}>
           <div className={s.sectionLabel}>DADOS</div>
-          <p className={s.sectionDesc}>Gerencie seus dados locais armazenados no aplicativo.</p>
+          <p className={s.sectionDesc}>Seus dados ficam salvos na nuvem (Firestore). Este navegador guarda uma cópia local para abrir mais rápido.</p>
           <div className={s.dangerCard}>
             <div className={s.dangerInfo}>
-              <div className={s.dangerTitle}>Resetar conta</div>
-              <div className={s.dangerDesc}>Apaga todas as suas áreas, itens, links e coleções salvos localmente. Esta ação não pode ser desfeita.</div>
+              <div className={s.dangerTitle}>Limpar cache deste navegador</div>
+              <div className={s.dangerDesc}>Apaga a cópia local e baixa tudo de novo da nuvem. Use se algo parecer desatualizado. Nada na nuvem é apagado.</div>
             </div>
             <button
               className={s.resetBtn}
               onClick={() => {
-                if (!confirm('Tem certeza? Todos os seus dados locais serão apagados e você começará do zero.')) return
-                const keys = ['formcraft-areas','formcraft-area-items','formcraft-collections','formcraft-links','formcraft-prefs']
-                keys.forEach(k => localStorage.removeItem(k))
+                if (!confirm('Limpar o cache local e recarregar? Seus dados na nuvem continuam salvos.')) return
+                Object.keys(localStorage)
+                  .filter(k => k.startsWith('formcraft-') && !k.startsWith('formcraft-rescue-') && !['formcraft-prefs', 'formcraft-sidebar', 'formcraft-session-uid', 'formcraft-migration-faculdade-semesters-v1'].includes(k))
+                  .forEach(k => localStorage.removeItem(k))
                 window.location.reload()
               }}
             >
-              Limpar dados
+              Limpar cache
             </button>
           </div>
         </section>

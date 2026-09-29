@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react'
+import { isChunkLoadError, reloadOnce } from '../utils/chunkReload'
 import { getFunctions, httpsCallable } from 'firebase/functions'
 import app from '../firebase'
 import s from './PdfProcessorModal.module.css'
@@ -84,7 +85,12 @@ export default function PdfProcessorModal({ subjectName, onSave, onClose }: Prop
       setResult(res.data)
       setStage('result')
     } catch (err: any) {
-      setError(err?.message ?? 'Erro ao processar o PDF.')
+      if (isChunkLoadError(err)) {
+        if (reloadOnce()) return
+        setError('O FormCraft foi atualizado enquanto esta aba estava aberta. Recarregue a página (F5) e envie o PDF de novo.')
+      } else {
+        setError(err?.message ?? 'Erro ao processar o PDF.')
+      }
       setStage('error')
     }
   }

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { normList, normCollection } from './normalize'
 import { auth, db } from '../firebase'
 import { doc, setDoc, deleteDoc } from 'firebase/firestore'
 
@@ -61,8 +62,8 @@ export const useCollectionsStore = create<CollectionsStore>()(
         const col = get().collections.find(c => c.id === colId)
         if (uid && col) setDoc(d(uid, colId), col).catch(() => {})
       },
-      hydrate: (collections) => set({ collections }),
+      hydrate: (collections) => set({ collections: normList(collections, normCollection) as any }),
     }),
-    { name: 'formcraft-collections' }
+    { name: 'formcraft-collections', merge: (p: any, c) => ({ ...c, ...p, collections: normList(p?.collections, normCollection) as any }) }
   )
 )
