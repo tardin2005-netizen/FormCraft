@@ -605,3 +605,29 @@
 .iosSteps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 10px; font-size: 14px; color: var(--text); line-height: 1.5; }
 .settingsPopup { width: 290px; padding-bottom: 6px; }
 .settingsPopup .menuItem { width: calc(100% - 12px); margin: 0 6px; }
+
+/* ── Left sidebar resize handle ── */
+.resizeHandle {
+  width: 6px;
+  flex-shrink: 0;
+  cursor: col-resize;
+  position: relative;
+  z-index: 20;
+}
+.resizeHandle::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 2px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+  opacity: 0;
+  transition: opacity 0.18s;
+}
+.resizeHandle:hover::after,
+.resizeHandleActive::after {
+  opacity: 0.55;
+}
+

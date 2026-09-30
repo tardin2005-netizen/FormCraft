@@ -9,7 +9,7 @@ import {
 import { useThemeStore, ACCENT_COLORS } from '../store/themeStore'
 import { useAreasStore } from '../store/areasStore'
 import { useAreaItemsStore } from '../store/areaItemsStore'
-import { useSidebarStore } from '../store/sidebarStore'
+import { useSidebarStore, LEFT_DEFAULT_WIDTH, LEFT_MIN_WIDTH } from '../store/sidebarStore'
 import { useSavedToolsStore } from '../store/savedToolsStore'
 import type { Accent } from '../store/themeStore'
 import { useAuth } from '../contexts/AuthContext'
@@ -86,7 +86,8 @@ export default function Layout() {
     })
   }
 
-  const { leftState, rightState, cycleLeft, cycleRight, setLeft, setRight } = useSidebarStore()
+  const { leftState, rightState, cycleLeft, cycleRight, setLeft, setRight, leftCustomWidth, setLeftCustomWidth } = useSidebarStore()
+  const [isResizingLeft, setIsResizingLeft] = useState(false)
   const { saved: savedToolNames, isSaved, saveTool, unsaveTool } = useSavedToolsStore()
 
   const [newChatOpen,   setNewChatOpen]   = useState(false)
@@ -155,6 +156,42 @@ export default function Layout() {
     return [...saved, ...rest]
   })()
 
+  function handleLeftResizeStart(e: React.MouseEvent) {
+    e.preventDefault()
+    const startX = e.clientX
+    const startW = leftState === 'compact' ? LEFT_MIN_WIDTH : leftCustomWidth
+
+    setIsResizingLeft(true)
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+
+    function onMove(ev: MouseEvent) {
+      const newW = startW + (ev.clientX - startX)
+      if (newW < 100) {
+        setLeft('compact')
+      } else {
+        setLeft('expanded')
+        setLeftCustomWidth(newW)
+      }
+    }
+
+    function onUp() {
+      setIsResizingLeft(false)
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+    }
+
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+  }
+
+  function handleLeftResizeDblClick() {
+    setLeft('expanded')
+    setLeftCustomWidth(LEFT_DEFAULT_WIDTH)
+  }
+
   function handleAddChat() {
     if (!newChatTitle.trim() || !activeAreaId) return
     addAreaItem({ areaId: activeAreaId, type: 'chat', title: newChatTitle.trim() })
@@ -162,7 +199,7 @@ export default function Layout() {
     setNewChatOpen(false)
   }
 
-  const leftW  = LEFT_W[leftState]
+  const leftW = leftState === 'hidden' ? 0 : leftState === 'compact' ? LEFT_W.compact : leftCustomWidth
   const rightW = RIGHT_W[rightState]
   const isLeftHidden  = leftState  === 'hidden'
   const isRightHidden = rightState === 'hidden'
@@ -174,7 +211,7 @@ export default function Layout() {
       <motion.aside
         className={s.left}
         animate={{ width: leftW }}
-        transition={{ type: 'spring', stiffness: 320, damping: 30 }}
+        transition={isResizingLeft ? { duration: 0 } : { type: 'spring', stiffness: 320, damping: 30 }}
         style={{ overflow: 'hidden', flexShrink: 0 }}
       >
         {leftState !== 'hidden' && (
@@ -399,6 +436,16 @@ export default function Layout() {
           </>
         )}
       </motion.aside>
+
+      {/* ── Left resize handle ── */}
+      {!isLeftHidden && (
+        <div
+          className={`${s.resizeHandle} ${isResizingLeft ? s.resizeHandleActive : ''}`}
+          onMouseDown={handleLeftResizeStart}
+          onDoubleClick={handleLeftResizeDblClick}
+          title="Arrastar para redimensionar · Duplo clique para restaurar"
+        />
+      )}
 
       {/* Sliver: show left sidebar when hidden */}
       {isLeftHidden && (
