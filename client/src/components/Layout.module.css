@@ -606,27 +606,34 @@
 .settingsPopup { width: 290px; padding-bottom: 6px; }
 .settingsPopup .menuItem { width: calc(100% - 12px); margin: 0 6px; }
 
-/* ── Left sidebar resize handle ── */
-.resizeHandle {
+/* ── Sidebar resize handles ── */
+.resizeHandle,
+.resizeHandleRight {
   width: 6px;
   flex-shrink: 0;
   cursor: col-resize;
   position: relative;
   z-index: 20;
 }
-.resizeHandle::after {
+.resizeHandle::after,
+.resizeHandleRight::after {
   content: '';
   position: absolute;
   top: 0;
   bottom: 0;
-  left: 2px;
   width: 2px;
   border-radius: 2px;
   background: var(--accent);
   opacity: 0;
   transition: opacity 0.18s;
 }
+/* left handle: indicator on left side */
+.resizeHandle::after      { left: 2px; }
+/* right handle: indicator on right side */
+.resizeHandleRight::after { right: 2px; }
+
 .resizeHandle:hover::after,
+.resizeHandleRight:hover::after,
 .resizeHandleActive::after {
   opacity: 0.55;
 }
