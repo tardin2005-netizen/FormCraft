@@ -3,6 +3,7 @@
 :is(.searchHero, .upcoming) [data-kind="prova"]    { --kind: #f43f5e; }
 :is(.searchHero, .upcoming) [data-kind="trabalho"] { --kind: #f59e0b; }
 :is(.searchHero, .upcoming) [data-kind="extra"]    { --kind: #3ecf8e; }
+:is(.searchHero, .upcoming) [data-kind="gcal"]     { --kind: #1a73e8; }
 
 .mark { background: var(--accent-muted); color: var(--text); border-radius: 3px; padding: 0 2px; }
 .linkBtn { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; font-size: 13px; cursor: pointer; }
@@ -118,6 +119,14 @@
 }
 .upList { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .upHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.upHeadRight { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+.gcalConnectBtn {
+  display: flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: 6px;
+  border: 1px solid var(--border); background: transparent; color: var(--text2);
+  font: inherit; font-size: 11.5px; cursor: pointer; white-space: nowrap; transition: border-color .15s, color .15s;
+}
+.gcalConnectBtn:hover:not(:disabled) { border-color: #1a73e8; color: #1a73e8; }
+.gcalConnectBtn:disabled { opacity: .6; cursor: default; }
 .upTitle { margin: 0; font-size: 15px; font-weight: 600; }
 .upTitle::first-letter { text-transform: uppercase; }
 .upNext { margin: 3px 0 0; font-size: 12.5px; color: var(--text2); }
