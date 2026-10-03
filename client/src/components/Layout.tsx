@@ -30,9 +30,7 @@ const ACCENT_LABELS: Record<Accent, string> = {
 const NAV_ITEMS = [
   { to: '/',            Icon: LayoutDashboard, label: 'Início' },
   { to: '/hubs',        Icon: Hexagon,         label: 'Meus Hubs' },
-  { to: '/conceitos',   Icon: Lightbulb,       label: 'Conceitos' },
   { to: '/biblioteca',  Icon: Library,         label: 'Biblioteca' },
-  { to: '/tarefas',     Icon: CheckSquare,     label: 'Tarefas' },
   { to: '/inbox',       Icon: Inbox,           label: 'Inbox' },
   { to: '/colecoes',    Icon: BookMarked,      label: 'Coleções' },
   { to: '/salvos',      Icon: Bookmark,        label: 'Salvos' },
@@ -448,6 +446,9 @@ export default function Layout() {
                       <div className={s.userName}>{user?.displayName ?? 'Usuário'}</div>
                       <div className={s.userEmail}>{user?.email ?? ''}</div>
                     </div>
+                    <button className={s.userSignOut} onClick={() => navigate('/settings')} title="Configurações">
+                      <Settings size={14} />
+                    </button>
                     <button className={s.userSignOut} onClick={signOut} title="Sair da conta">
                       <LogOut size={14} />
                     </button>
@@ -509,12 +510,6 @@ export default function Layout() {
           </div>
 
           <div className={s.topActions}>
-            <button className={s.topSearchBtn} onClick={() => setSearchOpen(true)}>
-              <Search size={13} /> Buscar <kbd className={s.topKbd}>⌘K</kbd>
-            </button>
-            <button className={`${s.topIconBtn} ${s.mobileOnly}`} onClick={() => setSearchOpen(true)} aria-label="Buscar">
-              <Search size={16} />
-            </button>
             <button className={s.topSaveLinkBtn} onClick={() => setSaveLinkOpen(true)} title="Salvar link (⌘S)">
               <Link2 size={15} />
             </button>
@@ -607,6 +602,9 @@ export default function Layout() {
                       </button>
                     )}
                     <div className={s.settingsDivider} />
+                    <button className={s.menuItem} onClick={() => { setSettingsOpen(false); navigate('/settings') }}>
+                      <Settings size={16} /><span>Configurações</span>
+                    </button>
                     <button className={`${s.menuItem} ${s.menuDanger}`} onClick={() => { setSettingsOpen(false); signOut() }}>
                       <LogOut size={16} /><span>Sair da conta</span>
                     </button>
