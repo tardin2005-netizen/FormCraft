@@ -150,6 +150,7 @@
 .contentLabel {
   font-size: 10px; font-weight: 700; text-transform: uppercase;
   letter-spacing: .08em; color: var(--text2); margin-bottom: 10px;
+  display: flex; align-items: center; justify-content: space-between;
 }
 
 /* ─── ContentCard ─── */
@@ -619,6 +620,39 @@
   .mainPanel { overflow-y: auto; }
   .mainPanel > .contentSection { flex: none; overflow: visible; }
 }
+
+/* ── Prazos & Pendências ── */
+.deadlineList { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+.deadlineRow {
+  display: flex; align-items: center; gap: 8px; padding: 7px 10px;
+  border-radius: 8px; border: 1px solid var(--border); background: var(--surface2);
+  font-size: 13px; transition: opacity .15s;
+}
+.deadlineRow.deadlineDone { opacity: .5; }
+.deadlineDone .deadlineTitle { text-decoration: line-through; }
+.deadlineToggle {
+  background: none; border: 0; padding: 0; cursor: pointer;
+  color: var(--text2); flex-shrink: 0; display: flex; align-items: center;
+}
+.deadlineToggle:hover { color: var(--accent); }
+.deadlineTitle { flex: 1; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.deadlineChip {
+  font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 99px;
+  text-transform: uppercase; letter-spacing: .05em; flex-shrink: 0;
+  background: var(--surface); border: 1px solid var(--border); color: var(--text2);
+}
+.deadlineChip[data-tipo="prova"]   { background: rgba(244,63,94,.12); color: #f43f5e; border-color: rgba(244,63,94,.3); }
+.deadlineChip[data-tipo="entrega"] { background: rgba(245,158,11,.12); color: #d97706; border-color: rgba(245,158,11,.3); }
+.deadlineChip[data-tipo="projeto"] { background: rgba(124,110,247,.12); color: var(--accent); border-color: rgba(124,110,247,.3); }
+.deadlineDate { font-size: 11.5px; color: var(--text2); flex-shrink: 0; }
+.deadlinePeso { font-size: 11px; color: var(--text2); flex-shrink: 0; font-weight: 600; }
+.deadlineRemove {
+  background: none; border: 0; padding: 0 2px; cursor: pointer; color: var(--text3);
+  font-size: 16px; line-height: 1; flex-shrink: 0; opacity: 0;
+  transition: opacity .15s; display: flex; align-items: center;
+}
+.deadlineRow:hover .deadlineRemove { opacity: 1; }
+.deadlineRemove:hover { color: #f43f5e; }
 
 .pdfLoading { padding: 28px 16px; text-align: center; font-size: 13px; color: var(--text2); }
 .pdfError {

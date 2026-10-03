@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useThemeStore, ACCENT_COLORS } from '../store/themeStore'
 import type { Accent } from '../store/themeStore'
 import { useAuth } from '../contexts/AuthContext'
@@ -49,6 +50,7 @@ function ThemePreviewLight() {
 }
 
 export default function Settings() {
+  const navigate = useNavigate()
   const { theme, setTheme, accent, setAccent } = useThemeStore()
 
   const [pendingTheme,  setPendingTheme]  = useState(theme)
@@ -141,7 +143,10 @@ export default function Settings() {
             </div>
           </div>
 
-          <button className={s.logoutBtn} onClick={() => { if (confirm('Sair da sua conta?')) signOut() }}>→ Sair da conta</button>
+          <div className={s.accountFooter}>
+            <button className={s.accountSquare} onClick={() => navigate('/settings')} title="Configurações">⚙</button>
+            <button className={s.logoutBtn} onClick={() => { if (confirm('Sair da sua conta?')) signOut() }}>→ Sair da conta</button>
+          </div>
         </section>
 
         {/* Dados */}

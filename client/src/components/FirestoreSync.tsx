@@ -11,6 +11,7 @@ import { useSavedToolsStore } from '../store/savedToolsStore'
 import { useContentItemsStore } from '../store/contentItemsStore'
 import { useTasksStore } from '../store/tasksStore'
 import { useLibraryStore } from '../store/libraryStore'
+import { useDeadlinesStore } from '../store/deadlinesStore'
 import { useRescueStore } from '../store/rescueStore'
 
 const LOCAL: Record<string, () => unknown[]> = {
@@ -29,6 +30,7 @@ const LOCAL: Record<string, () => unknown[]> = {
   contentItems: () => useContentItemsStore.getState().items,
   tasks: () => useTasksStore.getState().tasks,
   designPatterns: () => useLibraryStore.getState().patterns,
+  deadlines: () => useDeadlinesStore.getState().deadlines,
 }
 
 export default function FirestoreSync() {
@@ -142,6 +144,10 @@ export default function FirestoreSync() {
       onSnapshot(
         collection(db, 'users', uid, 'tasks'),
         snap => safe('tasks', snap, d => useTasksStore.getState().hydrate(d))
+      ),
+      onSnapshot(
+        collection(db, 'users', uid, 'deadlines'),
+        snap => safe('deadlines', snap, d => useDeadlinesStore.getState().hydrate(d))
       ),
     ]
 

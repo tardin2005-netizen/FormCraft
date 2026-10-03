@@ -79,7 +79,16 @@
 .accountNameInput:focus { border-color: var(--accent); }
 .accountEmail { font-size: 12px; color: var(--text2); margin-top: 3px; }
 
+.accountFooter { display: flex; align-items: center; gap: 8px; }
+.accountSquare {
+  background: transparent; border: 1px solid var(--border); border-radius: 10px;
+  padding: 10px 14px; font-size: 15px; line-height: 1; cursor: pointer;
+  color: var(--text2); transition: background .15s, border-color .15s;
+}
+.accountSquare:hover { background: var(--surface); border-color: var(--accent); color: var(--accent); }
+
 .logoutBtn {
+  flex: 1;
   background: transparent;
   border: 1px solid var(--border);
   border-radius: 10px;

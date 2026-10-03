@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useHubsStore, type Semester, type Subject, type ClassItem, type HubContent, type Concept } from '../store/hubsStore'
+import { useDeadlinesStore, type DeadlineType, type DeadlineInput } from '../store/deadlinesStore'
 import { useContentItemsStore } from '../store/contentItemsStore'
 import { type WorkspaceModule } from '../store/workspacesStore'
 import { type ModuleType, type ModuleLayout } from '../data/contextTemplates'
@@ -9,7 +10,7 @@ import DeleteBtn from '../modules/DeleteBtn'
 import EmptyState from '../components/EmptyState'
 import RichText from '../components/RichText'
 import { imageToDataUrl } from '../utils/imageData'
-import { CalendarDays, BookOpen, FileText, Lightbulb } from 'lucide-react'
+import { CalendarDays, BookOpen, FileText, Lightbulb, Clock, CheckCircle2, Circle } from 'lucide-react'
 import { uploadUserFile, MAX_UPLOAD_MB, type UploadedFile } from '../utils/fileUpload'
 import { ref as storageRef, getDownloadURL } from 'firebase/storage'
 import { storage } from '../firebase'
@@ -317,6 +318,11 @@ function FaculdadeView({ hubId }: { hubId: string }) {
   const [cptUploading, setCptUploading] = useState(false)
   const cptImgRef = useRef<HTMLInputElement>(null)
 
+  // Prazos & Pendências
+  const { deadlines, add: addDeadline, remove: removeDeadline, toggle: toggleDeadline } = useDeadlinesStore()
+  const [dlModal, setDlModal] = useState(false)
+  const [dlForm, setDlForm] = useState({ titulo: '', tipo: 'prova' as DeadlineType, data: '', peso: 20 })
+
   const [ctxMenu, setCtxMenu] = useState<CtxMenuState | null>(null)
   const closeCtx = useCallback(() => setCtxMenu(null), [])
 
@@ -347,6 +353,9 @@ function FaculdadeView({ hubId }: { hubId: string }) {
     selClass ? x.classId === selClass : (x.subjectId === selSubj && !x.classId)
   )
   const curConcepts  = concepts.filter(x => selClass ? x.classId === selClass : x.subjectId === selSubj)
+  const curDeadlines = deadlines
+    .filter(x => x.materiaId === selSubj)
+    .sort((a, b) => a.data.localeCompare(b.data))
 
   function createSemester() {
     const dup = hubSemesters.find(x => x.year === semForm.year && x.period === semForm.period)
@@ -609,6 +618,32 @@ function FaculdadeView({ hubId }: { hubId: string }) {
                         </div>
                       </div>
                     )}
+
+                    {/* Prazos & Pendências */}
+                    <div className={s.contentSection}>
+                      <div className={s.contentLabel}>
+                        <span>Prazos & Pendências</span>
+                        <button className={s.panelAdd} onClick={() => setDlModal(true)}>+</button>
+                      </div>
+                      {curDeadlines.length === 0 ? (
+                        <button className={s.panelEmptyAdd} onClick={() => setDlModal(true)}>+ Adicionar prazo</button>
+                      ) : (
+                        <div className={s.deadlineList}>
+                          {curDeadlines.map(dl => (
+                            <div key={dl.id} className={`${s.deadlineRow} ${dl.status === 'concluido' ? s.deadlineDone : ''}`}>
+                              <button className={s.deadlineToggle} onClick={() => toggleDeadline(dl.id)} title={dl.status === 'concluido' ? 'Marcar pendente' : 'Marcar concluído'}>
+                                {dl.status === 'concluido' ? <CheckCircle2 size={15} /> : <Circle size={15} />}
+                              </button>
+                              <span className={s.deadlineTitle}>{dl.titulo}</span>
+                              <span className={s.deadlineChip} data-tipo={dl.tipo}>{dl.tipo}</span>
+                              {dl.data && <span className={s.deadlineDate}>{dl.data}</span>}
+                              {dl.peso > 0 && <span className={s.deadlinePeso}>{dl.peso}%</span>}
+                              <button className={s.deadlineRemove} onClick={() => removeDeadline(dl.id)} title="Remover">×</button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </>
                 )
               })()}
@@ -814,6 +849,54 @@ function FaculdadeView({ hubId }: { hubId: string }) {
                   value={ctxForm.content} onChange={e => setCtxForm(f => ({ ...f, content: e.target.value }))} rows={4} />
               </div>
             )}
+          </Modal>
+        )}
+
+        {dlModal && selSubj && (
+          <Modal title="Novo Prazo / Pendência" onClose={() => setDlModal(false)}
+            onSave={() => {
+              if (!dlForm.titulo.trim() || !selSubj) return
+              const sem = semesters.find(x => x.id === selSem)
+              addDeadline({
+                titulo: dlForm.titulo.trim(),
+                tipo: dlForm.tipo,
+                data: dlForm.data,
+                peso: dlForm.peso,
+                materiaId: selSubj,
+                hubId,
+                semesterId: selSem ?? '',
+                status: 'pendente',
+              } as DeadlineInput)
+              setDlModal(false)
+              setDlForm({ titulo: '', tipo: 'prova', data: '', peso: 20 })
+            }}
+            saveLabel="Adicionar"
+            disabled={!dlForm.titulo.trim()}
+          >
+            <div className={s.field}>
+              <label className={s.label}>Título</label>
+              <input className={s.input} placeholder="ex: Prova N1" autoFocus value={dlForm.titulo}
+                onChange={e => setDlForm(f => ({ ...f, titulo: e.target.value }))} />
+            </div>
+            <div className={s.field}>
+              <label className={s.label}>Tipo</label>
+              <div className={s.typeRow}>
+                {(['prova','entrega','projeto','outro'] as DeadlineType[]).map(t => (
+                  <button key={t} className={`${s.typeBtn} ${dlForm.tipo === t ? s.typeActive : ''}`}
+                    onClick={() => setDlForm(f => ({ ...f, tipo: t }))}>{t}</button>
+                ))}
+              </div>
+            </div>
+            <div className={s.field}>
+              <label className={s.label}>Data</label>
+              <input className={s.input} type="date" value={dlForm.data}
+                onChange={e => setDlForm(f => ({ ...f, data: e.target.value }))} />
+            </div>
+            <div className={s.field}>
+              <label className={s.label}>Peso na nota (%)</label>
+              <input className={s.input} type="number" min={0} max={100} value={dlForm.peso}
+                onChange={e => setDlForm(f => ({ ...f, peso: Number(e.target.value) }))} />
+            </div>
           </Modal>
         )}
 
