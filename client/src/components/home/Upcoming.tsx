@@ -2,9 +2,13 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react'
 import { useHubsStore, type ClassItem } from '../../store/hubsStore'
+import { useAuth } from '../../contexts/AuthContext'
+import { useGoogleCalendar } from '../../hooks/useGoogleCalendar'
 import s from './Home.module.css'
 
-const TYPE_LABEL: Record<ClassItem['type'], string> = { aula: 'Aula', trabalho: 'Trabalho', prova: 'Prova', extra: 'Extra' }
+const TYPE_LABEL: Record<ClassItem['type'] | 'gcal', string> = {
+  aula: 'Aula', trabalho: 'Trabalho', prova: 'Prova', extra: 'Extra', gcal: 'Google'
+}
 const WEEKDAYS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
 const MONTHS = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro']
 const WINDOW_DAYS = 14
@@ -22,26 +26,55 @@ function countdown(days: number) {
   return days > 0 ? `em ${days} dias` : `há ${-days} dias`
 }
 
+interface GCalItem {
+  id: string
+  date: string
+  title: string
+  type: 'gcal'
+  source: 'gcal'
+  htmlLink: string
+  startTime?: string
+}
+
+type AnyItem = ClassItem | GCalItem
+
 export default function Upcoming() {
   const navigate = useNavigate()
   const { hubs, subjects, classes } = useHubsStore()
+  const { googleAccessToken, requestCalendarAccess } = useAuth()
+  const { events: gcalEvents, tokenExpired } = useGoogleCalendar(googleAccessToken)
+
   const today = startOfDay(new Date())
   const [month, setMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1))
   const [picked, setPicked] = useState<string | null>(null)
+  const [connectingGcal, setConnectingGcal] = useState(false)
 
   const dated = useMemo(() => classes.filter(c => /^\d{4}-\d{2}-\d{2}$/.test(c.date)), [classes])
+
+  const gcalItems = useMemo<GCalItem[]>(() => gcalEvents.map(ev => ({
+    id: `gcal-${ev.id}`,
+    date: ev.date,
+    title: ev.summary,
+    type: 'gcal' as const,
+    source: 'gcal' as const,
+    htmlLink: ev.htmlLink,
+    startTime: ev.startTime,
+  })), [gcalEvents])
+
+  const allDated = useMemo<AnyItem[]>(() => [...dated, ...gcalItems], [dated, gcalItems])
+
   const byDay = useMemo(() => {
-    const m = new Map<string, ClassItem[]>()
-    for (const c of dated) m.set(c.date, [...(m.get(c.date) ?? []), c])
+    const m = new Map<string, AnyItem[]>()
+    for (const c of allDated) m.set(c.date, [...(m.get(c.date) ?? []), c])
     return m
-  }, [dated])
+  }, [allDated])
 
   const list = useMemo(() => {
     if (picked) return byDay.get(picked) ?? []
-    return dated
+    return allDated
       .filter(c => { const d = dayDiff(parseKey(c.date), today); return d >= 0 && d <= WINDOW_DAYS })
       .sort((a, b) => a.date.localeCompare(b.date) || (a.type === 'prova' ? -1 : 1))
-  }, [picked, byDay, dated, today])
+  }, [picked, byDay, allDated, today])
 
   const nextExam = dated
     .filter(c => (c.type === 'prova' || c.type === 'trabalho') && dayDiff(parseKey(c.date), today) >= 0)
@@ -57,7 +90,18 @@ export default function Upcoming() {
 
   const facHub = hubs.find(h => h.type === 'faculdade') ?? hubs[0]
   const subjectName = (id: string) => subjects.find(x => x.id === id)?.name ?? ''
-  const open = (c: ClassItem) => navigate(`/hub/${c.hubId}?sem=${c.semesterId}&subj=${c.subjectId}&cls=${c.id}`)
+  const openItem = (c: AnyItem) => {
+    if (c.type === 'gcal') { window.open(c.htmlLink, '_blank', 'noopener'); return }
+    navigate(`/hub/${c.hubId}?sem=${c.semesterId}&subj=${c.subjectId}&cls=${c.id}`)
+  }
+
+  async function handleConnectGcal() {
+    setConnectingGcal(true)
+    try { await requestCalendarAccess() } catch { /* dismissed */ } finally { setConnectingGcal(false) }
+  }
+
+  const calKinds = (items: AnyItem[]) =>
+    [...new Set(items.map(i => i.type === 'gcal' ? 'gcal' : i.type))].slice(0, 4)
 
   return (
     <section className={s.upcoming} aria-labelledby="upcoming-title">
@@ -73,7 +117,20 @@ export default function Upcoming() {
               </p>
             )}
           </div>
-          {picked && <button className={s.linkBtn} onClick={() => setPicked(null)}>Ver próximos 14 dias</button>}
+          <div className={s.upHeadRight}>
+            {(!googleAccessToken || tokenExpired) && (
+              <button
+                className={s.gcalConnectBtn}
+                onClick={handleConnectGcal}
+                disabled={connectingGcal}
+                title="Mostrar eventos do Google Agenda aqui"
+              >
+                <img src="https://www.gstatic.com/images/branding/product/1x/calendar_2020q4_16dp.png" width={14} height={14} alt="" />
+                {connectingGcal ? 'Conectando…' : tokenExpired ? 'Reconectar Google Agenda' : 'Conectar Google Agenda'}
+              </button>
+            )}
+            {picked && <button className={s.linkBtn} onClick={() => setPicked(null)}>Ver próximos 14 dias</button>}
+          </div>
         </div>
 
         {list.length === 0 ? (
@@ -90,20 +147,25 @@ export default function Upcoming() {
             {list.map(c => {
               const d = parseKey(c.date)
               const diff = dayDiff(d, today)
+              const isGcal = c.type === 'gcal'
               return (
                 <li key={c.id}>
-                  <button className={s.upItem} onClick={() => open(c)}>
+                  <button className={s.upItem} onClick={() => openItem(c)}>
                     <span className={s.upDate}>
                       <b>{pad(d.getDate())}</b>
                       <span>{MONTHS[d.getMonth()].slice(0, 3)}</span>
                     </span>
                     <span className={s.upInfo}>
                       <span className={s.upItemTitle}>{c.title}</span>
-                      <span className={s.upItemSub}>{subjectName(c.subjectId)}</span>
+                      <span className={s.upItemSub}>
+                        {isGcal
+                          ? ((c as GCalItem).startTime ? `${(c as GCalItem).startTime} · Google Agenda` : 'Google Agenda')
+                          : subjectName((c as ClassItem).subjectId)}
+                      </span>
                     </span>
                     <span className={s.upRight}>
                       <span className={s.typeTag} data-kind={c.type}>{TYPE_LABEL[c.type]}</span>
-                      <span className={`${s.upWhen} ${diff <= 3 && c.type !== 'aula' ? s.upSoon : ''}`}>{countdown(diff)}</span>
+                      <span className={`${s.upWhen} ${diff <= 3 && c.type !== 'aula' && c.type !== 'gcal' ? s.upSoon : ''}`}>{countdown(diff)}</span>
                     </span>
                   </button>
                 </li>
@@ -124,7 +186,7 @@ export default function Upcoming() {
           {visibleCells.map(d => {
             const k = keyOf(d)
             const items = byDay.get(k) ?? []
-            const kinds = [...new Set(items.map(i => i.type))].slice(0, 3)
+            const kinds = calKinds(items)
             const outside = d.getMonth() !== month.getMonth()
             const isToday = k === keyOf(today)
             return (
@@ -144,6 +206,7 @@ export default function Upcoming() {
         </div>
         <div className={s.calLegend}>
           {(['aula', 'prova', 'trabalho'] as const).map(t => <span key={t}><i data-kind={t} />{TYPE_LABEL[t]}</span>)}
+          {gcalItems.length > 0 && <span><i data-kind="gcal" />Google</span>}
         </div>
       </div>
     </section>

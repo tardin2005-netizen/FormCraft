@@ -105,6 +105,16 @@ export const DEFAULT_PATTERNS: DesignPatternInput[] = [
     ondeUsar: 'Dashboards, apps com muita navegação, telas pequenas.',
     tags: ['sidebar', 'menu', 'navegação', 'layout'],
   },
+  {
+    nomePrincipal: 'Resize Handle',
+    sinonimos: ['Alça de redimensionamento', 'Drag to resize', 'Panel resizer', 'Gripper', 'Redimensionador de painel'],
+    categoria: 'Layout',
+    oQueE: 'Elemento visual de interface que permite ao utilizador alterar o tamanho de uma janela, painel, imagem, caixa de texto ou objeto ao clicar e arrastar. Ao passar o cursor sobre ele, o ponteiro muda para uma seta dupla, indicando a direção do redimensionamento disponível.',
+    comoFunciona: 'Cursor indicativo: ao passar o rato sobre o handle, o ponteiro muda para col-resize (↔ horizontal), row-resize (↕ vertical) ou nwse-resize (↗ diagonal), sinalizando que o objeto pode ser redimensionado.\nClicar e arrastar: o utilizador pressiona o botão do rato sobre o handle e arrasta para aumentar ou diminuir o elemento em tempo real.\nTipos comuns:\n• Cantos e bordas — pequenos quadrados, círculos ou pontos ao redor de um objeto selecionado (Word, Photoshop, PowerPoint).\n• Gripper — três linhas diagonais no canto inferior direito de caixas de texto na web ou janelas do sistema operativo.\n• Barras divisórias — linhas que separam painéis (editores de código, apps de email), permitindo dar mais espaço a uma secção e reduzi-lo noutra.\nSnap opcional: muitas implementações têm limiares que colapsam o painel automaticamente se arrastado abaixo de um tamanho mínimo.',
+    ondeUsar: 'Painéis laterais (sidebars), editores de código (VS Code, IDEs), clientes de email, janelas do sistema operativo, caixas de texto em editores como Word e Notion, divisores de layout em dashboards.',
+    tags: ['resize', 'drag', 'painel', 'sidebar', 'layout', 'interação', 'arrastar', 'handle', 'redimensionar', 'col-resize', 'gripper'],
+    exemploCodigo: '/* Handle horizontal — cursor e indicador visual */\n.resize-handle {\n  width: 6px;\n  cursor: col-resize;\n  position: relative;\n}\n.resize-handle::after {\n  content: "";\n  position: absolute;\n  inset: 0; left: 2px; width: 2px;\n  background: var(--accent);\n  opacity: 0;\n  transition: opacity .18s;\n}\n.resize-handle:hover::after { opacity: .55; }\n\n/* Lógica de drag em JS */\nhandle.addEventListener("mousedown", e => {\n  const startX = e.clientX;\n  const startW = panel.offsetWidth;\n  const onMove = ev => panel.style.width = startW + (ev.clientX - startX) + "px";\n  const onUp = () => document.removeEventListener("mousemove", onMove);\n  document.addEventListener("mousemove", onMove);\n  document.addEventListener("mouseup", onUp, { once: true });\n});',
+  },
 ]
 
 export const useLibraryStore = create<LibraryStore>()(
