@@ -6,6 +6,7 @@ export type ModuleType =
   | 'overview'
   | 'fonts' | 'colors' | 'references' | 'animations' | 'prompts'
   | 'ui-inspiration' | 'design-systems' | 'icons' | 'components' | 'design-styles'
+  | 'video-effects'
   | 'disciplines' | 'assignments' | 'exams' | 'materials' | 'calendar'
   | 'tools-db' | 'scripts' | 'troubleshooting' | 'documentation'
   | 'campaigns' | 'personas' | 'social' | 'metrics' | 'copywriting'
@@ -48,6 +49,7 @@ export const CONTEXT_TEMPLATES: ContextTemplate[] = [
       { type: 'design-systems',name: 'Design Systems', icon: '⊡',  description: 'Sistemas de design para referência',   layout: 'list',    suggested: false },
       { type: 'icons',         name: 'Ícones',         icon: '◆',  description: 'Bibliotecas de ícones e recursos',     layout: 'grid',    suggested: false },
       { type: 'animations',    name: 'Animações',      icon: '◎',  description: 'Referências de animação de interface', layout: 'grid',    suggested: true },
+      { type: 'video-effects', name: 'Efeitos de Vídeo', icon: '🎬', description: 'Técnicas cinematográficas e transições', layout: 'grid',  suggested: false },
       { type: 'prompts',       name: 'Prompts',        icon: '◈',  description: 'Prompts estruturados para IA',         layout: 'list',    suggested: true },
       { type: 'components',    name: 'Componentes',    icon: '⊞',  description: 'Componentes e padrões UI',             layout: 'grid',    suggested: false },
       { type: 'design-styles', name: 'Estilos',        icon: '◉',  description: 'Estilos visuais e referências',        layout: 'grid',    suggested: false },
@@ -105,6 +107,7 @@ export const CONTEXT_TEMPLATES: ContextTemplate[] = [
       { type: 'personas',    name: 'Personas',    icon: '◻', description: 'Perfis de público',         layout: 'grid',   suggested: false },
       { type: 'social',      name: 'Social Media',icon: '◎', description: 'Conteúdos por canal',       layout: 'kanban', suggested: false },
       { type: 'metrics',     name: 'Métricas',    icon: '◈', description: 'KPIs e resultados',         layout: 'table',  suggested: false },
+      { type: 'video-effects', name: 'Efeitos de Vídeo', icon: '🎬', description: 'Técnicas e transições cinematográficas', layout: 'grid', suggested: false },
       { type: 'prompts',     name: 'Prompts IA',  icon: '◈', description: 'Prompts de copy e criação', layout: 'list',   suggested: false },
     ],
   },

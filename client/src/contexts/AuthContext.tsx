@@ -10,6 +10,7 @@ import {
 } from 'firebase/auth'
 import type { User } from 'firebase/auth'
 import { auth } from '../firebase'
+import { getStoredGCalToken, storeGCalToken, clearGCalToken } from '../hooks/useGoogleCalendar'
 import { useLinksStore } from '../store/linksStore'
 import { useAreasStore } from '../store/areasStore'
 import { useAreaItemsStore } from '../store/areaItemsStore'
@@ -22,10 +23,14 @@ import { useSavedToolsStore } from '../store/savedToolsStore'
 import { useChatMessagesStore } from '../store/chatMessagesStore'
 import { useLibraryStore } from '../store/libraryStore'
 
+const GCAL_SCOPE = 'https://www.googleapis.com/auth/calendar.readonly'
+
 interface AuthCtx {
   user: User | null
   loading: boolean
+  googleAccessToken: string | null
   signInWithGoogle: () => Promise<void>
+  requestCalendarAccess: () => Promise<void>
   sendEmailLink: (email: string) => Promise<void>
   /** True when the page was opened from a sign-in link but we don't know which e-mail it was sent to. */
   emailLinkNeedsEmail: boolean
@@ -86,6 +91,7 @@ function clearDataStores() {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [googleAccessToken, setGoogleAccessToken] = useState<string | null>(() => getStoredGCalToken())
 
   useEffect(() => {
     return onAuthStateChanged(auth, (u) => {
@@ -120,8 +126,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .catch(() => setEmailLinkNeedsEmail(true))
   }, [])
 
+  function _extractAndStoreToken(result: import('firebase/auth').UserCredential) {
+    const cred = GoogleAuthProvider.credentialFromResult(result)
+    if (cred?.accessToken) {
+      storeGCalToken(cred.accessToken)
+      setGoogleAccessToken(cred.accessToken)
+    }
+  }
+
   async function signInWithGoogle() {
-    await signInWithPopup(auth, new GoogleAuthProvider())
+    const provider = new GoogleAuthProvider()
+    provider.addScope(GCAL_SCOPE)
+    const result = await signInWithPopup(auth, provider)
+    _extractAndStoreToken(result)
+  }
+
+  async function requestCalendarAccess() {
+    const provider = new GoogleAuthProvider()
+    provider.addScope(GCAL_SCOPE)
+    const result = await signInWithPopup(auth, provider)
+    _extractAndStoreToken(result)
   }
 
   async function sendEmailLink(email: string) {
@@ -140,11 +164,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function signOut() {
+    clearGCalToken()
+    setGoogleAccessToken(null)
     await fbSignOut(auth)
   }
 
   return (
-    <Ctx.Provider value={{ user, loading, signInWithGoogle, sendEmailLink, emailLinkNeedsEmail, completeEmailLink, signOut }}>
+    <Ctx.Provider value={{ user, loading, googleAccessToken, signInWithGoogle, requestCalendarAccess, sendEmailLink, emailLinkNeedsEmail, completeEmailLink, signOut }}>
       {children}
     </Ctx.Provider>
   )

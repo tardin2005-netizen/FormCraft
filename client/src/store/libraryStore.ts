@@ -4,7 +4,7 @@ import { normList, normPattern } from './normalize'
 import { auth, db } from '../firebase'
 import { doc, setDoc, deleteDoc, getDoc, arrayUnion } from 'firebase/firestore'
 
-export const PATTERN_CATEGORIES = ['Hover', 'Motion', 'Texto', 'Card', 'Fundo', 'Layout', 'Navegação', 'PWA', 'Outro'] as const
+export const PATTERN_CATEGORIES = ['Hover', 'Motion', 'Texto', 'Card', 'Fundo', 'Layout', 'Navegação', 'Vídeo', 'PWA', 'Outro'] as const
 export type PatternCategory = typeof PATTERN_CATEGORIES[number]
 
 export interface DesignPattern {
@@ -56,6 +56,18 @@ const HAMBURGER: DesignPatternInput = {
   ondeUsar: 'Celular e sites com muitos itens de menu. Para 3 a 5 destinos principais, uma barra inferior (bottom nav) costuma funcionar melhor, porque o hambúrguer esconde as opções; é o que o FormCraft usa no celular, com o botão "Mais".',
   tags: ['hambúrguer', 'menu', 'sidebar', 'drawer', 'mobile', 'navegação', 'responsivo'],
   exemploCodigo: '<button class="burger" aria-label="Abrir menu" aria-expanded="false">☰</button>\n<aside class="drawer">…links…</aside>\n\n.drawer {\n  position: fixed; inset: 0 auto 0 0; width: 280px;\n  transform: translateX(-100%); transition: transform .25s ease;\n}\n.drawer.open { transform: translateX(0); }\n@media (min-width: 768px) {\n  .burger { display: none; }\n  .drawer { position: sticky; transform: none; }\n}',
+}
+
+// Shipped after the first seed, like the hamburger menu: upgradeDefaults() adds it to existing libraries.
+const RESIZE_HANDLE: DesignPatternInput = {
+    nomePrincipal: 'Resize Handle',
+    sinonimos: ['Alça de redimensionamento', 'Drag to resize', 'Panel resizer', 'Gripper', 'Redimensionador de painel'],
+    categoria: 'Layout',
+    oQueE: 'Elemento visual de interface que permite ao utilizador alterar o tamanho de uma janela, painel, imagem, caixa de texto ou objeto ao clicar e arrastar. Ao passar o cursor sobre ele, o ponteiro muda para uma seta dupla, indicando a direção do redimensionamento disponível.',
+    comoFunciona: 'Cursor indicativo: ao passar o rato sobre o handle, o ponteiro muda para col-resize (↔ horizontal), row-resize (↕ vertical) ou nwse-resize (↗ diagonal), sinalizando que o objeto pode ser redimensionado.\nClicar e arrastar: o utilizador pressiona o botão do rato sobre o handle e arrasta para aumentar ou diminuir o elemento em tempo real.\nTipos comuns:\n• Cantos e bordas — pequenos quadrados, círculos ou pontos ao redor de um objeto selecionado (Word, Photoshop, PowerPoint).\n• Gripper — três linhas diagonais no canto inferior direito de caixas de texto na web ou janelas do sistema operativo.\n• Barras divisórias — linhas que separam painéis (editores de código, apps de email), permitindo dar mais espaço a uma secção e reduzi-lo noutra.\nSnap opcional: muitas implementações têm limiares que colapsam o painel automaticamente se arrastado abaixo de um tamanho mínimo.',
+    ondeUsar: 'Painéis laterais (sidebars), editores de código (VS Code, IDEs), clientes de email, janelas do sistema operativo, caixas de texto em editores como Word e Notion, divisores de layout em dashboards.',
+    tags: ['resize', 'drag', 'painel', 'sidebar', 'layout', 'interação', 'arrastar', 'handle', 'redimensionar', 'col-resize', 'gripper'],
+    exemploCodigo: '/* Handle horizontal — cursor e indicador visual */\n.resize-handle {\n  width: 6px;\n  cursor: col-resize;\n  position: relative;\n}\n.resize-handle::after {\n  content: "";\n  position: absolute;\n  inset: 0; left: 2px; width: 2px;\n  background: var(--accent);\n  opacity: 0;\n  transition: opacity .18s;\n}\n.resize-handle:hover::after { opacity: .55; }\n\n/* Lógica de drag em JS */\nhandle.addEventListener("mousedown", e => {\n  const startX = e.clientX;\n  const startW = panel.offsetWidth;\n  const onMove = ev => panel.style.width = startW + (ev.clientX - startX) + "px";\n  const onUp = () => document.removeEventListener("mousemove", onMove);\n  document.addEventListener("mousemove", onMove);\n  document.addEventListener("mouseup", onUp, { once: true });\n});',
 }
 
 const UPGRADE_ID = 'v2-menu-hamburguer'
@@ -130,6 +142,7 @@ export const DEFAULT_PATTERNS: DesignPatternInput[] = [
     tags: ['sidebar', 'menu', 'navegação', 'layout', ...SIDEBAR_EXTRA.tags],
   },
   HAMBURGER,
+  RESIZE_HANDLE,
 ]
 
 let upgrading: string | null = null
@@ -163,7 +176,7 @@ export const useLibraryStore = create<LibraryStore>()(
         if (get().patterns.length > 0) return
         DEFAULT_PATTERNS.forEach(p => get().addPattern(p))
       },
-      // Runs once per account (flag in users/{uid}/meta/library): only adds the hamburger pattern and
+      // Runs once per account (flag in users/{uid}/meta/library): only adds the hamburger and resize-handle patterns and
       // appends text to the existing sidebar one, never removes or overwrites what is there.
       upgradeDefaults: async () => {
         const uid = auth.currentUser?.uid
@@ -174,7 +187,9 @@ export const useLibraryStore = create<LibraryStore>()(
           const meta = await getDoc(metaRef)
           if ((meta.data()?.upgrades ?? []).includes(UPGRADE_ID)) return
           const { patterns } = get()
-          if (!patterns.some(p => sameName(p.nomePrincipal, HAMBURGER.nomePrincipal))) get().addPattern(HAMBURGER)
+          for (const extra of [HAMBURGER, RESIZE_HANDLE]) {
+            if (!patterns.some(p => sameName(p.nomePrincipal, extra.nomePrincipal))) get().addPattern(extra)
+          }
           const sidebar = patterns.find(p => sameName(p.nomePrincipal, 'Collapsed Sidebar'))
           if (sidebar && !sidebar.comoFunciona.includes('Menu hambúrguer')) {
             const { id: _id, criadoEm: _c, ...rest } = sidebar
