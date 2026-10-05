@@ -357,12 +357,14 @@ export default function KeepNotes({ module, workspaceId, items, addItem, updateI
     setComposing(false)
   }
 
-  // Keep saves when you click outside the composer.
+  // Keep saves when you click outside the composer or press Esc (an empty draft just closes).
   useEffect(() => {
     if (!composing) return
     const onDown = (e: MouseEvent) => { if (!composerRef.current?.contains(e.target as Node)) saveComposer() }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && !openId) saveComposer() }
     document.addEventListener('mousedown', onDown)
-    return () => document.removeEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey) }
   })
 
   function patchItem(id: string, n: Note) { updateItem(id, toPatch(n)) }

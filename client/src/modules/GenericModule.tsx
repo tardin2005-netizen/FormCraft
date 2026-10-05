@@ -45,9 +45,9 @@ function NoteModal({
   const light = isLight(form.color)
   const textCss = light ? { color: '#202124' } : {}
 
+  // Always closes; an empty note is simply discarded instead of trapping the user in the modal.
   function save() {
-    if (!form.title.trim() && !form.content.trim()) return
-    onSave(form)
+    if (form.title.trim() || form.content.trim()) onSave(form)
     onClose()
   }
 
