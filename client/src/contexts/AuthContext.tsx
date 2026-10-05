@@ -11,6 +11,7 @@ import {
 import type { User } from 'firebase/auth'
 import { auth } from '../firebase'
 import { getStoredGCalToken, storeGCalToken, clearGCalToken } from '../hooks/useGoogleCalendar'
+import { useDeadlinesStore } from '../store/deadlinesStore'
 import { useLinksStore } from '../store/linksStore'
 import { useAreasStore } from '../store/areasStore'
 import { useAreaItemsStore } from '../store/areaItemsStore'
@@ -86,6 +87,8 @@ function clearDataStores() {
   useHubsStore.getState().hydrateConcepts([])
   useLibraryStore.setState({ patterns: [], seeded: false })
   useChatMessagesStore.setState({ messages: [] })
+  useDeadlinesStore.setState({ deadlines: [] })
+  localStorage.removeItem('formcraft-deadlines')
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
