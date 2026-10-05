@@ -19,6 +19,7 @@ import TroubleshootingModule from '../modules/TroubleshootingModule'
 import ToolsDbModule from '../modules/ToolsDbModule'
 import HubGenericModule from '../modules/GenericModule'
 import ReferenceGallery from '../modules/ReferenceGallery'
+import KeepNotes from '../modules/KeepNotes'
 import s from './HubView.module.css'
 
 /* ─── helpers ─── */
@@ -891,6 +892,7 @@ function HubModuleTab({ hubId, tabKey, type, layout }: { hubId: string; tabKey: 
     case 'scripts':          return <ScriptsModule {...props} />
     case 'troubleshooting':  return <TroubleshootingModule {...props} />
     case 'references':       return <ReferenceGallery {...props} />
+    case 'notes':            return <KeepNotes {...props} />
     default:                 return <HubGenericModule {...props} />
   }
 }

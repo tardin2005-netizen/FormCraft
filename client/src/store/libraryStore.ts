@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { normList, normPattern } from './normalize'
 import { auth, db } from '../firebase'
-import { doc, setDoc, deleteDoc } from 'firebase/firestore'
+import { doc, setDoc, deleteDoc, getDoc, arrayUnion } from 'firebase/firestore'
 
 export const PATTERN_CATEGORIES = ['Hover', 'Motion', 'Texto', 'Card', 'Fundo', 'Layout', 'Navegação', 'PWA', 'Outro'] as const
 export type PatternCategory = typeof PATTERN_CATEGORIES[number]
@@ -30,6 +30,7 @@ interface LibraryStore {
   updatePattern: (id: string, p: DesignPatternInput) => void
   removePattern: (id: string) => void
   seedDefaults: () => void
+  upgradeDefaults: () => Promise<void>
   hydrate: (p: DesignPattern[]) => void
 }
 
@@ -37,6 +38,29 @@ function fs(item: DesignPattern) {
   const uid = auth.currentUser?.uid
   if (uid) setDoc(doc(db, 'users', uid, 'designPatterns', item.id), item).catch(() => {})
 }
+
+// Additions shipped after the first seed. upgradeDefaults() appends them to libraries that already exist.
+const SIDEBAR_EXTRA = {
+  sinonimos: ['Sidebar', 'Barra lateral', 'Menu lateral', 'Side navigation'],
+  comoFunciona: '\nNo celular: a sidebar some da tela e passa a ser aberta pelo Menu hambúrguer (☰), deslizando da lateral por cima do conteúdo (drawer).',
+  ondeUsar: ' No celular, combine com o Menu hambúrguer.',
+  tags: ['hambúrguer', 'drawer', 'responsivo'],
+}
+
+const HAMBURGER: DesignPatternInput = {
+  nomePrincipal: 'Menu hambúrguer',
+  sinonimos: ['Hamburger menu', 'Ícone de três linhas', 'Botão ☰', 'Menu sanduíche', 'Off-canvas menu', 'Drawer'],
+  categoria: 'Navegação',
+  oQueE: 'Botão com três linhas horizontais (☰) que esconde a navegação; ao ser tocado, abre o menu, normalmente uma sidebar que desliza da lateral.',
+  comoFunciona: 'Botão de abrir: o ícone ☰ fica num canto do topo e mostra o menu ao ser clicado.\nPainel deslizante (drawer): a sidebar entra pela lateral, por cima do conteúdo, com um fundo escurecido atrás.\nFechar: tocar fora do painel, apertar Esc ou no X (o ☰ costuma virar X quando aberto).\nAcessibilidade: o botão precisa de aria-label="Abrir menu" e aria-expanded dizendo se está aberto.\nResponsivo: no computador a sidebar fica sempre visível; abaixo de ~768px ela some e o hambúrguer assume.',
+  ondeUsar: 'Celular e sites com muitos itens de menu. Para 3 a 5 destinos principais, uma barra inferior (bottom nav) costuma funcionar melhor, porque o hambúrguer esconde as opções; é o que o FormCraft usa no celular, com o botão "Mais".',
+  tags: ['hambúrguer', 'menu', 'sidebar', 'drawer', 'mobile', 'navegação', 'responsivo'],
+  exemploCodigo: '<button class="burger" aria-label="Abrir menu" aria-expanded="false">☰</button>\n<aside class="drawer">…links…</aside>\n\n.drawer {\n  position: fixed; inset: 0 auto 0 0; width: 280px;\n  transform: translateX(-100%); transition: transform .25s ease;\n}\n.drawer.open { transform: translateX(0); }\n@media (min-width: 768px) {\n  .burger { display: none; }\n  .drawer { position: sticky; transform: none; }\n}',
+}
+
+const UPGRADE_ID = 'v2-menu-hamburguer'
+const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase()
+const addMissing = (list: string[], extra: string[]) => [...list, ...extra.filter(x => !list.some(y => sameName(x, y)))]
 
 export const DEFAULT_PATTERNS: DesignPatternInput[] = [
   {
@@ -98,14 +122,17 @@ export const DEFAULT_PATTERNS: DesignPatternInput[] = [
   },
   {
     nomePrincipal: 'Collapsed Sidebar',
-    sinonimos: ['Barra lateral colapsada', 'Sidebar recolhida', 'Mini sidebar'],
+    sinonimos: ['Barra lateral colapsada', 'Sidebar recolhida', 'Mini sidebar', ...SIDEBAR_EXTRA.sinonimos],
     categoria: 'Navegação',
     oQueE: 'Menu vertical reduzido ou recolhido na borda da tela para liberar espaço para o conteúdo principal.',
-    comoFunciona: 'A sidebar alterna entre largura cheia (ícone + texto) e compacta (só ícones), geralmente com tooltip no hover.',
-    ondeUsar: 'Dashboards, apps com muita navegação, telas pequenas.',
-    tags: ['sidebar', 'menu', 'navegação', 'layout'],
+    comoFunciona: 'A sidebar alterna entre largura cheia (ícone + texto) e compacta (só ícones), geralmente com tooltip no hover.' + SIDEBAR_EXTRA.comoFunciona,
+    ondeUsar: 'Dashboards, apps com muita navegação, telas pequenas.' + SIDEBAR_EXTRA.ondeUsar,
+    tags: ['sidebar', 'menu', 'navegação', 'layout', ...SIDEBAR_EXTRA.tags],
   },
+  HAMBURGER,
 ]
+
+let upgrading: string | null = null
 
 export const useLibraryStore = create<LibraryStore>()(
   persist(
@@ -135,6 +162,32 @@ export const useLibraryStore = create<LibraryStore>()(
         set({ seeded: true })
         if (get().patterns.length > 0) return
         DEFAULT_PATTERNS.forEach(p => get().addPattern(p))
+      },
+      // Runs once per account (flag in users/{uid}/meta/library): only adds the hamburger pattern and
+      // appends text to the existing sidebar one, never removes or overwrites what is there.
+      upgradeDefaults: async () => {
+        const uid = auth.currentUser?.uid
+        if (!uid || upgrading === uid) return
+        upgrading = uid
+        try {
+          const metaRef = doc(db, 'users', uid, 'meta', 'library')
+          const meta = await getDoc(metaRef)
+          if ((meta.data()?.upgrades ?? []).includes(UPGRADE_ID)) return
+          const { patterns } = get()
+          if (!patterns.some(p => sameName(p.nomePrincipal, HAMBURGER.nomePrincipal))) get().addPattern(HAMBURGER)
+          const sidebar = patterns.find(p => sameName(p.nomePrincipal, 'Collapsed Sidebar'))
+          if (sidebar && !sidebar.comoFunciona.includes('Menu hambúrguer')) {
+            const { id: _id, criadoEm: _c, ...rest } = sidebar
+            get().updatePattern(sidebar.id, {
+              ...rest,
+              sinonimos: addMissing(sidebar.sinonimos, SIDEBAR_EXTRA.sinonimos),
+              tags: addMissing(sidebar.tags, SIDEBAR_EXTRA.tags),
+              comoFunciona: sidebar.comoFunciona + SIDEBAR_EXTRA.comoFunciona,
+              ondeUsar: sidebar.ondeUsar + SIDEBAR_EXTRA.ondeUsar,
+            })
+          }
+          await setDoc(metaRef, { upgrades: arrayUnion(UPGRADE_ID) }, { merge: true })
+        } catch { upgrading = null }
       },
       hydrate: (patterns) => set({ patterns: normList(patterns, normPattern) as any, seeded: true }),
     }),

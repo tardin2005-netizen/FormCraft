@@ -123,7 +123,11 @@ export default function FirestoreSync() {
           const lib = useLibraryStore.getState()
           const docs = snap.docs.map(d => ({ ...d.data(), id: d.id }) as any)
           detectLocalOnly('designPatterns', snap, docs)
-          if (docs.length > 0) return lib.hydrate(docs)
+          if (docs.length > 0) {
+            lib.hydrate(docs)
+            if (!snap.metadata.fromCache) lib.upgradeDefaults()
+            return
+          }
           if (snap.metadata.fromCache) return
           if (lib.seeded) lib.hydrate([])
           else lib.seedDefaults()

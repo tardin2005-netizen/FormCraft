@@ -629,3 +629,8 @@
   .searchWrap { flex: 1; min-width: 0; }
   .searchWrap input { min-width: 0; width: 100%; }
 }
+
+.cardOrigin {
+  display: inline-block; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom;
+  padding: 1px 7px; border-radius: 99px; border: 1px solid var(--border); font-size: 10.5px; color: var(--text2);
+}
