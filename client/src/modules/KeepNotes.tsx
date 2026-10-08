@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Pin, PinOff, Palette, Image as ImageIcon, ListChecks, Type, Trash2, Tag, X, Search } from 'lucide-react'
+import { Pin, PinOff, Palette, Image as ImageIcon, ListChecks, Type, Trash2, Tag, X, Search, Plus, ArrowLeft, FileText } from 'lucide-react'
 import type { ModuleProps } from './moduleProps'
 import type { ContentItem } from '../store/contentItemsStore'
 import { useThemeStore } from '../store/themeStore'
@@ -256,79 +256,51 @@ function NoteEditor({ note, onChange, autoFocus, onDelete, footerRight }: {
   )
 }
 
-/* ── Card in the grid ── */
-function NoteCard({ item, onOpen, onPatch, onDelete }: {
-  item: ContentItem
-  onOpen: () => void
-  onPatch: (n: Note) => void
-  onDelete: () => void
-}) {
+function fmtDate(iso: string) {
+  const d = new Date(iso)
+  if (isNaN(+d)) return ''
+  if (d.toDateString() === new Date().toDateString()) return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  return d.toLocaleDateString('pt-BR')
+}
+
+function summarize(n: Note): { title: string; snippet: string } {
+  const lines = n.checklist
+    ? n.checklist.filter(i => i.text.trim()).map(i => i.text.trim())
+    : n.content.split('\n').map(l => l.trim()).filter(Boolean)
+  if (n.title.trim()) return { title: n.title.trim(), snippet: lines[0] ?? '' }
+  return { title: lines[0] ?? 'Nova nota', snippet: lines[1] ?? '' }
+}
+
+/* ── Row in the list ── */
+function NoteRow({ item, active, onSelect }: { item: ContentItem; active: boolean; onSelect: () => void }) {
   const note = readNote(item)
   const bg = useNoteColor(note.color)
-  const [paletteOpen, setPaletteOpen] = useState(false)
-  const open = (note.checklist ?? []).filter(i => !i.done)
-  const doneCount = (note.checklist ?? []).length - open.length
-
+  const { title, snippet } = summarize(note)
   return (
-    <article
-      className={`${s.card} ${bg ? s.colored : ''}`}
-      style={bg ? { background: bg, borderColor: bg } : undefined}
-      onClick={onOpen}
-      tabIndex={0}
-      onKeyDown={e => { if (e.key === 'Enter') onOpen() }}
-      aria-label={note.title || 'Nota'}
-    >
-      <button
-        className={`${s.pin} ${note.pinned ? s.pinOn : ''}`}
-        onClick={e => { e.stopPropagation(); onPatch({ ...note, pinned: !note.pinned }) }}
-        title={note.pinned ? 'Desafixar' : 'Fixar no topo'}
-        aria-label={note.pinned ? 'Desafixar' : 'Fixar no topo'}
-      >{note.pinned ? <PinOff size={15} /> : <Pin size={15} />}</button>
-
-      {note.image && <img className={s.cardImg} src={note.image} alt="" />}
-      {note.title && <h3 className={s.cardTitle}>{note.title}</h3>}
-      {note.checklist ? (
-        <ul className={s.cardList}>
-          {open.slice(0, 8).map(i => (
-            <li key={i.id}>
-              <input type="checkbox" checked={false} onClick={e => e.stopPropagation()}
-                onChange={() => onPatch({ ...note, checklist: note.checklist!.map(x => x.id === i.id ? { ...x, done: true } : x) })}
-                aria-label={`Concluir ${i.text}`} />
-              <span>{i.text}</span>
-            </li>
-          ))}
-          {open.length > 8 && <li className={s.more}>+ {open.length - 8} itens</li>}
-          {doneCount > 0 && <li className={s.more}>+ {doneCount} {doneCount === 1 ? 'concluído' : 'concluídos'}</li>}
-        </ul>
-      ) : note.content && <p className={s.cardBody}>{note.content}</p>}
-      {!note.title && !note.content && !note.checklist && !note.image && <p className={s.cardEmpty}>Nota vazia</p>}
-
-      {note.labels.length > 0 && (
-        <div className={s.cardLabels}>{note.labels.map(l => <span key={l} className={s.label}>{l}</span>)}</div>
-      )}
-
-      <div className={s.cardTools} onClick={e => e.stopPropagation()}>
-        <div className={s.paletteWrap}>
-          <button className={s.iconBtn} onClick={() => setPaletteOpen(v => !v)} title="Cor" aria-label="Cor"><Palette size={15} /></button>
-          {paletteOpen && <ColorPicker value={note.color} onPick={v => { onPatch({ ...note, color: v }); setPaletteOpen(false) }} />}
-        </div>
-        <button className={s.iconBtn} onClick={onDelete} title="Apagar nota" aria-label="Apagar nota"><Trash2 size={15} /></button>
-      </div>
-    </article>
+    <button type="button" className={`${s.row} ${active ? s.rowOn : ''}`} onClick={onSelect} aria-current={active ? 'true' : undefined}>
+      <span className={s.stripe} style={bg ? { background: bg } : undefined} />
+      <span className={s.rowText}>
+        <span className={s.rowTitle}>{title}</span>
+        <span className={s.rowSub}>
+          <span className={s.rowDate}>{fmtDate(item.updatedAt || item.createdAt)}</span>
+          <span className={s.rowSnip}>{snippet || (note.image ? 'Imagem' : 'Sem texto adicional')}</span>
+        </span>
+        {note.labels.length > 0 && (
+          <span className={s.rowLabels}>{note.labels.slice(0, 3).map(l => <span key={l} className={s.label}>{l}</span>)}</span>
+        )}
+      </span>
+      {note.image && <img className={s.thumb} src={note.image} alt="" />}
+    </button>
   )
 }
 
 /* ── Module ── */
 export default function KeepNotes({ module, workspaceId, items, addItem, updateItem, removeItem }: ModuleProps) {
-  const EMPTY: Note = { title: '', content: '', color: '', labels: [], pinned: false }
-  const [composing, setComposing] = useState(false)
-  const [draft, setDraft] = useState<Note>(EMPTY)
-  const [openId, setOpenId] = useState<string | null>(null)
-  const [openDraft, setOpenDraft] = useState<Note | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [draft, setDraft] = useState<Note | null>(null)
   const [query, setQuery] = useState('')
   const [label, setLabel] = useState<string | null>(null)
   const [undo, setUndo] = useState<ContentItem | null>(null)
-  const composerRef = useRef<HTMLDivElement>(null)
   const saveTimer = useRef<number | null>(null)
 
   const labels = useMemo(() => [...new Set(items.flatMap(i => readNote(i).labels))].sort((a, b) => a.localeCompare(b)), [items])
@@ -338,55 +310,60 @@ export default function KeepNotes({ module, workspaceId, items, addItem, updateI
     return items
       .filter(i => {
         const n = readNote(i)
+        if (i.id === selectedId) return true
         if (label && !n.labels.includes(label)) return false
         if (!tokens.length) return true
         const hay = normalize([n.title, n.content, ...(n.checklist ?? []).map(c => c.text), ...n.labels].join(' '))
         return tokens.every(t => hay.includes(t))
       })
       .sort((a, b) => (b.updatedAt || b.createdAt).localeCompare(a.updatedAt || a.createdAt))
-  }, [items, query, label])
+  }, [items, query, label, selectedId])
   const pinned = visible.filter(i => i.starred)
   const others = visible.filter(i => !i.starred)
 
-  function saveComposer() {
-    if (!isEmpty(draft)) {
-      const p = toPatch({ ...draft, checklist: draft.checklist?.filter(i => i.text.trim()) })
-      addItem({ workspaceId, moduleId: module.id, contentType: 'notes', data: p.data!, tags: p.tags!, starred: !!p.starred })
-    }
-    setDraft(EMPTY)
-    setComposing(false)
-  }
-
-  // Keep saves when you click outside the composer or press Esc (an empty draft just closes).
-  useEffect(() => {
-    if (!composing) return
-    const onDown = (e: MouseEvent) => { if (!composerRef.current?.contains(e.target as Node)) saveComposer() }
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && !openId) saveComposer() }
-    document.addEventListener('mousedown', onDown)
-    document.addEventListener('keydown', onKey)
-    return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey) }
-  })
-
   function patchItem(id: string, n: Note) { updateItem(id, toPatch(n)) }
 
-  function openNote(item: ContentItem) { setOpenId(item.id); setOpenDraft(readNote(item)) }
-  function changeOpen(n: Note) {
-    setOpenDraft(n)
+  function flush() {
     if (saveTimer.current) window.clearTimeout(saveTimer.current)
-    const id = openId
-    saveTimer.current = window.setTimeout(() => { if (id) patchItem(id, n) }, 350)
+    saveTimer.current = null
+    if (!selectedId || !draft) return
+    if (isEmpty(draft)) removeItem(selectedId)
+    else patchItem(selectedId, { ...draft, checklist: draft.checklist?.filter(i => i.text.trim()) })
   }
-  function closeOpen() {
+
+  const latest = useRef({ flush })
+  latest.current = { flush }
+  useEffect(() => () => latest.current.flush(), [])
+
+  function select(item: ContentItem | null) {
+    if (item && item.id === selectedId) return
+    flush()
+    setSelectedId(item?.id ?? null)
+    setDraft(item ? readNote(item) : null)
+  }
+
+  function newNote() {
+    flush()
+    const it = addItem({
+      workspaceId, moduleId: module.id, contentType: 'notes',
+      data: { title: '', content: '', color: '', tags: label ?? '' },
+      tags: label ? [label] : [], starred: false,
+    })
+    setSelectedId(it.id)
+    setDraft(readNote(it))
+  }
+
+  function changeDraft(n: Note) {
+    setDraft(n)
     if (saveTimer.current) window.clearTimeout(saveTimer.current)
-    if (openId && openDraft) {
-      if (isEmpty(openDraft)) removeItem(openId)
-      else patchItem(openId, { ...openDraft, checklist: openDraft.checklist?.filter(i => i.text.trim()) })
-    }
-    setOpenId(null); setOpenDraft(null)
+    const id = selectedId
+    saveTimer.current = window.setTimeout(() => { if (id) patchItem(id, n) }, 350)
   }
 
   function deleteNote(item: ContentItem) {
-    if (openId === item.id) { if (saveTimer.current) window.clearTimeout(saveTimer.current); setOpenId(null); setOpenDraft(null) }
+    if (saveTimer.current) window.clearTimeout(saveTimer.current)
+    saveTimer.current = null
+    setSelectedId(null); setDraft(null)
     removeItem(item.id)
     setUndo(item)
   }
@@ -397,91 +374,83 @@ export default function KeepNotes({ module, workspaceId, items, addItem, updateI
   }, [undo])
   function restore() {
     if (!undo) return
-    addItem({ workspaceId: undo.workspaceId, moduleId: undo.moduleId, contentType: undo.contentType, data: undo.data, tags: undo.tags, starred: undo.starred })
+    const it = addItem({ workspaceId: undo.workspaceId, moduleId: undo.moduleId, contentType: undo.contentType, data: undo.data, tags: undo.tags, starred: undo.starred })
     setUndo(null)
+    setSelectedId(it.id); setDraft(readNote(it))
   }
 
-  const openItem = openId ? items.find(i => i.id === openId) : null
-  const openBg = useNoteColor(openDraft?.color ?? '')
-  const draftBg = useNoteColor(draft.color)
+  const hasNotes = items.length > 0
+  useEffect(() => {
+    if (selectedId || !hasNotes) return
+    if (window.matchMedia('(min-width: 769px)').matches) {
+      const first = [...items].sort((a, b) => (b.updatedAt || b.createdAt).localeCompare(a.updatedAt || a.createdAt))
+        .sort((a, b) => Number(!!b.starred) - Number(!!a.starred))[0]
+      if (first) { setSelectedId(first.id); setDraft(readNote(first)) }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasNotes])
 
-  const grid = (list: ContentItem[]) => (
-    <div className={s.masonry}>
-      {list.map(i => (
-        <NoteCard key={i.id} item={i} onOpen={() => openNote(i)} onPatch={n => patchItem(i.id, n)} onDelete={() => deleteNote(i)} />
-      ))}
-    </div>
-  )
+  const openItem = selectedId ? items.find(i => i.id === selectedId) : null
+  const paneBg = useNoteColor(draft?.color ?? '')
+  const list = (arr: ContentItem[]) => arr.map(i => <NoteRow key={i.id} item={i} active={i.id === selectedId} onSelect={() => select(i)} />)
 
   return (
-    <div className={s.page}>
-      <div
-        ref={composerRef}
-        className={`${s.composer} ${composing ? s.composerOpen : ''}`}
-        style={composing && draftBg ? { background: draftBg, borderColor: draftBg } : undefined}
-      >
-        {composing ? (
-          <NoteEditor
-            note={draft}
-            onChange={setDraft}
-            autoFocus={draft.checklist ? undefined : 'body'}
-            footerRight={<button type="button" className={s.closeBtn} onClick={saveComposer}>Fechar</button>}
-          />
-        ) : (
-          <div className={s.composerIdle}>
-            <button className={s.composerHint} onClick={() => setComposing(true)}>Criar uma nota…</button>
-            <button className={s.iconBtn} onClick={() => { setDraft({ ...EMPTY, checklist: [{ id: newId(), text: '', done: false }] }); setComposing(true) }} title="Nova lista" aria-label="Nova lista"><ListChecks size={18} /></button>
-          </div>
-        )}
+    <div className={`${s.page} ${openItem ? s.hasOpen : ''}`}>
+      <div className={s.top}>
+        <label className={s.search}>
+          <Search size={18} aria-hidden="true" />
+          <input id="keep-search" placeholder="Buscar nas notas" value={query} onChange={e => setQuery(e.target.value)} />
+          {query && <button type="button" className={s.clear} onClick={() => setQuery('')} aria-label="Limpar busca"><X size={16} /></button>}
+        </label>
+        <button type="button" className={s.newBtn} onClick={newNote}><Plus size={16} aria-hidden="true" /> Nova nota</button>
       </div>
+      {labels.length > 0 && (
+        <div className={s.labelFilter}>
+          <button className={`${s.chip} ${!label ? s.chipOn : ''}`} onClick={() => setLabel(null)}>Todas</button>
+          {labels.map(l => <button key={l} className={`${s.chip} ${label === l ? s.chipOn : ''}`} onClick={() => setLabel(label === l ? null : l)}>{l}</button>)}
+        </div>
+      )}
 
-      {(items.length > 0) && (
-        <div className={s.filters}>
-          <label className={s.search}>
-            <Search size={14} aria-hidden="true" />
-            <input id="keep-search" placeholder="Buscar nas notas" value={query} onChange={e => setQuery(e.target.value)} />
-          </label>
-          {labels.length > 0 && (
-            <div className={s.labelFilter}>
-              <button className={`${s.chip} ${!label ? s.chipOn : ''}`} onClick={() => setLabel(null)}>Todas</button>
-              {labels.map(l => <button key={l} className={`${s.chip} ${label === l ? s.chipOn : ''}`} onClick={() => setLabel(label === l ? null : l)}>{l}</button>)}
+      <div className={s.split}>
+        <aside className={s.list} aria-label="Lista de notas">
+          {!hasNotes ? (
+            <div className={s.empty}>
+              <p className={s.emptyTitle}>Suas notas aparecem aqui</p>
+              <p>Clique em "Nova nota" para começar.</p>
+            </div>
+          ) : visible.length === 0 ? (
+            <p className={s.noMatch}>Nenhuma nota com esse filtro.</p>
+          ) : (
+            <>
+              <div className={s.count}>{visible.length} {visible.length === 1 ? 'nota' : 'notas'}</div>
+              {pinned.length > 0 && <><h2 className={s.section}><Pin size={12} aria-hidden="true" /> Fixadas</h2>{list(pinned)}</>}
+              {others.length > 0 && <>{pinned.length > 0 && <h2 className={s.section}>Notas</h2>}{list(others)}</>}
+            </>
+          )}
+        </aside>
+
+        <section
+          className={s.pane}
+          style={paneBg ? { background: paneBg } : undefined}
+          aria-label="Editor de nota"
+        >
+          {openItem && draft ? (
+            <NoteEditor
+              key={openItem.id}
+              note={draft}
+              onChange={changeDraft}
+              autoFocus={isEmpty(draft) ? 'title' : undefined}
+              onDelete={() => deleteNote(openItem)}
+              footerRight={<button type="button" className={s.backBtn} onClick={() => select(null)}><ArrowLeft size={14} aria-hidden="true" /> Notas</button>}
+            />
+          ) : (
+            <div className={s.placeholder}>
+              <FileText size={32} aria-hidden="true" />
+              <p>Selecione uma nota para ver ou crie uma nova.</p>
             </div>
           )}
-        </div>
-      )}
-
-      {items.length === 0 ? (
-        <div className={s.empty}>
-          <p className={s.emptyTitle}>Suas notas aparecem aqui</p>
-          <p>Clique em "Criar uma nota…" para escrever, ou no ícone de lista para uma lista de tarefas.</p>
-        </div>
-      ) : visible.length === 0 ? (
-        <p className={s.noMatch}>Nenhuma nota com esse filtro.</p>
-      ) : (
-        <>
-          {pinned.length > 0 && <><h2 className={s.section}>Fixadas</h2>{grid(pinned)}</>}
-          {others.length > 0 && <>{pinned.length > 0 && <h2 className={s.section}>Outras</h2>}{grid(others)}</>}
-        </>
-      )}
-
-      {openItem && openDraft && (
-        <div className={s.backdrop} onClick={closeOpen}>
-          <div
-            className={s.modal}
-            style={openBg ? { background: openBg, borderColor: openBg } : undefined}
-            onClick={e => e.stopPropagation()}
-            role="dialog"
-            aria-label={openDraft.title || 'Nota'}
-          >
-            <NoteEditor
-              note={openDraft}
-              onChange={changeOpen}
-              onDelete={() => deleteNote(openItem)}
-              footerRight={<button type="button" className={s.closeBtn} onClick={closeOpen}>Fechar</button>}
-            />
-          </div>
-        </div>
-      )}
+        </section>
+      </div>
 
       {undo && (
         <div className={s.toast} role="status">
