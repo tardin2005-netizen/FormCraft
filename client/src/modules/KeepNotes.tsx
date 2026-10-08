@@ -302,6 +302,7 @@ export default function KeepNotes({ module, workspaceId, items, addItem, updateI
   const [label, setLabel] = useState<string | null>(null)
   const [undo, setUndo] = useState<ContentItem | null>(null)
   const saveTimer = useRef<number | null>(null)
+  const dirty = useRef(false)
 
   const labels = useMemo(() => [...new Set(items.flatMap(i => readNote(i).labels))].sort((a, b) => a.localeCompare(b)), [items])
 
@@ -316,7 +317,7 @@ export default function KeepNotes({ module, workspaceId, items, addItem, updateI
         const hay = normalize([n.title, n.content, ...(n.checklist ?? []).map(c => c.text), ...n.labels].join(' '))
         return tokens.every(t => hay.includes(t))
       })
-      .sort((a, b) => (b.updatedAt || b.createdAt).localeCompare(a.updatedAt || a.createdAt))
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
   }, [items, query, label, selectedId])
   const pinned = visible.filter(i => i.starred)
   const others = visible.filter(i => !i.starred)
@@ -327,6 +328,8 @@ export default function KeepNotes({ module, workspaceId, items, addItem, updateI
     if (saveTimer.current) window.clearTimeout(saveTimer.current)
     saveTimer.current = null
     if (!selectedId || !draft) return
+    if (!dirty.current && !isEmpty(draft)) return
+    dirty.current = false
     if (isEmpty(draft)) removeItem(selectedId)
     else patchItem(selectedId, { ...draft, checklist: draft.checklist?.filter(i => i.text.trim()) })
   }
@@ -354,10 +357,11 @@ export default function KeepNotes({ module, workspaceId, items, addItem, updateI
   }
 
   function changeDraft(n: Note) {
+    dirty.current = true
     setDraft(n)
     if (saveTimer.current) window.clearTimeout(saveTimer.current)
     const id = selectedId
-    saveTimer.current = window.setTimeout(() => { if (id) patchItem(id, n) }, 350)
+    saveTimer.current = window.setTimeout(() => { if (id) { patchItem(id, n); dirty.current = false } }, 350)
   }
 
   function deleteNote(item: ContentItem) {
@@ -383,7 +387,7 @@ export default function KeepNotes({ module, workspaceId, items, addItem, updateI
   useEffect(() => {
     if (selectedId || !hasNotes) return
     if (window.matchMedia('(min-width: 769px)').matches) {
-      const first = [...items].sort((a, b) => (b.updatedAt || b.createdAt).localeCompare(a.updatedAt || a.createdAt))
+      const first = [...items].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
         .sort((a, b) => Number(!!b.starred) - Number(!!a.starred))[0]
       if (first) { setSelectedId(first.id); setDraft(readNote(first)) }
     }
