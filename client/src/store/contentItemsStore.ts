@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import { normList, normContentItem } from './normalize'
 import { auth, db } from '../firebase'
 import { doc, setDoc, deleteDoc } from 'firebase/firestore'
@@ -76,6 +76,14 @@ export const useContentItemsStore = create<ContentItemsStore>()(
 
       hydrate: (items) => set({ items: normList(items, normContentItem) as any }),
     }),
-    { name: 'formcraft-content-items', merge: (p: any, c) => ({ ...c, ...p, items: normList(p?.items, normContentItem) as any }) }
+    {
+      name: 'formcraft-content-items',
+      // Quota overflow (e.g. notes with images) must not crash the UI; Firestore is the source of truth.
+      storage: createJSONStorage(() => ({
+        getItem: k => localStorage.getItem(k),
+        setItem: (k, v) => { try { localStorage.setItem(k, v) } catch { /* quota exceeded */ } },
+        removeItem: k => localStorage.removeItem(k),
+      })),
+      merge: (p: any, c) => ({ ...c, ...p, items: normList(p?.items, normContentItem) as any }) }
   )
 )
