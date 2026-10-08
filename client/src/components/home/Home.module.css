@@ -4,6 +4,7 @@
 :is(.searchHero, .upcoming) [data-kind="trabalho"] { --kind: #f59e0b; }
 :is(.searchHero, .upcoming) [data-kind="extra"]    { --kind: #3ecf8e; }
 :is(.searchHero, .upcoming) [data-kind="gcal"]     { --kind: #1a73e8; }
+:is(.searchHero, .upcoming) [data-kind="task"]     { --kind: #a855f7; }
 
 .mark { background: var(--accent-muted); color: var(--text); border-radius: 3px; padding: 0 2px; }
 .linkBtn { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; font-size: 13px; cursor: pointer; }

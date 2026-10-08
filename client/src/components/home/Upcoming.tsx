@@ -2,12 +2,13 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react'
 import { useHubsStore, type ClassItem } from '../../store/hubsStore'
+import { useTasksStore } from '../../store/tasksStore'
 import { useAuth } from '../../contexts/AuthContext'
 import { useGoogleCalendar } from '../../hooks/useGoogleCalendar'
 import s from './Home.module.css'
 
-const TYPE_LABEL: Record<ClassItem['type'] | 'gcal', string> = {
-  aula: 'Aula', trabalho: 'Trabalho', prova: 'Prova', extra: 'Extra', gcal: 'Google'
+const TYPE_LABEL: Record<ClassItem['type'] | 'gcal' | 'task', string> = {
+  aula: 'Aula', trabalho: 'Trabalho', prova: 'Prova', extra: 'Extra', gcal: 'Google', task: 'Tarefa'
 }
 const WEEKDAYS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
 const MONTHS = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro']
@@ -36,11 +37,21 @@ interface GCalItem {
   startTime?: string
 }
 
-type AnyItem = ClassItem | GCalItem
+interface TaskItem {
+  id: string
+  date: string
+  title: string
+  type: 'task'
+  source: 'task'
+  urgency: string
+}
+
+type AnyItem = ClassItem | GCalItem | TaskItem
 
 export default function Upcoming() {
   const navigate = useNavigate()
   const { hubs, subjects, classes } = useHubsStore()
+  const { tasks } = useTasksStore()
   const { googleAccessToken, requestCalendarAccess } = useAuth()
   const { events: gcalEvents, tokenExpired } = useGoogleCalendar(googleAccessToken)
 
@@ -61,7 +72,21 @@ export default function Upcoming() {
     startTime: ev.startTime,
   })), [gcalEvents])
 
-  const allDated = useMemo<AnyItem[]>(() => [...dated, ...gcalItems], [dated, gcalItems])
+  const taskItems = useMemo<TaskItem[]>(() =>
+    tasks
+      .filter(t => t.status !== 'done' && t.dueDate && /^\d{4}-\d{2}-\d{2}$/.test(t.dueDate))
+      .map(t => ({
+        id: `task-${t.id}`,
+        date: t.dueDate!,
+        title: t.title,
+        type: 'task' as const,
+        source: 'task' as const,
+        urgency: t.urgency,
+      })),
+    [tasks]
+  )
+
+  const allDated = useMemo<AnyItem[]>(() => [...dated, ...gcalItems, ...taskItems], [dated, gcalItems, taskItems])
 
   const byDay = useMemo(() => {
     const m = new Map<string, AnyItem[]>()
@@ -91,8 +116,9 @@ export default function Upcoming() {
   const facHub = hubs.find(h => h.type === 'faculdade') ?? hubs[0]
   const subjectName = (id: string) => subjects.find(x => x.id === id)?.name ?? ''
   const openItem = (c: AnyItem) => {
-    if (c.type === 'gcal') { window.open(c.htmlLink, '_blank', 'noopener'); return }
-    navigate(`/hub/${c.hubId}?sem=${c.semesterId}&subj=${c.subjectId}&cls=${c.id}`)
+    if (c.type === 'gcal') { window.open((c as GCalItem).htmlLink, '_blank', 'noopener'); return }
+    if (c.type === 'task') { navigate('/tarefas'); return }
+    navigate(`/hub/${(c as ClassItem).hubId}?sem=${(c as ClassItem).semesterId}&subj=${(c as ClassItem).subjectId}&cls=${c.id}`)
   }
 
   async function handleConnectGcal() {
@@ -101,7 +127,7 @@ export default function Upcoming() {
   }
 
   const calKinds = (items: AnyItem[]) =>
-    [...new Set(items.map(i => i.type === 'gcal' ? 'gcal' : i.type))].slice(0, 4)
+    [...new Set(items.map(i => i.type))].slice(0, 4)
 
   return (
     <section className={s.upcoming} aria-labelledby="upcoming-title">
@@ -137,8 +163,8 @@ export default function Upcoming() {
           <div className={s.upEmpty}>
             <CalendarDays size={20} aria-hidden="true" />
             <div>
-              <p><b>{picked ? 'Nada marcado neste dia.' : 'Nenhuma aula, prova ou entrega nos próximos 14 dias.'}</b></p>
-              <p>As datas vêm das aulas que você cadastra no hub. Crie uma aula, prova ou trabalho com data para ela aparecer aqui.</p>
+              <p><b>{picked ? 'Nada marcado neste dia.' : 'Nenhuma aula, prova, entrega ou tarefa nos próximos 14 dias.'}</b></p>
+              <p>As datas vêm das aulas cadastradas no hub e das tarefas com prazo definido.</p>
               {facHub && !picked && <button className={s.ghostBtn} onClick={() => navigate(`/hub/${facHub.id}`)}>Abrir {facHub.name}</button>}
             </div>
           </div>
@@ -148,6 +174,7 @@ export default function Upcoming() {
               const d = parseKey(c.date)
               const diff = dayDiff(d, today)
               const isGcal = c.type === 'gcal'
+              const isTask = c.type === 'task'
               return (
                 <li key={c.id}>
                   <button className={s.upItem} onClick={() => openItem(c)}>
@@ -160,7 +187,9 @@ export default function Upcoming() {
                       <span className={s.upItemSub}>
                         {isGcal
                           ? ((c as GCalItem).startTime ? `${(c as GCalItem).startTime} · Google Agenda` : 'Google Agenda')
-                          : subjectName((c as ClassItem).subjectId)}
+                          : isTask
+                            ? `Urgência: ${(c as TaskItem).urgency === 'urgent' ? 'Urgente' : (c as TaskItem).urgency === 'high' ? 'Alta' : (c as TaskItem).urgency === 'medium' ? 'Média' : 'Baixa'}`
+                            : subjectName((c as ClassItem).subjectId)}
                       </span>
                     </span>
                     <span className={s.upRight}>
@@ -206,6 +235,7 @@ export default function Upcoming() {
         </div>
         <div className={s.calLegend}>
           {(['aula', 'prova', 'trabalho'] as const).map(t => <span key={t}><i data-kind={t} />{TYPE_LABEL[t]}</span>)}
+          {taskItems.length > 0 && <span><i data-kind="task" />Tarefa</span>}
           {gcalItems.length > 0 && <span><i data-kind="gcal" />Google</span>}
         </div>
       </div>

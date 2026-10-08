@@ -33,6 +33,24 @@ function isLight(hex: string) {
   return (r*299+g*587+b*114)/1000 > 160
 }
 
+function extractDomain(url: string): string {
+  try {
+    const u = url.startsWith('http') ? url : `https://${url}`
+    return new URL(u).hostname.replace(/^www\./, '')
+  } catch {
+    return url
+  }
+}
+
+function normalizeUrl(url: string): string {
+  if (!url) return ''
+  return url.startsWith('http') ? url : `https://${url}`
+}
+
+function faviconUrl(domain: string) {
+  return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`
+}
+
 function NoteModal({
   initial, title: modalTitle, onClose, onSave,
 }: {
@@ -45,7 +63,6 @@ function NoteModal({
   const light = isLight(form.color)
   const textCss = light ? { color: '#202124' } : {}
 
-  // Always closes; an empty note is simply discarded instead of trapping the user in the modal.
   function save() {
     if (form.title.trim() || form.content.trim()) onSave(form)
     onClose()
@@ -106,10 +123,103 @@ function NoteModal({
   )
 }
 
+function LinkModal({
+  initial, onClose, onSave,
+}: {
+  initial: { url: string; title: string }
+  onClose: () => void
+  onSave: (url: string, title: string) => void
+}) {
+  const [url, setUrl] = useState(initial.url)
+  const [title, setTitle] = useState(initial.title)
+
+  function save() {
+    if (url.trim()) onSave(url.trim(), title.trim())
+    onClose()
+  }
+
+  return (
+    <div className={s.backdrop} onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div className={s.modal} onClick={e => e.stopPropagation()}>
+        <input
+          className={s.modalTitle}
+          placeholder="URL (ex: https://exemplo.com)"
+          value={url}
+          onChange={e => setUrl(e.target.value)}
+          autoFocus
+          type="url"
+          onKeyDown={e => e.key === 'Enter' && save()}
+        />
+        <input
+          className={s.modalContent}
+          style={{ minHeight: 'auto', fontSize: 13 }}
+          placeholder="Título (opcional)"
+          value={title}
+          onChange={e => setTitle(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && save()}
+        />
+        <div className={s.modalFooter}>
+          <div />
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className={s.cancelBtn} onClick={onClose}>Fechar</button>
+            <button className={s.saveBtn} onClick={save} disabled={!url.trim()}>Salvar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function LinkCard({
+  item, onEdit, onDelete, onToggleStar,
+}: {
+  item: { id: string; starred: boolean; tags: string[]; data: unknown }
+  onEdit: () => void
+  onDelete: () => void
+  onToggleStar: () => void
+}) {
+  const d = item.data as NoteData
+  const url = normalizeUrl(d.content || d.title)
+  const domain = extractDomain(url)
+  const displayTitle = d.title || domain
+
+  return (
+    <div className={s.linkCard} title={url}>
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={s.linkMain}
+        onClick={e => e.stopPropagation()}
+      >
+        <img
+          src={faviconUrl(domain)}
+          className={s.linkFav}
+          alt=""
+          onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+        />
+        <div className={s.linkText}>
+          <div className={s.linkTitle}>{displayTitle}</div>
+          <div className={s.linkDomain}>{domain}</div>
+        </div>
+      </a>
+      <div className={s.cardActions} onClick={e => e.stopPropagation()}>
+        <button className={s.pinBtn} onClick={onToggleStar} title={item.starred ? 'Desafixar' : 'Fixar'}>
+          {item.starred ? '📌' : '☆'}
+        </button>
+        <button className={s.pinBtn} onClick={onEdit} title="Editar">✎</button>
+        <DeleteBtn onConfirm={onDelete} />
+      </div>
+    </div>
+  )
+}
+
 export default function GenericModule({ module, workspaceId, items, addItem, updateItem, removeItem, toggleStar }: ModuleProps) {
   const [addOpen,  setAddOpen]  = useState(false)
   const [editItem, setEditItem] = useState<string | null>(null)
   const [quickTitle, setQuickTitle] = useState('')
+
+  const isLinks = module.type === 'links'
 
   function handleAdd(data: NoteData) {
     addItem({
@@ -122,10 +232,28 @@ export default function GenericModule({ module, workspaceId, items, addItem, upd
     })
   }
 
+  function handleAddLink(url: string, title: string) {
+    addItem({
+      workspaceId,
+      moduleId: module.id,
+      contentType: 'links' as 'notes',
+      data: { title, content: url, color: '', tags: '' } as unknown as Record<string, unknown>,
+      tags: [],
+      starred: false,
+    })
+  }
+
   function handleEdit(id: string, data: NoteData) {
     updateItem(id, {
       data: data as unknown as Record<string, unknown>,
       tags: data.tags.split(',').map(t => t.trim()).filter(Boolean),
+    })
+  }
+
+  function handleEditLink(id: string, url: string, title: string) {
+    updateItem(id, {
+      data: { title, content: url, color: '', tags: '' } as unknown as Record<string, unknown>,
+      tags: [],
     })
   }
 
@@ -140,7 +268,7 @@ export default function GenericModule({ module, workspaceId, items, addItem, upd
       <div className={s.quickBar} onClick={() => { if (!addOpen) setAddOpen(true) }}>
         <input
           className={s.quickInput}
-          placeholder="Fazer anotação..."
+          placeholder={isLinks ? 'Adicionar link...' : 'Fazer anotação...'}
           value={quickTitle}
           onChange={e => setQuickTitle(e.target.value)}
           onFocus={() => setAddOpen(true)}
@@ -152,80 +280,119 @@ export default function GenericModule({ module, workspaceId, items, addItem, upd
       {items.length === 0 && (
         <div className={s.empty}>
           <div className={s.emptyIcon}>{module.icon}</div>
-          <div className={s.emptyTitle}>Nenhuma nota ainda</div>
-          <div className={s.emptyDesc}>Clique em "+ Adicionar" para criar a primeira nota.</div>
+          <div className={s.emptyTitle}>{isLinks ? 'Nenhum link ainda' : 'Nenhuma nota ainda'}</div>
+          <div className={s.emptyDesc}>Clique em "+ Adicionar" para {isLinks ? 'salvar o primeiro link.' : 'criar a primeira nota.'}</div>
         </div>
       )}
 
-      {pinnedItems.length > 0 && (
+      {isLinks ? (
         <>
-          <div className={s.sectionLabel}>📌 Fixadas</div>
-          <div className={s.grid}>
-            {pinnedItems.map(item => {
-              const d = item.data as unknown as NoteData
-              const light = isLight(d.color)
-              const tc = light ? { color: '#202124' } : {}
-              return (
-                <div
-                  key={item.id}
-                  className={s.card}
-                  style={{ background: d.color || 'var(--surface)', ...(d.color ? { border: 'none' } : {}) }}
-                  onClick={() => openEdit(item.id)}
-                  title={`${d.title}${d.content ? ' — ' + d.content.slice(0, 80) : ''}`}
-                >
-                  {d.title && <div className={s.cardTitle} style={tc}>{d.title}</div>}
-                  {d.content && <div className={s.cardContent} style={tc}>{d.content}</div>}
-                  {item.tags.length > 0 && (
-                    <div className={s.cardTags}>
-                      {item.tags.map(t => <span key={t} className={s.tag} style={light ? { background: 'rgba(0,0,0,.08)', color: '#202124' } : {}}>#{t}</span>)}
+          {pinnedItems.length > 0 && (
+            <>
+              <div className={s.sectionLabel}>📌 Fixados</div>
+              <div className={s.linkGrid}>
+                {pinnedItems.map(item => (
+                  <LinkCard
+                    key={item.id}
+                    item={item}
+                    onEdit={() => openEdit(item.id)}
+                    onDelete={() => removeItem(item.id)}
+                    onToggleStar={() => toggleStar(item.id)}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+          {otherItems.length > 0 && (
+            <>
+              {pinnedItems.length > 0 && <div className={s.sectionLabel}>Outros</div>}
+              <div className={s.linkGrid}>
+                {otherItems.map(item => (
+                  <LinkCard
+                    key={item.id}
+                    item={item}
+                    onEdit={() => openEdit(item.id)}
+                    onDelete={() => removeItem(item.id)}
+                    onToggleStar={() => toggleStar(item.id)}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </>
+      ) : (
+        <>
+          {pinnedItems.length > 0 && (
+            <>
+              <div className={s.sectionLabel}>📌 Fixadas</div>
+              <div className={s.grid}>
+                {pinnedItems.map(item => {
+                  const d = item.data as unknown as NoteData
+                  const light = isLight(d.color)
+                  const tc = light ? { color: '#202124' } : {}
+                  return (
+                    <div
+                      key={item.id}
+                      className={s.card}
+                      style={{ background: d.color || 'var(--surface)', ...(d.color ? { border: 'none' } : {}) }}
+                      onClick={() => openEdit(item.id)}
+                      title={`${d.title}${d.content ? ' — ' + d.content.slice(0, 80) : ''}`}
+                    >
+                      {d.title && <div className={s.cardTitle} style={tc}>{d.title}</div>}
+                      {d.content && <div className={s.cardContent} style={tc}>{d.content}</div>}
+                      {item.tags.length > 0 && (
+                        <div className={s.cardTags}>
+                          {item.tags.map(t => <span key={t} className={s.tag} style={light ? { background: 'rgba(0,0,0,.08)', color: '#202124' } : {}}>#{t}</span>)}
+                        </div>
+                      )}
+                      <div className={s.cardActions} onClick={e => e.stopPropagation()}>
+                        <button className={s.pinBtn} onClick={() => toggleStar(item.id)} title="Desafixar">📌</button>
+                        <DeleteBtn onConfirm={() => removeItem(item.id)} />
+                      </div>
                     </div>
-                  )}
-                  <div className={s.cardActions} onClick={e => e.stopPropagation()}>
-                    <button className={s.pinBtn} onClick={() => toggleStar(item.id)} title="Desafixar">📌</button>
-                    <DeleteBtn onConfirm={() => removeItem(item.id)} />
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+                  )
+                })}
+              </div>
+            </>
+          )}
+
+          {otherItems.length > 0 && (
+            <>
+              {pinnedItems.length > 0 && <div className={s.sectionLabel}>Outras</div>}
+              <div className={s.grid}>
+                {otherItems.map(item => {
+                  const d = item.data as unknown as NoteData
+                  const light = isLight(d.color)
+                  const tc = light ? { color: '#202124' } : {}
+                  return (
+                    <div
+                      key={item.id}
+                      className={s.card}
+                      style={{ background: d.color || 'var(--surface)', ...(d.color ? { border: 'none' } : {}) }}
+                      onClick={() => openEdit(item.id)}
+                      title={`${d.title}${d.content ? ' — ' + d.content.slice(0, 80) : ''}`}
+                    >
+                      {d.title && <div className={s.cardTitle} style={tc}>{d.title}</div>}
+                      {d.content && <div className={s.cardContent} style={tc}>{d.content}</div>}
+                      {item.tags.length > 0 && (
+                        <div className={s.cardTags}>
+                          {item.tags.map(t => <span key={t} className={s.tag} style={light ? { background: 'rgba(0,0,0,.08)', color: '#202124' } : {}}>#{t}</span>)}
+                        </div>
+                      )}
+                      <div className={s.cardActions} onClick={e => e.stopPropagation()}>
+                        <button className={s.pinBtn} onClick={() => toggleStar(item.id)} title="Fixar">☆</button>
+                        <DeleteBtn onConfirm={() => removeItem(item.id)} />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          )}
         </>
       )}
 
-      {otherItems.length > 0 && (
-        <>
-          {pinnedItems.length > 0 && <div className={s.sectionLabel}>Outras</div>}
-          <div className={s.grid}>
-            {otherItems.map(item => {
-              const d = item.data as unknown as NoteData
-              const light = isLight(d.color)
-              const tc = light ? { color: '#202124' } : {}
-              return (
-                <div
-                  key={item.id}
-                  className={s.card}
-                  style={{ background: d.color || 'var(--surface)', ...(d.color ? { border: 'none' } : {}) }}
-                  onClick={() => openEdit(item.id)}
-                  title={`${d.title}${d.content ? ' — ' + d.content.slice(0, 80) : ''}`}
-                >
-                  {d.title && <div className={s.cardTitle} style={tc}>{d.title}</div>}
-                  {d.content && <div className={s.cardContent} style={tc}>{d.content}</div>}
-                  {item.tags.length > 0 && (
-                    <div className={s.cardTags}>
-                      {item.tags.map(t => <span key={t} className={s.tag} style={light ? { background: 'rgba(0,0,0,.08)', color: '#202124' } : {}}>#{t}</span>)}
-                    </div>
-                  )}
-                  <div className={s.cardActions} onClick={e => e.stopPropagation()}>
-                    <button className={s.pinBtn} onClick={() => toggleStar(item.id)} title="Fixar">☆</button>
-                    <DeleteBtn onConfirm={() => removeItem(item.id)} />
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </>
-      )}
-
-      {addOpen && (
+      {addOpen && !isLinks && (
         <NoteModal
           initial={{ ...EMPTY, title: quickTitle }}
           title="Nova nota"
@@ -234,10 +401,27 @@ export default function GenericModule({ module, workspaceId, items, addItem, upd
         />
       )}
 
+      {addOpen && isLinks && (
+        <LinkModal
+          initial={{ url: '', title: '' }}
+          onClose={() => { setAddOpen(false); setQuickTitle('') }}
+          onSave={handleAddLink}
+        />
+      )}
+
       {editItem && (() => {
         const item = items.find(i => i.id === editItem)
         if (!item) return null
         const d = item.data as unknown as NoteData
+        if (isLinks) {
+          return (
+            <LinkModal
+              initial={{ url: d.content || d.title || '', title: d.content ? d.title || '' : '' }}
+              onClose={() => setEditItem(null)}
+              onSave={(url, title) => handleEditLink(editItem, url, title)}
+            />
+          )
+        }
         return (
           <NoteModal
             initial={{ title: d.title || '', content: d.content || '', color: d.color || '', tags: item.tags.join(', ') }}
