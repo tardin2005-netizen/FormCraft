@@ -37,7 +37,6 @@ const NAV_ITEMS = [
   { to: '/colecoes',    Icon: BookMarked,      label: 'Coleções' },
   { to: '/salvos',      Icon: Bookmark,        label: 'Salvos' },
   { to: '/ferramentas', Icon: Wrench,          label: 'Ferramentas' },
-  { to: '/settings',    Icon: Settings,        label: 'Config.' },
 ]
 
 const MOBILE_PRIMARY = 4
@@ -448,6 +447,9 @@ export default function Layout() {
                       <div className={s.userName}>{user?.displayName ?? 'Usuário'}</div>
                       <div className={s.userEmail}>{user?.email ?? ''}</div>
                     </div>
+                    <NavLink to="/settings" className={s.userSignOut} title="Configurações">
+                      <Settings size={14} />
+                    </NavLink>
                     <button className={s.userSignOut} onClick={signOut} title="Sair da conta">
                       <LogOut size={14} />
                     </button>
@@ -783,7 +785,7 @@ export default function Layout() {
                   <NavLink key={to} to={to} className={({ isActive }) => `${s.moreItem} ${isActive ? s.moreItemActive : ''}`}
                     onClick={() => setMoreOpen(false)}>
                     <Icon size={20} />
-                    <span>{label === 'Config.' ? 'Configurações' : label}</span>
+                    <span>{label}</span>
                   </NavLink>
                 ))}
               </div>
