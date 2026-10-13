@@ -162,7 +162,8 @@ export default function Login() {
     <div className={s.page}>
       <main className={s.left}>
         <div className={s.card}>
-          <span className={s.tab}>FORMCRAFT</span>
+          <img src="/logotipo-claro.png" alt="Formcraft" className={`${s.logo} ${s.logoLight}`} width={190} height={57} />
+          <img src="/logotipo-escuro.png" alt="" aria-hidden="true" className={`${s.logo} ${s.logoDark}`} width={190} height={57} />
 
           {sentTo ? (
             <div className={s.sent}>

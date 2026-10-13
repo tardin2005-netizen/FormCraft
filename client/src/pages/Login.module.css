@@ -1,21 +1,21 @@
-/* Login-only look (proposta "Ficha + Vitrine"). Tokens are scoped here so the rest of the app is untouched. */
+/* Login: identidade Formcraft (azul-marinho profundo + azul elétrico da logo). Tokens escopados aqui. */
 .page {
-  --l-ground: #15171c;
-  --l-surface: #1d2027;
-  --l-surface-2: #262a33;
-  --l-rule: #2f343e;
-  --l-ink: #ece9e2;
-  --l-ink-2: #a3a6ae;
-  --l-ink-3: #7b7f89;
-  --l-marca: #f2d544;
-  --l-marca-soft: rgba(242, 213, 68, .22);
-  --l-marca-ink: #1b1a12;
-  --l-btn: #ece9e2;
-  --l-btn-ink: #15171c;
-  --l-crit: #ef6461;
-  --l-line: rgba(236, 233, 226, .05);
-  --l-shadow: 0 1px 0 rgba(255,255,255,.03), 0 18px 40px rgba(0,0,0,.4);
-  --l-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --l-ground: #02061a;
+  --l-surface: #0a1128;
+  --l-surface-2: #111b3c;
+  --l-rule: #1b2750;
+  --l-ink: #eaf0ff;
+  --l-ink-2: #9fb0d8;
+  --l-ink-3: #6b7ba6;
+  --l-marca: #2f7bff;
+  --l-marca-soft: rgba(47, 123, 255, .3);
+  --l-marca-ink: #ffffff;
+  --l-btn: #f2f5ff;
+  --l-btn-ink: #02061a;
+  --l-crit: #ff6b6b;
+  --l-glow: rgba(47, 123, 255, .24);
+  --l-shadow: 0 0 0 1px rgba(47,123,255,.07), 0 24px 60px rgba(0, 8, 60, .6), 0 0 90px rgba(47,123,255,.12);
+  --l-display: "Figtree", "Segoe UI", system-ui, sans-serif;
   --l-body: "Figtree", "Segoe UI", system-ui, sans-serif;
   --l-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
 
@@ -31,31 +31,44 @@
 }
 
 :global([data-theme="bw"]) .page {
-  --l-ground: #f6f5f1;
+  --l-ground: #f2f5fd;
   --l-surface: #ffffff;
-  --l-surface-2: #efede7;
-  --l-rule: #dcd9d0;
-  --l-ink: #1a1c22;
-  --l-ink-2: #555963;
-  --l-ink-3: #7c808a;
-  --l-marca: #f7dc45;
-  --l-marca-soft: rgba(247, 220, 69, .55);
-  --l-btn: #1a1c22;
-  --l-btn-ink: #f6f5f1;
+  --l-surface-2: #e9eefb;
+  --l-rule: #d3dcf2;
+  --l-ink: #0a1230;
+  --l-ink-2: #4a5878;
+  --l-ink-3: #7584a6;
+  --l-marca: #1f66f0;
+  --l-marca-soft: rgba(31, 102, 240, .18);
+  --l-btn: #0a1230;
+  --l-btn-ink: #f2f5fd;
   --l-crit: #c23b38;
-  --l-line: rgba(47, 85, 212, .09);
-  --l-shadow: 0 1px 0 rgba(0,0,0,.02), 0 14px 32px rgba(30,30,20,.12);
+  --l-glow: rgba(31, 102, 240, .14);
+  --l-shadow: 0 1px 0 rgba(0,0,0,.02), 0 18px 44px rgba(20, 40, 110, .14);
 }
 
-/* ── Left: index card on ruled paper ── */
+/* ── Left: card on a soft blue glow, with the logo's orbit ring ── */
 .left {
+  position: relative;
+  overflow: hidden;
   display: grid;
   place-items: center;
   padding: 72px 24px 48px;
-  background-color: var(--l-ground);
-  background-image: linear-gradient(var(--l-line) 1px, transparent 1px);
-  background-size: 100% 32px;
-  background-position: 0 14px;
+  background:
+    radial-gradient(55% 45% at 50% 46%, var(--l-glow), transparent 72%),
+    var(--l-ground);
+}
+.left::before {
+  content: "";
+  position: absolute;
+  left: 50%; top: 48%;
+  width: min(760px, 120%); height: 300px;
+  transform: translate(-50%, -50%) rotate(-14deg);
+  border: 1px solid var(--l-marca);
+  border-radius: 50%;
+  opacity: .28;
+  box-shadow: 0 0 24px var(--l-marca-soft);
+  pointer-events: none;
 }
 
 .card {
@@ -64,33 +77,21 @@
   max-width: 400px;
   background: var(--l-surface);
   border: 1px solid var(--l-rule);
-  border-radius: 6px 14px 14px 14px;
-  padding: 28px 26px 22px;
+  border-radius: 16px;
+  padding: 30px 26px 22px;
   display: grid;
   gap: 14px;
   box-shadow: var(--l-shadow);
 }
 
-.tab {
-  position: absolute;
-  top: -26px;
-  left: -1px;
-  height: 26px;
-  padding: 0 12px;
-  display: flex;
-  align-items: center;
-  font-family: var(--l-mono);
-  font-size: 11px;
-  letter-spacing: .14em;
-  color: var(--l-ink-2);
-  background: var(--l-surface);
-  border: 1px solid var(--l-rule);
-  border-bottom: 0;
-  border-radius: 8px 8px 0 0;
-}
+.logo { display: block; width: 190px; height: auto; margin: 0 auto 6px; }
+.logoDark { display: none; }
+:global([data-theme="bw"]) .logoLight { display: none; }
+:global([data-theme="bw"]) .logoDark { display: block; }
 
 .title {
   margin: 0;
+  text-align: center;
   font-family: var(--l-display);
   font-size: 26px;
   font-weight: 800;
@@ -98,7 +99,7 @@
   letter-spacing: -.01em;
   text-wrap: balance;
 }
-.sub { margin: 0; color: var(--l-ink-2); }
+.sub { margin: 0; color: var(--l-ink-2); text-align: center; }
 
 .primary, .secondary {
   display: flex;
@@ -115,9 +116,9 @@
   transition: transform .12s, opacity .15s, border-color .15s;
 }
 .primary { background: var(--l-btn); color: var(--l-btn-ink); border: 1px solid var(--l-btn); }
-.primary:hover:not(:disabled) { transform: translateY(-1px); }
-.secondary { background: var(--l-surface); color: var(--l-ink); border: 1px solid var(--l-rule); }
-.secondary:hover:not(:disabled) { border-color: var(--l-ink-3); }
+.primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 24px var(--l-marca-soft); }
+.secondary { background: var(--l-marca); color: #fff; border: 1px solid var(--l-marca); }
+.secondary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 24px var(--l-marca-soft); }
 .primary:disabled, .secondary:disabled { opacity: .6; cursor: progress; }
 .primary:focus-visible, .secondary:focus-visible, .input:focus-visible, .linkBtn:focus-visible {
   outline: 2px solid var(--l-marca);
@@ -148,7 +149,7 @@
   outline: none;
 }
 .input::placeholder { color: var(--l-ink-3); }
-.input:focus { border-color: var(--l-ink-3); }
+.input:focus { border-color: var(--l-marca); box-shadow: 0 0 0 3px var(--l-marca-soft); }
 
 .error {
   margin: 0;
@@ -216,7 +217,7 @@
   color: var(--l-ink-2);
   position: relative;
 }
-.demoSearch:focus-within { border-color: var(--l-ink-3); }
+.demoSearch:focus-within { border-color: var(--l-marca); }
 .demoSearch input {
   flex: 1;
   min-width: 0;
@@ -271,5 +272,5 @@
 
 @media (prefers-reduced-motion: reduce) {
   .caret, .spinner, .demoCard { animation: none; }
-  .primary:hover:not(:disabled) { transform: none; }
+  .primary:hover:not(:disabled), .secondary:hover:not(:disabled) { transform: none; }
 }
