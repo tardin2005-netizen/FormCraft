@@ -114,7 +114,7 @@ function Showcase() {
       </label>
       <div className={s.demoGrid} aria-live="polite">
         {results.length === 0 ? (
-          <p className={s.demoEmpty}>Nenhum exemplo com “{query}”. No seu FormCraft a busca cobre tudo que você guardar.</p>
+          <p className={s.demoEmpty}>Nenhum exemplo com “{query}”. No seu Formcraft a busca cobre tudo que você guardar.</p>
         ) : results.map(d => (
           <article key={d.title + d.origin} className={s.demoCard}>
             <span className={`${s.demoOrigin} ${d.kind === 'lib' ? s.originLib : ''} ${d.kind === 'prova' ? s.originProva : ''}`}>{d.origin}</span>
@@ -215,7 +215,7 @@ export default function Login() {
         </div>
       </main>
 
-      <aside className={s.right} aria-label="Como o FormCraft funciona">
+      <aside className={s.right} aria-label="Como o Formcraft funciona">
         <div className={s.pitch}>
           <h2 className={s.pitchTitle}>Tudo que você estudou, a uma busca de distância.</h2>
           <p className={s.pitchSub}>Guarde PDFs e resumos por aula e ache qualquer conceito de qualquer semestre.</p>

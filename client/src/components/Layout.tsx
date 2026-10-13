@@ -264,10 +264,10 @@ export default function Layout() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -8 }}
                     transition={{ duration: .15 }}
-                  ><img src="/logo-mark.png" alt="" className={s.logoImg} /> FormCraft</motion.span>
+                  ><img src="/logo-mark.png" alt="" className={s.logoImg} /> Formcraft</motion.span>
                 )}
               </AnimatePresence>
-              {leftState === 'compact' && <img src="/logo-mark.png" alt="FormCraft" className={s.logoImg} />}
+              {leftState === 'compact' && <img src="/logo-mark.png" alt="Formcraft" className={s.logoImg} />}
               <button
                 className={s.collapseBtn}
                 onClick={cycleLeft}
@@ -419,7 +419,7 @@ export default function Layout() {
               <div className={s.installCard}>
                 <button className={s.installClose} onClick={dismissInstall} aria-label="Dispensar aviso de instalação"><X size={13} /></button>
                 <div className={s.installIcon}><Download size={16} /></div>
-                <div className={s.installTitle}>Instale o FormCraft</div>
+                <div className={s.installTitle}>Instale o Formcraft</div>
                 <div className={s.installText}>Abre em janela própria, direto da área de trabalho ou da tela inicial do celular.</div>
                 <button className={s.installBtn} onClick={installApp}>Instalar app</button>
               </div>
@@ -507,7 +507,7 @@ export default function Layout() {
                 <PanelLeft size={15} />
               </button>
             )}
-            <span className={s.topLogo}><img src="/logo-mark.png" alt="" className={s.logoImg} /> FormCraft</span>
+            <span className={s.topLogo}><img src="/logo-mark.png" alt="" className={s.logoImg} /> Formcraft</span>
           </div>
 
           <div className={s.topActions}>
@@ -533,7 +533,7 @@ export default function Layout() {
             <button
               className={`${s.topIconBtn} ${s.aiBtn} ${aiChatOpen ? s.topIconActive : ''}`}
               onClick={() => setAiChatOpen(v => !v)}
-              title="FormCraft AI (⌘J)"
+              title="Formcraft AI (⌘J)"
             >
               ⬡
             </button>
@@ -836,7 +836,7 @@ export default function Layout() {
               <button className={s.infoClose} onClick={() => setIosHelpOpen(false)} aria-label="Fechar"><X size={16} /></button>
             </div>
             <ol className={s.iosSteps}>
-              <li>Abra o FormCraft no <b>Safari</b>.</li>
+              <li>Abra o Formcraft no <b>Safari</b>.</li>
               <li>Toque em <b>Compartilhar</b> (o quadrado com a seta para cima).</li>
               <li>Escolha <b>Adicionar à Tela de Início</b> e confirme.</li>
             </ol>

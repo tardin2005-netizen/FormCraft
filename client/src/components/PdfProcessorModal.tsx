@@ -87,7 +87,7 @@ export default function PdfProcessorModal({ subjectName, onSave, onClose }: Prop
     } catch (err: any) {
       if (isChunkLoadError(err)) {
         if (reloadOnce()) return
-        setError('O FormCraft foi atualizado enquanto esta aba estava aberta. Recarregue a página (F5) e envie o PDF de novo.')
+        setError('O Formcraft foi atualizado enquanto esta aba estava aberta. Recarregue a página (F5) e envie o PDF de novo.')
       } else {
         setError(err?.message ?? 'Erro ao processar o PDF.')
       }

@@ -121,7 +121,7 @@ export default function SearchPalette({ onClose, initialQuery = '' }: Props) {
     <>
       <div className={s.backdrop} onClick={onClose} />
 
-      <div className={s.panel} role="dialog" aria-label="Buscar no FormCraft">
+      <div className={s.panel} role="dialog" aria-label="Buscar no Formcraft">
         <div className={s.inputRow}>
           <span className={s.searchIcon}>{isTagSearch ? '#' : '🔎'}</span>
           <input

@@ -93,7 +93,7 @@ export default function HomeSearch({ query, setQuery, onSaveLink, onQuickNote }:
             value={query}
             onChange={e => setQuery(e.target.value)}
             onKeyDown={e => { if (e.key === 'Escape') setQuery('') }}
-            aria-label="Buscar no FormCraft"
+            aria-label="Buscar no Formcraft"
             autoComplete="off"
           />
           {query && (

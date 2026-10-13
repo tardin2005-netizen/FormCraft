@@ -53,7 +53,7 @@ const HAMBURGER: DesignPatternInput = {
   categoria: 'Navegação',
   oQueE: 'Botão com três linhas horizontais (☰) que esconde a navegação; ao ser tocado, abre o menu, normalmente uma sidebar que desliza da lateral.',
   comoFunciona: 'Botão de abrir: o ícone ☰ fica num canto do topo e mostra o menu ao ser clicado.\nPainel deslizante (drawer): a sidebar entra pela lateral, por cima do conteúdo, com um fundo escurecido atrás.\nFechar: tocar fora do painel, apertar Esc ou no X (o ☰ costuma virar X quando aberto).\nAcessibilidade: o botão precisa de aria-label="Abrir menu" e aria-expanded dizendo se está aberto.\nResponsivo: no computador a sidebar fica sempre visível; abaixo de ~768px ela some e o hambúrguer assume.',
-  ondeUsar: 'Celular e sites com muitos itens de menu. Para 3 a 5 destinos principais, uma barra inferior (bottom nav) costuma funcionar melhor, porque o hambúrguer esconde as opções; é o que o FormCraft usa no celular, com o botão "Mais".',
+  ondeUsar: 'Celular e sites com muitos itens de menu. Para 3 a 5 destinos principais, uma barra inferior (bottom nav) costuma funcionar melhor, porque o hambúrguer esconde as opções; é o que o Formcraft usa no celular, com o botão "Mais".',
   tags: ['hambúrguer', 'menu', 'sidebar', 'drawer', 'mobile', 'navegação', 'responsivo'],
   exemploCodigo: '<button class="burger" aria-label="Abrir menu" aria-expanded="false">☰</button>\n<aside class="drawer">…links…</aside>\n\n.drawer {\n  position: fixed; inset: 0 auto 0 0; width: 280px;\n  transform: translateX(-100%); transition: transform .25s ease;\n}\n.drawer.open { transform: translateX(0); }\n@media (min-width: 768px) {\n  .burger { display: none; }\n  .drawer { position: sticky; transform: none; }\n}',
 }
@@ -129,7 +129,7 @@ export const DEFAULT_PATTERNS: DesignPatternInput[] = [
     categoria: 'PWA',
     oQueE: 'Ícone e nome definidos no manifesto do site que o fazem parecer um app quando instalado no celular ou computador.',
     comoFunciona: 'O nome aparece embaixo do ícone na tela inicial, na barra de tarefas ou no menu.\nFicam no manifest.json, que o navegador lê para saber qual imagem e nome usar na instalação.',
-    ondeUsar: 'Qualquer site que deve ser instalável como app (como o próprio FormCraft).',
+    ondeUsar: 'Qualquer site que deve ser instalável como app (como o próprio Formcraft).',
     tags: ['manifest', 'ícone', 'instalação', 'mobile'],
   },
   {

@@ -132,7 +132,7 @@ export default function FormCraftChat({ open, onClose }: Props) {
               <div className={s.headerLeft}>
                 <span className={s.headerIcon}>⬡</span>
                 <div>
-                  <div className={s.headerTitle}>FormCraft AI</div>
+                  <div className={s.headerTitle}>Formcraft AI</div>
                   <div className={s.headerSub}>Estrategista · Analista · Professor</div>
                 </div>
               </div>
@@ -151,7 +151,7 @@ export default function FormCraftChat({ open, onClose }: Props) {
               {messages.length === 0 ? (
                 <div className={s.empty}>
                   <div className={s.emptyIcon}>⬡</div>
-                  <div className={s.emptyTitle}>FormCraft AI</div>
+                  <div className={s.emptyTitle}>Formcraft AI</div>
                   <div className={s.emptyDesc}>
                     Seu assistente de Marketing, Estratégia e Negócios. Faça uma pergunta ou escolha um ponto de partida:
                   </div>
