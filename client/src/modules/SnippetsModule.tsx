@@ -21,6 +21,8 @@ const CATEGORY_COLOR: Record<SnippetCategory, { bg: string; text: string }> = {
   'Outro':       { bg: '#6b728022', text: '#6b7280' },
 }
 
+const CATEGORIES: SnippetCategory[] = ['Mensagem', 'Endereço', 'Preço', 'Procedimento', 'Outro']
+
 const EMPTY_FORM: SnippetData = { title: '', body: '', category: 'Outro', tags: '' }
 
 export default function SnippetsModule({ module, workspaceId, items, addItem, removeItem, toggleStar }: ModuleProps) {
@@ -28,6 +30,9 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
   const [form, setForm] = useState<SnippetData>(EMPTY_FORM)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+  const [activeCategory, setActiveCategory] = useState<SnippetCategory | 'Todos'>('Todos')
 
   function copy(text: string, id: string) {
     navigator.clipboard.writeText(text).catch(() => {})
@@ -37,7 +42,8 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
 
   function openNew() { setForm(EMPTY_FORM); setEditingId(null); setShowForm(true) }
 
-  function openEdit(id: string) {
+  function openEdit(id: string, e: React.MouseEvent) {
+    e.stopPropagation()
     const item = items.find(i => i.id === id)
     if (!item) return
     const d = item.data as unknown as SnippetData
@@ -50,7 +56,6 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
     if (!form.title.trim() || !form.body.trim()) return
     const tags = form.tags.split(',').map(t => t.trim()).filter(Boolean)
     if (editingId) {
-      // update via removeItem + addItem (store pattern)
       removeItem(editingId)
     }
     addItem({
@@ -66,12 +71,56 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
     setEditingId(null)
   }
 
+  const expandedItem = expandedId ? items.find(i => i.id === expandedId) : null
+  const expandedData = expandedItem ? (expandedItem.data as unknown as SnippetData) : null
+
+  const visible = items
+    .slice()
+    .sort((a, b) => (b.starred ? 1 : 0) - (a.starred ? 1 : 0))
+    .filter(item => {
+      const d = item.data as unknown as SnippetData
+      if (activeCategory !== 'Todos' && d.category !== activeCategory) return false
+      if (search) {
+        const q = search.toLowerCase()
+        if (!d.title.toLowerCase().includes(q) && !d.body.toLowerCase().includes(q)) return false
+      }
+      return true
+    })
+
   return (
     <div>
       <div className={s.moduleHeader}>
         <h2 className={s.moduleTitle}>{module.name || 'Snippets'}</h2>
         <button className={s.addBtn} onClick={openNew}>+ Adicionar</button>
       </div>
+
+      {items.length > 0 && (
+        <div className={vs.toolbar}>
+          <div className={vs.searchWrap}>
+            <span className={vs.searchIcon}>🔍</span>
+            <input
+              className={vs.searchInput}
+              placeholder="Buscar snippets…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+            {search && (
+              <button className={vs.searchClear} onClick={() => setSearch('')}>✕</button>
+            )}
+          </div>
+          <div className={vs.filters}>
+            {(['Todos', ...CATEGORIES] as (SnippetCategory | 'Todos')[]).map(cat => (
+              <button
+                key={cat}
+                className={`${vs.filterBtn} ${activeCategory === cat ? vs.filterActive : ''}`}
+                onClick={() => setActiveCategory(cat)}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {items.length === 0 ? (
         <div className={vs.empty}>
@@ -81,24 +130,39 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
             Guarde mensagens prontas, endereços, tabelas de preço e procedimentos. Copie com um clique quando precisar.
           </div>
         </div>
+      ) : visible.length === 0 ? (
+        <div className={vs.empty}>
+          <div className={vs.emptyIcon}>🔍</div>
+          <div className={vs.emptyTitle}>Nenhum resultado</div>
+          <div className={vs.emptyDesc}>Tente ajustar o filtro ou a busca.</div>
+        </div>
       ) : (
         <div className={vs.grid}>
-          {items.map(item => {
+          {visible.map(item => {
             const d = item.data as unknown as SnippetData
             const color = CATEGORY_COLOR[d.category] ?? CATEGORY_COLOR['Outro']
             const isCopied = copied === item.id
             return (
-              <div key={item.id} className={`${vs.card} ${item.starred ? vs.starred : ''}`}>
+              <div
+                key={item.id}
+                className={`${vs.card} ${item.starred ? vs.starred : ''}`}
+                onClick={() => setExpandedId(item.id)}
+              >
                 <div className={vs.cardTop}>
                   <span className={vs.badge} style={{ background: color.bg, color: color.text }}>
                     {d.category}
                   </span>
                   <div className={vs.actions}>
-                    <button className={`${s.starBtn} ${item.starred ? s.starActive : ''}`} onClick={() => toggleStar(item.id)}>
+                    <button
+                      className={`${s.starBtn} ${item.starred ? s.starActive : ''}`}
+                      onClick={e => { e.stopPropagation(); toggleStar(item.id) }}
+                    >
                       {item.starred ? '★' : '☆'}
                     </button>
-                    <button className={s.editBtn} onClick={() => openEdit(item.id)} title="Editar">✎</button>
-                    <DeleteBtn onConfirm={() => removeItem(item.id)} />
+                    <button className={s.editBtn} onClick={e => openEdit(item.id, e)} title="Editar">✎</button>
+                    <span onClick={e => e.stopPropagation()}>
+                      <DeleteBtn onConfirm={() => removeItem(item.id)} />
+                    </span>
                   </div>
                 </div>
 
@@ -111,7 +175,7 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
 
                 <button
                   className={`${vs.copyBtn} ${isCopied ? vs.copied : ''}`}
-                  onClick={() => copy(d.body, item.id)}
+                  onClick={e => { e.stopPropagation(); copy(d.body, item.id) }}
                 >
                   {isCopied ? '✓ Copiado!' : '📋 Copiar'}
                 </button>
@@ -121,6 +185,39 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
         </div>
       )}
 
+      {/* ── Expand modal ── */}
+      {expandedId && expandedData && (
+        <div className={s.backdrop} onClick={() => setExpandedId(null)}>
+          <div className={vs.expandModal} onClick={e => e.stopPropagation()}>
+            <div className={vs.expandHeader}>
+              <div>
+                <span
+                  className={vs.badge}
+                  style={{
+                    background: CATEGORY_COLOR[expandedData.category]?.bg,
+                    color: CATEGORY_COLOR[expandedData.category]?.text,
+                  }}
+                >
+                  {expandedData.category}
+                </span>
+                <div className={vs.expandTitle}>{expandedData.title}</div>
+              </div>
+              <button className={vs.expandClose} onClick={() => setExpandedId(null)}>✕</button>
+            </div>
+            <div className={vs.expandBody}>{expandedData.body}</div>
+            <div className={vs.expandFooter}>
+              <button
+                className={`${vs.copyBtn} ${copied === expandedId ? vs.copied : ''}`}
+                onClick={() => copy(expandedData.body, expandedId)}
+              >
+                {copied === expandedId ? '✓ Copiado!' : '📋 Copiar conteúdo'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Form modal ── */}
       {showForm && (
         <div className={s.backdrop} onClick={e => { if (e.target === e.currentTarget) setShowForm(false) }}>
           <div className={s.formModal}>
