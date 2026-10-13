@@ -38,7 +38,8 @@
   min-height: 53px;
   flex-shrink: 0;
 }
-.logo     { font-size: 14px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+.logo     { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+.logoImg  { width: 24px; height: 24px; border-radius: 7px; flex-shrink: 0; display: block; }
 .logoMini { font-size: 18px; color: var(--accent); }
 
 .collapseBtn {
@@ -233,7 +234,7 @@
   background: var(--surface); flex-shrink: 0; position: relative; z-index: 10;
 }
 .topLeft { display: flex; align-items: center; gap: 8px; }
-.topLogo { font-size: 14px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+.topLogo { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: var(--accent); white-space: nowrap; }
 
 .topActions { display: flex; align-items: center; gap: 6px; }
 .topSearchBtn {

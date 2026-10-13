@@ -264,10 +264,10 @@ export default function Layout() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -8 }}
                     transition={{ duration: .15 }}
-                  >⬡ FormCraft</motion.span>
+                  ><img src="/logo-mark.png" alt="" className={s.logoImg} /> FormCraft</motion.span>
                 )}
               </AnimatePresence>
-              {leftState === 'compact' && <span className={s.logoMini}>⬡</span>}
+              {leftState === 'compact' && <img src="/logo-mark.png" alt="FormCraft" className={s.logoImg} />}
               <button
                 className={s.collapseBtn}
                 onClick={cycleLeft}
@@ -507,7 +507,7 @@ export default function Layout() {
                 <PanelLeft size={15} />
               </button>
             )}
-            <span className={s.topLogo}>⬡ FormCraft</span>
+            <span className={s.topLogo}><img src="/logo-mark.png" alt="" className={s.logoImg} /> FormCraft</span>
           </div>
 
           <div className={s.topActions}>

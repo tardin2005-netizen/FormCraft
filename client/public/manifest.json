@@ -4,8 +4,8 @@
   "description": "Seu espaço de aprendizado e organização",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f1117",
-  "theme_color": "#2563eb",
+  "background_color": "#000310",
+  "theme_color": "#000310",
   "orientation": "any",
   "icons": [
     {

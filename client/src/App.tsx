@@ -25,7 +25,8 @@ function LoadingScreen() {
       minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
       background: '#08080f', color: 'rgba(255,255,255,0.4)', fontSize: 14,
     }}>
-      ⬡ FormCraft
+      <img src="/logo-mark.png" alt="" width={28} height={28} style={{ borderRadius: 8, marginRight: 10 }} />
+      FormCraft
     </div>
   )
 }

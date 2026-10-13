@@ -172,7 +172,7 @@ export default function Settings() {
         <section className={s.section}>
           <div className={s.sectionLabel}>SOBRE</div>
           <div className={s.aboutCard}>
-            <div className={s.aboutLogo}>⬡ FormCraft</div>
+            <div className={s.aboutLogo}><img src="/logo-mark.png" alt="" width={24} height={24} style={{ borderRadius: 7, verticalAlign: -6, marginRight: 8 }} />FormCraft</div>
             <div className={s.aboutDesc}>Seu hub de conhecimento pessoal. Organize links, PDFs, notas e mais.</div>
             <div className={s.aboutVersion}>v0.1.0</div>
           </div>
