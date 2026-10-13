@@ -84,7 +84,7 @@
   box-shadow: var(--l-shadow);
 }
 
-.logo { display: block; width: 190px; height: auto; margin: 0 auto 6px; }
+.logo { display: block; width: 132px; height: auto; margin: 0 auto 4px; }
 .logoDark { display: none; }
 :global([data-theme="bw"]) .logoLight { display: none; }
 :global([data-theme="bw"]) .logoDark { display: block; }

@@ -23,10 +23,10 @@ function LoadingScreen() {
   return (
     <div style={{
       minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: '#08080f', color: 'rgba(255,255,255,0.4)', fontSize: 14,
+      background: '#02061a',
     }}>
-      <img src="/logo-mark.png" alt="" width={28} height={28} style={{ borderRadius: 8, marginRight: 10 }} />
-      Formcraft
+      <img src="/logotipo-vertical-claro.png" alt="Formcraft" width={165} height={150} style={{ maxWidth: '50vw', height: 'auto', animation: 'fc-pulse 1.6s ease-in-out infinite' }} />
+      <style>{'@keyframes fc-pulse{0%,100%{opacity:.55}50%{opacity:1}}@media (prefers-reduced-motion:reduce){img[src$="logotipo-vertical-claro.png"]{animation:none!important}}'}</style>
     </div>
   )
 }

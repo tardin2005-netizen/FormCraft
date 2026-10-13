@@ -21,6 +21,7 @@ import { usePwaInstall, promptInstall } from '../hooks/usePwaInstall'
 import SaveLinkModal from './SaveLinkModal'
 import QuickNote from './QuickNote'
 import FormCraftChat from './FormCraftChat'
+import Logotipo from './Logotipo'
 import s from './Layout.module.css'
 
 const ACCENT_LABELS: Record<Accent, string> = {
@@ -264,7 +265,7 @@ export default function Layout() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -8 }}
                     transition={{ duration: .15 }}
-                  ><img src="/logo-mark.png" alt="" className={s.logoImg} /> Formcraft</motion.span>
+                  ><Logotipo height={72} vertical /></motion.span>
                 )}
               </AnimatePresence>
               {leftState === 'compact' && <img src="/logo-mark.png" alt="Formcraft" className={s.logoImg} />}
@@ -507,7 +508,7 @@ export default function Layout() {
                 <PanelLeft size={15} />
               </button>
             )}
-            <span className={s.topLogo}><img src="/logo-mark.png" alt="" className={s.logoImg} /> Formcraft</span>
+            <span className={`${s.topLogo} ${leftState !== 'hidden' ? s.topLogoDup : ''}`}><Logotipo height={32} flush /></span>
           </div>
 
           <div className={s.topActions}>

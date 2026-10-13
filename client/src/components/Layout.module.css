@@ -33,7 +33,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 12px 14px;
+  padding: 14px 12px 12px;
   border-bottom: 1px solid var(--border);
   min-height: 53px;
   flex-shrink: 0;
@@ -234,6 +234,8 @@
   background: var(--surface); flex-shrink: 0; position: relative; z-index: 10;
 }
 .topLeft { display: flex; align-items: center; gap: 8px; }
+.topLogoDup { display: none; }
+@media (max-width: 768px) { .topLogoDup { display: inline-flex; } }
 .topLogo { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: var(--accent); white-space: nowrap; }
 
 .topActions { display: flex; align-items: center; gap: 6px; }

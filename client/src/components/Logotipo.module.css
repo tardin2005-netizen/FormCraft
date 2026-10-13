@@ -1,0 +1,4 @@
+.light, .dark { display: block; flex-shrink: 0; max-width: none; }
+.dark { display: none; }
+:global([data-theme="bw"]) .light { display: none; }
+:global([data-theme="bw"]) .dark { display: block; }
