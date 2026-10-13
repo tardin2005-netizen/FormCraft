@@ -11,6 +11,19 @@ import g from './Conceitos.module.css'
 
 type Filter = 'todos' | 'aulas' | 'avulsos' | `ctx:${string}`
 type Sort = 'az' | 'recentes'
+type View = 'cards' | 'list'
+
+const PLACEHOLDER_COLORS = [
+  '#7c6ef7','#3ecf8e','#f59e0b','#4f8ef7','#f43f5e',
+  '#10b981','#ec4899','#8b5cf6','#06b6d4','#84cc16',
+]
+function placeholderColor(termo: string): string {
+  const code = termo.trim().toUpperCase().charCodeAt(0) || 65
+  return PLACEHOLDER_COLORS[code % PLACEHOLDER_COLORS.length]
+}
+function placeholderLetter(termo: string): string {
+  return termo.trim().charAt(0).toUpperCase() || '?'
+}
 
 const splitList = (v: string) => v.split(',').map(x => x.trim()).filter(Boolean)
 const letterOf = (termo: string) => {
@@ -33,6 +46,7 @@ export default function Conceitos() {
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<Filter>('todos')
   const [sort, setSort] = useState<Sort>('az')
+  const [view, setView] = useState<View>('cards')
   const [editing, setEditing] = useState<Concept | 'new' | null>(null)
 
   useEffect(() => {
@@ -135,9 +149,15 @@ export default function Conceitos() {
               value={query}
               onChange={e => setQuery(e.target.value)}
             />
-            <div className={g.sortToggle} role="radiogroup" aria-label="Ordem">
-              <button role="radio" aria-checked={sort === 'az'} className={sort === 'az' ? g.sortOn : ''} onClick={() => setSort('az')}>A–Z</button>
-              <button role="radio" aria-checked={sort === 'recentes'} className={sort === 'recentes' ? g.sortOn : ''} onClick={() => setSort('recentes')}>Recentes</button>
+            <div className={g.controls}>
+              <div className={g.sortToggle} role="radiogroup" aria-label="Ordem">
+                <button role="radio" aria-checked={sort === 'az'} className={sort === 'az' ? g.sortOn : ''} onClick={() => setSort('az')}>A–Z</button>
+                <button role="radio" aria-checked={sort === 'recentes'} className={sort === 'recentes' ? g.sortOn : ''} onClick={() => setSort('recentes')}>Recentes</button>
+              </div>
+              <div className={g.viewToggle} role="radiogroup" aria-label="Visualização">
+                <button role="radio" aria-checked={view === 'cards'} className={view === 'cards' ? g.viewOn : ''} onClick={() => setView('cards')}>⊞ Cards</button>
+                <button role="radio" aria-checked={view === 'list'} className={view === 'list' ? g.viewOn : ''} onClick={() => setView('list')}>≡ Lista</button>
+              </div>
             </div>
           </div>
           <div className={s.catRow}>
@@ -170,7 +190,31 @@ export default function Conceitos() {
           {groups.map(({ letter, items }) => (
             <section key={letter || 'all'} className={g.group} aria-labelledby={letter ? `letra-${letter}` : undefined}>
               {letter && <h2 id={`letra-${letter}`} className={g.letter}>{letter}</h2>}
-              {sort === 'az' ? (
+
+              {view === 'cards' ? (
+                <div className={g.conceptGrid}>
+                  {items.map(c => (
+                    <button key={c.id} className={g.conceptCard} onClick={() => navigate(`/conceitos/${c.id}`)}>
+                      {c.imageData ? (
+                        <div className={g.conceptImg}><img src={c.imageData} alt={c.termo} /></div>
+                      ) : (
+                        <div className={g.conceptPlaceholder} style={{ background: placeholderColor(c.termo) }}>
+                          {placeholderLetter(c.termo)}
+                        </div>
+                      )}
+                      <div className={g.conceptBody}>
+                        <span className={g.conceptBadge}>{c.classId ? 'Aula' : (c.contexto || 'Conceito')}</span>
+                        <div className={g.conceptTerm}>{c.termo}</div>
+                        {!!c.sinonimos?.length && (
+                          <div className={g.conceptSynonyms}>{c.sinonimos.slice(0, 2).join(' · ')}</div>
+                        )}
+                        <div className={g.conceptDef}>{plainText(c.definicao)}</div>
+                        <div className={g.conceptOrigin}>{origin(c)}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
                 <ul className={g.entries}>
                   {items.map(c => (
                     <li key={c.id}>
@@ -188,24 +232,6 @@ export default function Conceitos() {
                     </li>
                   ))}
                 </ul>
-              ) : (
-              <div className={s.grid}>
-                {items.map(c => (
-                  <button key={c.id} className={s.card} onClick={() => navigate(`/conceitos/${c.id}`)}>
-                    {c.imageData && <div className={s.cardImg}><img src={c.imageData} alt={c.termo} /></div>}
-                    <div className={s.cardBody}>
-                      <span className={s.cardCat}>{c.classId ? 'Aula' : (c.contexto || 'Conceito')}</span>
-                      <div className={s.cardTitle}>{c.termo}</div>
-                      <div className={s.cardDef}>{plainText(c.definicao)}</div>
-                    </div>
-                    <div className={s.cardFoot}>
-                      {c.sinonimos?.length
-                        ? <>também: {c.sinonimos.slice(0, 2).join(', ')}{c.sinonimos.length > 2 ? ` +${c.sinonimos.length - 2}` : ''}</>
-                        : origin(c)}
-                    </div>
-                  </button>
-                ))}
-              </div>
               )}
             </section>
           ))}

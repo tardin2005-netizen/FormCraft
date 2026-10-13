@@ -1,31 +1,118 @@
 /* Glossary layout on top of Biblioteca.module.css */
 .toolRow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .toolRow > input { flex: 1 1 280px; }
-.sortToggle { display: flex; gap: 3px; padding: 3px; border-radius: 9px; background: var(--surface2); }
-.sortToggle button {
-  padding: 6px 12px; border: 0; border-radius: 7px; background: transparent; color: var(--text2);
-  font-size: 12px; font-weight: 500; cursor: pointer; font-family: inherit;
+
+.controls { display: flex; align-items: center; gap: 6px; }
+.sortToggle, .viewToggle {
+  display: flex; gap: 3px; padding: 3px; border-radius: 9px; background: var(--surface2);
 }
-.sortToggle .sortOn { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,.18); }
-.sortToggle button:focus-visible, .letters a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sortToggle button, .viewToggle button {
+  padding: 6px 12px; border: 0; border-radius: 7px; background: transparent; color: var(--text2);
+  font-size: 12px; font-weight: 500; cursor: pointer; font-family: inherit; line-height: 1;
+}
+.sortToggle .sortOn, .viewToggle .viewOn {
+  background: var(--surface); color: var(--text); font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0,0,0,.18);
+}
+.sortToggle button:focus-visible, .viewToggle button:focus-visible, .letters a:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
 
 .letters { display: flex; flex-wrap: wrap; gap: 4px; }
 .letters a {
   min-width: 26px; height: 26px; display: grid; place-items: center; padding: 0 6px;
   border-radius: 6px; border: 1px solid var(--border); color: var(--text2);
-  font-size: 12px; font-weight: 600; text-decoration: none; font-variant-numeric: tabular-nums;
+  font-size: 12px; font-weight: 600; text-decoration: none;
 }
 .letters a:hover { border-color: var(--accent); color: var(--accent); }
 
-.glossary { display: flex; flex-direction: column; gap: 22px; }
-.group { display: flex; flex-direction: column; gap: 10px; scroll-margin-top: 16px; }
+/* ── Glossary wrapper ── */
+.glossary { display: flex; flex-direction: column; gap: 28px; }
+.group { display: flex; flex-direction: column; gap: 12px; scroll-margin-top: 16px; }
 .letter {
-  margin: 0; padding-bottom: 6px; border-bottom: 1px solid var(--border);
-  font-size: 20px; font-weight: 700; color: var(--accent); line-height: 1;
+  margin: 0; padding-bottom: 8px; border-bottom: 2px solid var(--accent);
+  font-size: 22px; font-weight: 800; color: var(--accent); line-height: 1;
   scroll-margin-top: 16px;
 }
 
-/* Dictionary rows (A–Z) */
+/* ── Card grid ── */
+.conceptGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.conceptCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  transition: border-color .15s, box-shadow .15s, transform .12s;
+  padding: 0;
+}
+.conceptCard:hover {
+  border-color: var(--accent);
+  box-shadow: 0 6px 24px rgba(0,0,0,.2);
+  transform: translateY(-2px);
+}
+.conceptCard:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* image / placeholder area */
+.conceptImg {
+  width: 100%;
+  height: 140px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.conceptImg img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.conceptPlaceholder {
+  width: 100%; height: 140px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 52px; font-weight: 900; color: rgba(255,255,255,.9);
+  letter-spacing: -.02em; flex-shrink: 0;
+  user-select: none;
+}
+
+/* body */
+.conceptBody {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 12px 14px 14px;
+  flex: 1;
+}
+.conceptBadge {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--accent); opacity: .85;
+}
+.conceptTerm {
+  font-size: 15px; font-weight: 700; line-height: 1.25; color: var(--text);
+}
+.conceptSynonyms {
+  font-size: 11px; color: var(--text2); font-style: italic; margin-top: -2px;
+}
+.conceptDef {
+  font-size: 12.5px; line-height: 1.55; color: var(--text);
+  opacity: .75;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1;
+}
+.conceptOrigin {
+  margin-top: 4px;
+  font-size: 10.5px; color: var(--text2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ── Dictionary rows (list view, A–Z) ── */
 .entries { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .entries li + li { border-top: 1px solid var(--border); }
 .entry {
@@ -48,7 +135,9 @@
   font-size: 11px; color: var(--text2); white-space: nowrap; max-width: 180px;
   overflow: hidden; text-overflow: ellipsis; padding: 2px 8px; border: 1px solid var(--border); border-radius: 99px;
 }
+
 @media (max-width: 768px) {
+  .conceptGrid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
   .entry { grid-template-columns: 1fr; gap: 6px; }
   .entryMeta { order: -1; justify-content: flex-start; }
 }
