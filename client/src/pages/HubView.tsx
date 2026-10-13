@@ -905,6 +905,8 @@ function GenericHubView({ hubId }: { hubId: string }) {
   const { items } = useContentItemsStore()
   const [activeTab, setActiveTab] = useState(WORKSPACE_TABS[0].key)
   const [showAddMenu, setShowAddMenu] = useState(false)
+  const [menuPos, setMenuPos] = useState({ top: 0, right: 0 })
+  const addModuleBtnRef = useRef<HTMLButtonElement>(null)
 
   const itemCount = (key: string) =>
     items.filter(i => i.moduleId === `hub-${hubId}-${key}`).length
@@ -914,13 +916,20 @@ function GenericHubView({ hubId }: { hubId: string }) {
 
   const activeTabDef = WORKSPACE_TABS.find(t => t.key === activeTab) ?? WORKSPACE_TABS[0]
 
-  // Always include the active tab even if empty (e.g. user just navigated to an empty module)
   const displayTabs = populatedTabs.some(t => t.key === activeTab)
     ? populatedTabs
     : [activeTabDef, ...populatedTabs]
 
-  // If nothing is populated at all, show the first tab so the page isn't blank
   const shownTabs = displayTabs.length > 0 ? displayTabs : [WORKSPACE_TABS[0]]
+
+  function toggleAddMenu(e: React.MouseEvent) {
+    e.stopPropagation()
+    if (!showAddMenu && addModuleBtnRef.current) {
+      const rect = addModuleBtnRef.current.getBoundingClientRect()
+      setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right })
+    }
+    setShowAddMenu(v => !v)
+  }
 
   return (
     <div className={s.genericPage}>
@@ -935,32 +944,38 @@ function GenericHubView({ hubId }: { hubId: string }) {
         {emptyTabs.length > 0 && (
           <div className={s.addModuleWrap}>
             <button
+              ref={addModuleBtnRef}
               className={s.addModuleBtn}
-              onClick={e => { e.stopPropagation(); setShowAddMenu(v => !v) }}
+              onClick={toggleAddMenu}
               title="Acessar módulos sem itens"
             >
               + Módulo
             </button>
-            {showAddMenu && (
-              <>
-                <div className={s.addModuleOverlay} onClick={() => setShowAddMenu(false)} />
-                <div className={s.addModuleMenu}>
-                  {emptyTabs.map(t => (
-                    <button
-                      key={t.key}
-                      className={s.addModuleItem}
-                      onClick={() => { setActiveTab(t.key); setShowAddMenu(false) }}
-                    >
-                      <span>{t.icon}</span>
-                      <span>{t.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
           </div>
         )}
       </div>
+
+      {showAddMenu && (
+        <>
+          <div className={s.addModuleOverlay} onClick={() => setShowAddMenu(false)} />
+          <div
+            className={s.addModuleMenu}
+            style={{ position: 'fixed', top: menuPos.top, right: menuPos.right }}
+          >
+            {emptyTabs.map(t => (
+              <button
+                key={t.key}
+                className={s.addModuleItem}
+                onClick={() => { setActiveTab(t.key); setShowAddMenu(false) }}
+              >
+                <span>{t.icon}</span>
+                <span>{t.label}</span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
       <div className={s.wsContent}>
         <HubModuleTab key={activeTabDef.key} hubId={hubId} tabKey={activeTabDef.key} type={activeTabDef.type} layout={activeTabDef.layout} />
       </div>

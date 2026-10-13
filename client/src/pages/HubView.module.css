@@ -264,7 +264,7 @@
 .addModuleBtn:hover { color: var(--accent); border-color: var(--accent); }
 .addModuleOverlay { position: fixed; inset: 0; z-index: 49; }
 .addModuleMenu {
-  position: absolute; right: 0; top: calc(100% + 4px); z-index: 50;
+  z-index: 50;
   background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
   padding: 6px; display: flex; flex-direction: column; gap: 2px;
   min-width: 160px; box-shadow: 0 8px 24px rgba(0,0,0,.18);
