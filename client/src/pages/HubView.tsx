@@ -936,7 +936,7 @@ function GenericHubView({ hubId }: { hubId: string }) {
           <div className={s.addModuleWrap}>
             <button
               className={s.addModuleBtn}
-              onClick={() => setShowAddMenu(v => !v)}
+              onClick={e => { e.stopPropagation(); setShowAddMenu(v => !v) }}
               title="Acessar módulos sem itens"
             >
               + Módulo
