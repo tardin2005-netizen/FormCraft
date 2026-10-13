@@ -20,6 +20,7 @@ import ToolsDbModule from '../modules/ToolsDbModule'
 import HubGenericModule from '../modules/GenericModule'
 import ReferenceGallery from '../modules/ReferenceGallery'
 import KeepNotes from '../modules/KeepNotes'
+import SnippetsModule from '../modules/SnippetsModule'
 import s from './HubView.module.css'
 
 /* ─── helpers ─── */
@@ -869,6 +870,7 @@ function FaculdadeView({ hubId }: { hubId: string }) {
 
 /* ─── Workspace tabs for generic hubs ─── */
 const WORKSPACE_TABS: { key: string; label: string; icon: string; type: ModuleType; layout: ModuleLayout }[] = [
+  { key: 'snippets',         label: 'Snippets',        icon: '📋',  type: 'snippets',         layout: 'grid'    },
   { key: 'tools-db',         label: 'Ferramentas',     icon: '🛠',  type: 'tools-db',         layout: 'grid'    },
   { key: 'scripts',          label: 'Scripts',         icon: '📜',  type: 'scripts',          layout: 'list'    },
   { key: 'troubleshooting',  label: 'Troubleshooting', icon: '🔧',  type: 'troubleshooting',  layout: 'table'   },
@@ -888,6 +890,7 @@ function HubModuleTab({ hubId, tabKey, type, layout }: { hubId: string; tabKey: 
   const props = { module: syntheticModule, workspaceId: hubId, items: moduleItems, addItem, updateItem, removeItem, toggleStar }
 
   switch (type) {
+    case 'snippets':         return <SnippetsModule {...props} />
     case 'tools-db':         return <ToolsDbModule {...props} />
     case 'scripts':          return <ScriptsModule {...props} />
     case 'troubleshooting':  return <TroubleshootingModule {...props} />

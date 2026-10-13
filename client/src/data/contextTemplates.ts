@@ -11,7 +11,7 @@ export type ModuleType =
   | 'tools-db' | 'scripts' | 'troubleshooting' | 'documentation'
   | 'campaigns' | 'personas' | 'social' | 'metrics' | 'copywriting'
   | 'user-flows' | 'wireframes' | 'accessibility' | 'heuristics'
-  | 'notes' | 'links' | 'files'
+  | 'notes' | 'links' | 'files' | 'snippets'
 
 export type ModuleLayout = 'grid' | 'list' | 'gallery' | 'table' | 'kanban'
 
