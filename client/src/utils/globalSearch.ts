@@ -120,13 +120,17 @@ export function tokenHit(hay: string, words: string[], t: string) {
   return t.length <= 2 ? words.includes(t) : hay.includes(t)
 }
 
+// Never print credentials in result previews: "senha: abc123" becomes "senha: ••••••".
+const maskSecrets = (s: string) => s.replace(/(senha|password|passwd|pwd|token|secret|chave|pin)(\s*[:=-]?\s*)(\S+)/gi, (_m, k, sep) => `${k}${sep}••••••`)
+
 function excerptOf(text: string, tokens: string[]) {
   const norm = normalize(text)
   for (const t of tokens.filter(x => x.length >= 3)) {
     const i = norm.indexOf(t)
     if (i >= 0) {
       const from = Math.max(0, i - 28), to = Math.min(text.length, i + t.length + 48)
-      return (from > 0 ? '…' : '') + text.slice(from, to).replace(/\s+/g, ' ').trim() + (to < text.length ? '…' : '')
+      const raw = text.slice(from, to).replace(/\s+/g, ' ').trim()
+      return (from > 0 ? '…' : '') + maskSecrets(raw) + (to < text.length ? '…' : '')
     }
   }
   return undefined
