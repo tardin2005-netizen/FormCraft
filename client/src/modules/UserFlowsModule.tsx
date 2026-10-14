@@ -3,6 +3,7 @@ import type { ModuleProps } from './moduleProps'
 import s from './modules.module.css'
 import d from './UserFlowsModule.module.css'
 import DeleteBtn from './DeleteBtn'
+import Glyph from '../components/Glyph'
 
 type Status = 'rascunho' | 'revisao' | 'aprovado'
 
@@ -107,7 +108,7 @@ export default function UserFlowsModule({ module, workspaceId, items, addItem, r
                     {data.link && (
                       <a href={data.link} target="_blank" rel="noopener noreferrer" className={d.extLink} onClick={e => e.stopPropagation()}>↗ Abrir</a>
                     )}
-                    <button className={`${s.starBtn} ${item.starred ? s.starActive : ''}`} onClick={e => { e.stopPropagation(); toggleStar(item.id) }}>{item.starred ? '★' : '☆'}</button>
+                    <button className={`${s.starBtn} ${item.starred ? s.starActive : ''}`} onClick={e => { e.stopPropagation(); toggleStar(item.id) }}><Glyph value="ph:star" size={15} weight={item.starred ? 'fill' : 'bold'} /></button>
                     <DeleteBtn onConfirm={() => removeItem(item.id)} />
                     <span className={d.chevron}>{isOpen ? '↑' : '↓'}</span>
                   </div>

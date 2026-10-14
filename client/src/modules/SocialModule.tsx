@@ -3,6 +3,7 @@ import type { ModuleProps } from './moduleProps'
 import s from './modules.module.css'
 import d from './SocialModule.module.css'
 import DeleteBtn from './DeleteBtn'
+import Glyph from '../components/Glyph'
 
 type Platform = 'Instagram' | 'LinkedIn' | 'TikTok' | 'YouTube' | 'Twitter/X' | 'Facebook' | 'Pinterest' | 'WhatsApp' | 'Outro'
 type Status = 'ideia' | 'producao' | 'agendado' | 'publicado'
@@ -149,7 +150,7 @@ export default function SocialModule({ module, workspaceId, items, addItem, remo
                     {(data.data||data.hora) && (
                       <span className={d.dateChip}>{fmtDate(data.data)}{data.hora?` ${data.hora}`:''}</span>
                     )}
-                    <button className={`${s.starBtn} ${item.starred?s.starActive:''}`} onClick={e=>{e.stopPropagation();toggleStar(item.id)}}>{item.starred?'★':'☆'}</button>
+                    <button className={`${s.starBtn} ${item.starred?s.starActive:''}`} onClick={e=>{e.stopPropagation();toggleStar(item.id)}}><Glyph value="ph:star" size={15} weight={item.starred ? 'fill' : 'bold'} /></button>
                     <DeleteBtn onConfirm={()=>removeItem(item.id)}/>
                     <span className={d.chevron}>{isOpen?'↑':'↓'}</span>
                   </div>

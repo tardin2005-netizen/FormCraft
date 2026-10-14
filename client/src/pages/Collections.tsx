@@ -8,6 +8,7 @@ import { useLinksStore } from '../store/linksStore'
 import type { SavedLink } from '../store/linksStore'
 import IconPicker, { IconDisplay } from '../components/IconPicker'
 import s from './Collections.module.css'
+import Glyph from '../components/Glyph'
 
 const COLORS  = ['#7c6ef7','#3178c6','#f43f5e','#f59e0b','#10b981','#06b6d4','#8b5cf6','#ec4899','#ef4444','#0ea5e9']
 
@@ -17,7 +18,7 @@ const TYPE_ICON: Record<string, string> = { link:'🔗', pdf:'📄', nota:'📝'
 function MiniCard({ item }: { item: SavedLink }) {
   return (
     <div className={s.miniCard}>
-      <span className={s.miniIcon}>{TYPE_ICON[item.type] ?? '🔗'}</span>
+      <span className={s.miniIcon}><Glyph value={TYPE_ICON[item.type] ?? '🔗'} size={16} /></span>
       <span className={s.miniTitle}>{item.title}</span>
     </div>
   )
@@ -63,7 +64,7 @@ function ColCard({
         <div className={s.colPreviewGrid}>
           {preview.map(i => (
             <div key={i.id} className={s.colPreviewItem}>
-              <span>{TYPE_ICON[i.type] ?? '🔗'}</span>
+              <span><Glyph value={TYPE_ICON[i.type] ?? '🔗'} size={14} /></span>
               <span className={s.colPreviewTitle}>{i.title}</span>
             </div>
           ))}
@@ -139,7 +140,7 @@ function ColDetail({
             {available.length === 0 && <div className={s.vaultEmpty}>Todos os itens já estão na coleção</div>}
             {available.map(l => (
               <button key={l.id} className={s.vaultItem} onClick={() => { onAddItem(l.id); }}>
-                <span>{TYPE_ICON[l.type]}</span>
+                <span><Glyph value={TYPE_ICON[l.type]} size={14} /></span>
                 <span className={s.vaultItemTitle}>{l.title}</span>
                 <span className={s.vaultAdd}>+</span>
               </button>
@@ -151,7 +152,7 @@ function ColDetail({
       <div className={s.detailList}>
         {items.length === 0 && (
           <div className={s.detailEmpty}>
-            <span>📭</span>
+            <span><Glyph value="ph:tray" size={22} /></span>
             <span>Nenhum item nesta coleção. Clique em "+ Adicionar" para incluir itens do seu acervo.</span>
           </div>
         )}
@@ -188,7 +189,7 @@ function ColDetail({
 /* ── New Collection Modal ── */
 function NewColModal({ onSave, onClose }: { onSave: (data: { name: string; emoji: string; color: string; desc: string }) => void; onClose: () => void }) {
   const [name,       setName]       = useState('')
-  const [icon,       setIcon]       = useState('📁')
+  const [icon,       setIcon]       = useState('ph:folder')
   const [color,      setColor]      = useState(COLORS[0])
   const [desc,       setDesc]       = useState('')
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -242,7 +243,7 @@ function NewColModal({ onSave, onClose }: { onSave: (data: { name: string; emoji
             <label className={s.newLabel}>Ícone</label>
             <button className={s.iconSelectBtn} onClick={() => setPickerOpen(true)}>
               <IconDisplay value={icon} size={16} color={color} />
-              <span>{icon}</span>
+              <span>Ícone da coleção</span>
               <span className={s.iconSelectChange}>Trocar →</span>
             </button>
           </div>

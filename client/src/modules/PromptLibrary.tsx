@@ -3,6 +3,7 @@ import type { ModuleProps } from './moduleProps'
 import s from './modules.module.css'
 import p from './PromptLibrary.module.css'
 import DeleteBtn from './DeleteBtn'
+import Glyph from '../components/Glyph'
 
 interface PromptData {
   title: string
@@ -150,7 +151,7 @@ export default function PromptLibrary({ module, workspaceId, items, addItem, rem
                   </div>
                 ) : (
                   <div className={p.imgPlaceholder}>
-                    <span className={p.placeholderIcon}>{isImg ? '🖼' : '◈'}</span>
+                    <span className={p.placeholderIcon}><Glyph value={isImg ? 'ph:image' : 'ph:cube'} size={22} /></span>
                   </div>
                 )}
 
@@ -160,7 +161,7 @@ export default function PromptLibrary({ module, workspaceId, items, addItem, rem
                     <div className={p.cardTitle}>{d.title}</div>
                     <div className={p.cardActions}>
                       <button className={`${s.starBtn} ${item.starred ? s.starActive : ''}`} onClick={() => toggleStar(item.id)}>
-                        {item.starred ? '★' : '☆'}
+                        <Glyph value="ph:star" size={15} weight={item.starred ? 'fill' : 'bold'} />
                       </button>
                       <DeleteBtn onConfirm={() => removeItem(item.id)} />
                     </div>
@@ -219,7 +220,7 @@ export default function PromptLibrary({ module, workspaceId, items, addItem, rem
                   </div>
                   <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
                     <button className={`${s.starBtn} ${item.starred ? s.starActive : ''}`} onClick={e => { e.stopPropagation(); toggleStar(item.id) }}>
-                      {item.starred ? '★' : '☆'}
+                      <Glyph value="ph:star" size={15} weight={item.starred ? 'fill' : 'bold'} />
                     </button>
                     <DeleteBtn onConfirm={() => removeItem(item.id)} />
                     <span style={{ color: 'var(--text2)', fontSize: 12 }}>{isOpen ? '↑' : '↓'}</span>
@@ -331,7 +332,7 @@ export default function PromptLibrary({ module, workspaceId, items, addItem, rem
                   </div>
                 ) : (
                   <div className={s.imageDrop} onClick={() => imgRef.current?.click()}>
-                    <div>📋 Cole com ⌘V ou clique para selecionar a imagem gerada</div>
+                    <div><Glyph value="ph:clipboard" size={14} /> Cole com ⌘V ou clique para selecionar a imagem gerada</div>
                     <div style={{ fontSize: 11, marginTop: 4, opacity: .6 }}>PNG, JPG, WebP</div>
                     <input ref={imgRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageFile} />
                   </div>

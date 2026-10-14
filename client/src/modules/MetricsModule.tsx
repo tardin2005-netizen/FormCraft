@@ -3,6 +3,7 @@ import type { ModuleProps } from './moduleProps'
 import s from './modules.module.css'
 import d from './MetricsModule.module.css'
 import DeleteBtn from './DeleteBtn'
+import Glyph from '../components/Glyph'
 
 type Categoria = 'conversao' | 'alcance' | 'engajamento' | 'receita' | 'custo' | 'seo' | 'email' | 'outro'
 type Tendencia = 'up' | 'down' | 'stable'
@@ -111,7 +112,7 @@ export default function MetricsModule({ module, workspaceId, items, addItem, rem
                     {catInfo?.label||data.categoria}
                   </div>
                   <div className={d.cardActions}>
-                    <button className={`${s.starBtn} ${item.starred?s.starActive:''}`} onClick={()=>toggleStar(item.id)}>{item.starred?'★':'☆'}</button>
+                    <button className={`${s.starBtn} ${item.starred?s.starActive:''}`} onClick={()=>toggleStar(item.id)}><Glyph value="ph:star" size={15} weight={item.starred ? 'fill' : 'bold'} /></button>
                     <DeleteBtn onConfirm={()=>removeItem(item.id)}/>
                   </div>
                 </div>

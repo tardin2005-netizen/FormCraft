@@ -67,7 +67,7 @@ function AddItemModal({ areaId, onClose }: { areaId: string; onClose: () => void
                 className={`${s.typeBtn} ${type === t ? s.typeBtnActive : ''}`}
                 onClick={() => setType(t)}
               >
-                {TYPE_ICON[t]} {TYPE_LABEL[t]}
+                <Glyph value={TYPE_ICON[t]} size={14} /> {TYPE_LABEL[t]}
               </button>
             ))}
           </div>
@@ -157,7 +157,7 @@ export default function AreaView() {
             + Adicionar
           </button>
           <button className={s.deleteAreaBtn} onClick={handleDelete} title="Apagar área">
-            🗑 Apagar área
+            <Glyph value="ph:trash" size={14} /> Apagar área
           </button>
         </div>
       </div>
@@ -167,11 +167,11 @@ export default function AreaView() {
       <div className={s.content}>
         {items.length === 0 && (
           <div className={s.empty}>
-            <div className={s.emptyIcon}>📭</div>
+            <div className={s.emptyIcon}><Glyph value="ph:tray" size={32} /></div>
             <div>Nenhum link, nota ou arquivo ainda.</div>
             {chatCount > 0 && (
               <div style={{ fontSize: 12, color: 'var(--accent)', marginTop: 4 }}>
-                💬 {chatCount} canal{chatCount !== 1 ? 'is' : ''} disponível{chatCount !== 1 ? 's' : ''} na sidebar
+                <Glyph value="ph:chat-circle" size={14} /> {chatCount} canal{chatCount !== 1 ? 'is' : ''} disponível{chatCount !== 1 ? 's' : ''} na sidebar
               </div>
             )}
             <button className={s.emptyAddBtn} onClick={() => setAddOpen(true)}>+ Adicionar item</button>
@@ -188,7 +188,7 @@ export default function AreaView() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ delay: i * .03 }}
             >
-              <span className={s.itemIcon}>{TYPE_ICON[item.type]}</span>
+              <span className={s.itemIcon}><Glyph value={TYPE_ICON[item.type]} size={16} /></span>
               <div className={s.itemInfo}>
                 <div className={s.itemTitle}>
                   {item.url ? (

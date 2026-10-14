@@ -1,5 +1,6 @@
 import { Component, type ReactNode } from 'react'
 import s from './ErrorBoundary.module.css'
+import Glyph from './Glyph'
 
 interface Props { children: ReactNode }
 interface State { error: Error | null }
@@ -21,7 +22,7 @@ export default class ErrorBoundary extends Component<Props, State> {
     return (
       <div className={s.page}>
         <div className={s.card}>
-          <span className={s.icon}>⚠️</span>
+          <span className={s.icon}><Glyph value="ph:warning" size={28} /></span>
           <h1 className={s.title}>Algo deu errado</h1>
           <p className={s.desc}>
             Essa tela travou por um erro inesperado. Seus dados estão salvos no Firestore — nada foi perdido.

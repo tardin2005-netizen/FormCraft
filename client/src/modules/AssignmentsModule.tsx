@@ -3,6 +3,7 @@ import type { ModuleProps } from './moduleProps'
 import s from './modules.module.css'
 import d from './AssignmentsModule.module.css'
 import DeleteBtn from './DeleteBtn'
+import Glyph from '../components/Glyph'
 
 type Status = 'pendente' | 'em-andamento' | 'entregue' | 'avaliado'
 type Tipo = 'trabalho' | 'seminário' | 'individual' | 'grupo' | 'projeto' | 'prova-prática' | 'outro'
@@ -163,7 +164,7 @@ export default function AssignmentsModule({ module, workspaceId, items, addItem,
                               className={`${s.starBtn} ${item.starred ? s.starActive : ''}`}
                               onClick={() => toggleStar(item.id)}
                             >
-                              {item.starred ? '★' : '☆'}
+                              <Glyph value="ph:star" size={15} weight={item.starred ? 'fill' : 'bold'} />
                             </button>
                             <DeleteBtn onConfirm={() => removeItem(item.id)} />
                           </div>

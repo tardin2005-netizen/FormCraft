@@ -3,6 +3,7 @@ import type { ModuleProps } from './moduleProps'
 import s from './modules.module.css'
 import d from './CampaignsModule.module.css'
 import DeleteBtn from './DeleteBtn'
+import Glyph from '../components/Glyph'
 
 type Status = 'briefing' | 'execucao' | 'concluida' | 'pausada'
 type Canal = 'Instagram' | 'LinkedIn' | 'TikTok' | 'YouTube' | 'Email' | 'Google Ads' | 'Meta Ads' | 'Twitter/X' | 'WhatsApp' | 'Blog' | 'Outro'
@@ -95,7 +96,7 @@ export default function CampaignsModule({ module, workspaceId, items, addItem, r
                         <div className={d.cardTop} onClick={()=>setExpanded(isOpen?null:item.id)}>
                           <div className={d.cardTitle}>{data.title}</div>
                           <div className={d.cardActions}>
-                            <button className={`${s.starBtn} ${item.starred?s.starActive:''}`} onClick={e=>{e.stopPropagation();toggleStar(item.id)}}>{item.starred?'★':'☆'}</button>
+                            <button className={`${s.starBtn} ${item.starred?s.starActive:''}`} onClick={e=>{e.stopPropagation();toggleStar(item.id)}}><Glyph value="ph:star" size={15} weight={item.starred ? 'fill' : 'bold'} /></button>
                             <DeleteBtn onConfirm={()=>removeItem(item.id)}/>
                             <span className={d.chevron}>{isOpen?'↑':'↓'}</span>
                           </div>

@@ -3,6 +3,7 @@ import type { ModuleProps } from './moduleProps'
 import s from './modules.module.css'
 import d from './ExamsModule.module.css'
 import DeleteBtn from './DeleteBtn'
+import Glyph from '../components/Glyph'
 
 type Status = 'próxima' | 'realizada' | 'aguardando-nota'
 type Tipo = 'prova' | 'avaliação' | 'quiz' | 'prova-final' | 'substitutiva'
@@ -203,8 +204,8 @@ export default function ExamsModule({ module, workspaceId, items, addItem, remov
                   </div>
                   {(data.local || data.conteudo) && (
                     <div className={d.rowMeta}>
-                      {data.local && <span className={d.metaItem}>📍 {data.local}</span>}
-                      {data.conteudo && <span className={d.metaItem}>📖 {data.conteudo}</span>}
+                      {data.local && <span className={d.metaItem}><Glyph value="ph:map-pin" size={12} /> {data.local}</span>}
+                      {data.conteudo && <span className={d.metaItem}><Glyph value="ph:book-open" size={12} /> {data.conteudo}</span>}
                     </div>
                   )}
                   {data.observacoes && <div className={d.obs}>{data.observacoes}</div>}
@@ -234,7 +235,7 @@ export default function ExamsModule({ module, workspaceId, items, addItem, remov
                 {/* Actions */}
                 <div className={d.actions}>
                   <button className={`${s.starBtn} ${item.starred ? s.starActive : ''}`} onClick={() => toggleStar(item.id)}>
-                    {item.starred ? '★' : '☆'}
+                    <Glyph value="ph:star" size={15} weight={item.starred ? 'fill' : 'bold'} />
                   </button>
                   <DeleteBtn onConfirm={() => removeItem(item.id)} />
                 </div>

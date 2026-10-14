@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { SavedLink } from '../store/linksStore'
 import s from '../pages/Inbox.module.css'
+import Glyph from './Glyph'
 
 export function EditModal({ item, onClose, onSave }: {
   item: SavedLink
@@ -123,7 +124,7 @@ export function FaviconImg({ src, fallback }: { src: string; fallback: string })
   if (src.startsWith('http')) {
     return <img src={src} alt="" className={s.favicon} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
   }
-  return <span className={s.faviconEmoji}>{fallback}</span>
+  return <span className={s.faviconEmoji}><Glyph value={fallback} size={16} /></span>
 }
 
 export function TypeBadge({ type }: { type: string }) {
@@ -199,7 +200,7 @@ export function FullContentModal({ item, onClose, onTagSearch }: { item: SavedLi
               </a>
             )}
             <button className={s.fullModalCopy} onClick={copy}>
-              {copied ? '✓ Copiado!' : '📋 Copiar'}
+              {copied ? <><Glyph value="ph:check" size={13} /> Copiado!</> : <><Glyph value="ph:clipboard" size={13} /> Copiar</>}
             </button>
           </div>
         </div>
@@ -289,7 +290,7 @@ export function GridCard({ item, onDelete, onUpdate, onTagSearch, origin }: {
       <div className={s.cardThumb} style={{ background: `linear-gradient(135deg, ${color}33 0%, ${color}11 100%)` }}>
         {item.ogImage
           ? <img src={item.ogImage} alt="" className={s.cardThumbImg} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
-          : <span className={s.cardThumbEmoji}>{fallbackEmoji}</span>
+          : <span className={s.cardThumbEmoji}><Glyph value={fallbackEmoji} size={28} /></span>
         }
         <AnimatePresence>
           {(hovered || confirming) && (

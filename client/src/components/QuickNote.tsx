@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { useLinksStore } from '../store/linksStore'
 import s from './QuickNote.module.css'
+import Glyph from './Glyph'
 
 const DRAFT_KEY = 'formcraft-quicknote-draft'
 
@@ -62,7 +63,7 @@ export default function QuickNote({ onClose }: Props) {
         onKeyDown={handleKey}
       >
         <div className={s.header}>
-          <span className={s.icon}>📝</span>
+          <span className={s.icon}><Glyph value="ph:note-pencil" size={16} /></span>
           <input
             className={s.titleInput}
             placeholder="Título (opcional)"

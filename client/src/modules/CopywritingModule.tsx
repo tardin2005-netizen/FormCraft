@@ -3,6 +3,7 @@ import type { ModuleProps } from './moduleProps'
 import s from './modules.module.css'
 import d from './CopywritingModule.module.css'
 import DeleteBtn from './DeleteBtn'
+import Glyph from '../components/Glyph'
 
 type Format = 'headline' | 'cta' | 'email' | 'caption' | 'anuncio' | 'slogan' | 'descricao' | 'roteiro' | 'outro'
 type Tom = 'profissional' | 'descontraido' | 'urgente' | 'inspiracional' | 'emocional' | 'educativo' | 'humoristico'
@@ -118,7 +119,7 @@ export default function CopywritingModule({ module, workspaceId, items, addItem,
                     {data.canal && <span className={d.canalBadge}>{data.canal}</span>}
                   </div>
                   <div className={d.cardActions}>
-                    <button className={`${s.starBtn} ${item.starred?s.starActive:''}`} onClick={e=>{e.stopPropagation();toggleStar(item.id)}}>{item.starred?'★':'☆'}</button>
+                    <button className={`${s.starBtn} ${item.starred?s.starActive:''}`} onClick={e=>{e.stopPropagation();toggleStar(item.id)}}><Glyph value="ph:star" size={15} weight={item.starred ? 'fill' : 'bold'} /></button>
                     <DeleteBtn onConfirm={()=>removeItem(item.id)}/>
                     <span className={d.chevron}>{isOpen?'↑':'↓'}</span>
                   </div>

@@ -3,6 +3,7 @@ import type { ModuleProps } from './moduleProps'
 import s from './modules.module.css'
 import d from './HeuristicsModule.module.css'
 import DeleteBtn from './DeleteBtn'
+import Glyph from '../components/Glyph'
 
 type Severidade = 0 | 1 | 2 | 3 | 4
 type Status = 'identificado' | 'corrigindo' | 'corrigido' | 'aceito'
@@ -165,7 +166,7 @@ export default function HeuristicsModule({ module, workspaceId, items, addItem, 
                     </div>
                   </div>
                   <div className={d.rowActions}>
-                    <button className={`${s.starBtn} ${item.starred ? s.starActive : ''}`} onClick={e => { e.stopPropagation(); toggleStar(item.id) }}>{item.starred ? '★' : '☆'}</button>
+                    <button className={`${s.starBtn} ${item.starred ? s.starActive : ''}`} onClick={e => { e.stopPropagation(); toggleStar(item.id) }}><Glyph value="ph:star" size={15} weight={item.starred ? 'fill' : 'bold'} /></button>
                     <DeleteBtn onConfirm={() => removeItem(item.id)} />
                     <span className={d.chevron}>{isOpen ? '↑' : '↓'}</span>
                   </div>

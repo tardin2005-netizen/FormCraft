@@ -3,6 +3,7 @@ import type { ModuleProps } from './moduleProps'
 import s from './modules.module.css'
 import d from './ComponentsModule.module.css'
 import DeleteBtn from './DeleteBtn'
+import Glyph from '../components/Glyph'
 
 type Tipo = 'button' | 'input' | 'select' | 'modal' | 'card' | 'nav' | 'table' | 'form' | 'feedback' | 'layout' | 'outro'
 type Status = 'draft' | 'em-review' | 'ready' | 'deprecated'
@@ -130,7 +131,7 @@ export default function ComponentsModule({ module, workspaceId, items, addItem, 
                     )}
                   </div>
                   <div className={d.cardActions} onClick={e => e.stopPropagation()}>
-                    <button className={`${s.starBtn} ${item.starred ? s.starActive : ''}`} onClick={() => toggleStar(item.id)}>{item.starred ? '★' : '☆'}</button>
+                    <button className={`${s.starBtn} ${item.starred ? s.starActive : ''}`} onClick={() => toggleStar(item.id)}><Glyph value="ph:star" size={15} weight={item.starred ? 'fill' : 'bold'} /></button>
                     <DeleteBtn onConfirm={() => removeItem(item.id)} />
                     <span className={d.chevron}>{isOpen ? '↑' : '↓'}</span>
                   </div>

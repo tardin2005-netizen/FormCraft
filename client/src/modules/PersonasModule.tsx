@@ -3,6 +3,7 @@ import type { ModuleProps } from './moduleProps'
 import s from './modules.module.css'
 import d from './PersonasModule.module.css'
 import DeleteBtn from './DeleteBtn'
+import Glyph from '../components/Glyph'
 
 interface PersonaData {
   title: string
@@ -78,7 +79,7 @@ export default function PersonasModule({ module, workspaceId, items, addItem, re
                     : <div className={d.avatarPlaceholder}>{data.title.charAt(0).toUpperCase()}</div>
                   }
                   <div className={d.avatarActions}>
-                    <button className={`${s.starBtn} ${item.starred?s.starActive:''}`} onClick={()=>toggleStar(item.id)}>{item.starred?'★':'☆'}</button>
+                    <button className={`${s.starBtn} ${item.starred?s.starActive:''}`} onClick={()=>toggleStar(item.id)}><Glyph value="ph:star" size={15} weight={item.starred ? 'fill' : 'bold'} /></button>
                     <DeleteBtn onConfirm={()=>removeItem(item.id)}/>
                   </div>
                 </div>

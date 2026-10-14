@@ -3,6 +3,7 @@ import { isChunkLoadError, reloadOnce } from '../utils/chunkReload'
 import { getFunctions, httpsCallable } from 'firebase/functions'
 import app from '../firebase'
 import s from './PdfProcessorModal.module.css'
+import Glyph from './Glyph'
 
 const functions = getFunctions(app, 'us-central1')
 const processAulaPdfFn = httpsCallable<
@@ -118,7 +119,7 @@ export default function PdfProcessorModal({ subjectName, onSave, onClose }: Prop
       <div className={s.backdrop} onClick={onClose} />
       <div className={s.modal}>
         <div className={s.header}>
-          <span>📄 Processar PDF da Aula</span>
+          <span><Glyph value="ph:file-pdf" size={16} /> Processar PDF da Aula</span>
           <button className={s.closeBtn} onClick={onClose}>✕</button>
         </div>
 
@@ -131,7 +132,7 @@ export default function PdfProcessorModal({ subjectName, onSave, onClose }: Prop
               onDrop={onDrop}
               onClick={() => inputRef.current?.click()}
             >
-              <div className={s.dropIcon}>📥</div>
+              <div className={s.dropIcon}><Glyph value="ph:download-simple" size={28} /></div>
               <div className={s.dropTitle}>Arraste o PDF da aula aqui</div>
               <div className={s.dropSub}>ou clique para selecionar o arquivo</div>
               <div className={s.dropHint}>O conteúdo será resumido automaticamente pelo Claude</div>
@@ -148,7 +149,7 @@ export default function PdfProcessorModal({ subjectName, onSave, onClose }: Prop
           {(stage === 'extracting' || stage === 'processing') && (
             <div className={s.progressWrap}>
               <div className={s.progressIcon}>
-                {stage === 'extracting' ? '📖' : '🧠'}
+                <Glyph value={stage === 'extracting' ? 'ph:book-open' : 'ph:brain'} size={28} />
               </div>
               <div className={s.progressTitle}>
                 {stage === 'extracting'
@@ -165,7 +166,7 @@ export default function PdfProcessorModal({ subjectName, onSave, onClose }: Prop
 
           {stage === 'error' && (
             <div className={s.errorWrap}>
-              <div className={s.errorIcon}>⚠️</div>
+              <div className={s.errorIcon}><Glyph value="ph:warning" size={28} /></div>
               <div className={s.errorMsg}>{error}</div>
               <button className={s.retryBtn} onClick={() => { setStage('drop'); setError('') }}>
                 Tentar novamente
@@ -175,7 +176,7 @@ export default function PdfProcessorModal({ subjectName, onSave, onClose }: Prop
 
           {stage === 'result' && result && (
             <div className={s.resultWrap}>
-              <div className={s.resultFile}>📄 {fileName}</div>
+              <div className={s.resultFile}><Glyph value="ph:file-text" size={14} /> {fileName}</div>
               <h2 className={s.resultTitle}>{result.title}</h2>
               <p className={s.resultSummary}>{result.summary}</p>
 

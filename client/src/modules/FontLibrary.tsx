@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { ModuleProps } from './moduleProps'
 import s from './modules.module.css'
 import DeleteBtn from './DeleteBtn'
+import Glyph from '../components/Glyph'
 
 interface FontData {
   name: string
@@ -84,7 +85,7 @@ export default function FontLibrary({ module, workspaceId, items, addItem, remov
                   </div>
                   <div className={s.fontActions}>
                     <button className={`${s.starBtn} ${item.starred ? s.starActive : ''}`} onClick={() => toggleStar(item.id)}>
-                      {item.starred ? '★' : '☆'}
+                      <Glyph value="ph:star" size={15} weight={item.starred ? 'fill' : 'bold'} />
                     </button>
                     {d.url && (
                       <a href={d.url} target="_blank" rel="noreferrer" className={s.linkBtn} title="Abrir fonte">↗</a>

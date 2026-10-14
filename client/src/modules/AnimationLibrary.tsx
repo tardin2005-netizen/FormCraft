@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { ModuleProps } from './moduleProps'
 import s from './modules.module.css'
 import DeleteBtn from './DeleteBtn'
+import Glyph from '../components/Glyph'
 
 interface AnimationData {
   name: string
@@ -73,7 +74,7 @@ export default function AnimationLibrary({ module, workspaceId, items, addItem, 
                   </div>
                   <div style={{ display: 'flex', gap: 4, alignItems: 'flex-start' }}>
                     <span className={s.intensityBadge} style={{ background: `${INTENSITY_COLOR[d.intensity]}20`, color: INTENSITY_COLOR[d.intensity] }}>{d.intensity}</span>
-                    <button className={`${s.starBtn} ${item.starred ? s.starActive : ''}`} onClick={() => toggleStar(item.id)}>{item.starred ? '★' : '☆'}</button>
+                    <button className={`${s.starBtn} ${item.starred ? s.starActive : ''}`} onClick={() => toggleStar(item.id)}><Glyph value="ph:star" size={15} weight={item.starred ? 'fill' : 'bold'} /></button>
                     <DeleteBtn onConfirm={() => removeItem(item.id)} />
                   </div>
                 </div>

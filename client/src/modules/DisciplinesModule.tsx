@@ -3,6 +3,7 @@ import type { ModuleProps } from './moduleProps'
 import s from './modules.module.css'
 import d from './DisciplinesModule.module.css'
 import DeleteBtn from './DeleteBtn'
+import Glyph from '../components/Glyph'
 
 type Status = 'cursando' | 'aprovado' | 'reprovado' | 'trancado'
 type Filter = 'todas' | Status
@@ -129,7 +130,7 @@ export default function DisciplinesModule({ module, workspaceId, items, addItem,
                       className={`${s.starBtn} ${item.starred ? s.starActive : ''}`}
                       onClick={() => toggleStar(item.id)}
                     >
-                      {item.starred ? '★' : '☆'}
+                      <Glyph value="ph:star" size={15} weight={item.starred ? 'fill' : 'bold'} />
                     </button>
                     <DeleteBtn onConfirm={() => removeItem(item.id)} />
                   </div>

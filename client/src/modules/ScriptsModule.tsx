@@ -4,6 +4,7 @@ import s from './modules.module.css'
 import d from './ScriptsModule.module.css'
 import DeleteBtn from './DeleteBtn'
 import EditBtn from './EditBtn'
+import Glyph from '../components/Glyph'
 
 type Lang = 'bash' | 'python' | 'javascript' | 'typescript' | 'sql' | 'powershell' | 'php' | 'go' | 'rust' | 'outro'
 type Cat = 'automacao' | 'deploy' | 'backup' | 'monitoramento' | 'dados' | 'infra' | 'util' | 'outro'
@@ -141,7 +142,7 @@ export default function ScriptsModule({ module, workspaceId, items, addItem, upd
                     {data.so && <span className={d.osBadge}>{data.so}</span>}
                   </div>
                   <div className={d.cardActions}>
-                    <button className={`${s.starBtn} ${item.starred?s.starActive:''}`} onClick={e=>{e.stopPropagation();toggleStar(item.id)}}>{item.starred?'★':'☆'}</button>
+                    <button className={`${s.starBtn} ${item.starred?s.starActive:''}`} onClick={e=>{e.stopPropagation();toggleStar(item.id)}}><Glyph value="ph:star" size={15} weight={item.starred ? 'fill' : 'bold'} /></button>
                     <EditBtn onClick={() => openEdit(item)} />
                     <DeleteBtn onConfirm={()=>removeItem(item.id)}/>
                     <span className={d.chevron}>{isOpen?'↑':'↓'}</span>

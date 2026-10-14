@@ -3,6 +3,7 @@ import type { ModuleProps } from './moduleProps'
 import s from './modules.module.css'
 import DeleteBtn from './DeleteBtn'
 import EditBtn from './EditBtn'
+import Glyph from '../components/Glyph'
 
 interface ReferenceData {
   title: string
@@ -135,13 +136,13 @@ export default function ReferenceGallery({ module, workspaceId, items, addItem, 
                 {(d.pastedImage || d.imageUrl) ? (
                   <img src={d.pastedImage || d.imageUrl} alt={d.title} className={s.refImage} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
                 ) : (
-                  <div className={s.refImagePlaceholder}>{d.url ? '🔗' : '◈'}</div>
+                  <div className={s.refImagePlaceholder}><Glyph value={d.url ? 'ph:link' : 'ph:cube'} size={26} /></div>
                 )}
                 <div className={s.refCardBody}>
                   <div className={s.refTopRow}>
                     <span className={s.refTitle}>{d.title}</span>
                     <div style={{ display: 'flex', gap: 4 }}>
-                      <button className={`${s.starBtn} ${item.starred ? s.starActive : ''}`} onClick={() => toggleStar(item.id)}>{item.starred ? '★' : '☆'}</button>
+                      <button className={`${s.starBtn} ${item.starred ? s.starActive : ''}`} onClick={() => toggleStar(item.id)}><Glyph value="ph:star" size={15} weight={item.starred ? 'fill' : 'bold'} /></button>
                       {d.url && <a href={d.url} target="_blank" rel="noreferrer" className={s.linkBtn}>↗</a>}
                       <EditBtn onClick={() => openEdit(item)} />
                     <DeleteBtn onConfirm={() => removeItem(item.id)} />
@@ -177,7 +178,7 @@ export default function ReferenceGallery({ module, workspaceId, items, addItem, 
                   )}
                 </div>
                 <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-                  <button className={`${s.starBtn} ${item.starred ? s.starActive : ''}`} onClick={() => toggleStar(item.id)}>{item.starred ? '★' : '☆'}</button>
+                  <button className={`${s.starBtn} ${item.starred ? s.starActive : ''}`} onClick={() => toggleStar(item.id)}><Glyph value="ph:star" size={15} weight={item.starred ? 'fill' : 'bold'} /></button>
                   {d.url && <a href={d.url} target="_blank" rel="noreferrer" className={s.linkBtn}>↗</a>}
                   <EditBtn onClick={() => openEdit(item)} />
                     <DeleteBtn onConfirm={() => removeItem(item.id)} />
@@ -213,7 +214,7 @@ export default function ReferenceGallery({ module, workspaceId, items, addItem, 
                   </div>
                 ) : (
                   <div className={s.imageDrop} onClick={() => fileInputRef.current?.click()}>
-                    <span>📋 Cole com ⌘V ou clique para selecionar</span>
+                    <span><Glyph value="ph:clipboard" size={14} /> Cole com ⌘V ou clique para selecionar</span>
                     <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileChange} />
                   </div>
                 )}

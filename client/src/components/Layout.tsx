@@ -668,12 +668,18 @@ export default function Layout() {
                 onClick={() => { setToolCat(c); setRight('expanded') }}
                 title={c}
               >
-                {c === 'IA & Pesquisa' ? '🤖' :
-                 c === 'Imagem & Design' ? '🎨' :
-                 c === 'Criar vídeo' ? '🎬' :
-                 c === 'Áudio & Voz' ? '🔊' :
-                 c === 'Métricas' ? '📊' :
-                 c === 'Banco de Imagens' ? '🖼️' : '◈'}
+                <Glyph size={17} value={
+                  c === 'IA & Pesquisa' ? 'ph:robot' :
+                  c === 'Imagem & Design' ? 'ph:palette' :
+                  c === 'Criar vídeo' ? 'ph:film-strip' :
+                  c === 'Áudio & Voz' ? 'ph:speaker-high' :
+                  c === 'Métricas' ? 'ph:chart-bar' :
+                  c === 'Banco de Imagens' ? 'ph:image' :
+                  c === 'CMS & Sites' ? 'ph:globe' :
+                  c === 'Segurança' ? 'ph:shield-check' :
+                  c === 'Produtividade' ? 'ph:clipboard' :
+                  c === 'Redes Sociais' ? 'ph:share-network' :
+                  c === 'Ícones & SVG' ? 'ph:swatches' : 'ph:squares-four'} />
               </button>
             ))}
           </motion.div>
@@ -687,14 +693,14 @@ export default function Layout() {
             transition={{ duration: .15 }}
           >
             <div className={s.rightHeader}>
-              <span className={s.rightTitle}>⭐ Favoritas</span>
+              <span className={s.rightTitle}><Glyph value="ph:star" size={14} /> Favoritas</span>
               <button className={s.rightCollapseBtn} onClick={cycleRight} title="Compactar">›</button>
             </div>
 
             <div className={s.toolSearchRow}>
               <input
                 className={s.toolSearchInput}
-                placeholder="🔍 Buscar favorita..."
+                placeholder="Buscar favorita..."
                 value={toolSearch}
                 onChange={e => setToolSearch(e.target.value)}
               />
@@ -708,7 +714,7 @@ export default function Layout() {
                 )
                 if (favs.length === 0) return (
                   <div className={s.toolEmptyFav}>
-                    <div className={s.toolEmptyFavIcon}>☆</div>
+                    <div className={s.toolEmptyFavIcon}><Glyph value="ph:star" size={26} /></div>
                     <div className={s.toolEmptyFavText}>Nenhuma ferramenta favorita ainda</div>
                     <NavLink to="/ferramentas" className={s.toolEmptyFavLink} onClick={cycleRight}>
                       Abrir biblioteca →
@@ -736,7 +742,7 @@ export default function Layout() {
                       className={`${s.toolSaveBtn} ${s.toolSaved}`}
                       onClick={e => { e.preventDefault(); unsaveTool(t.name) }}
                       title="Remover dos favoritos"
-                    >★</button>
+                    ><Glyph value="ph:star" size={13} weight="fill" /></button>
                   </motion.a>
                 ))
               })()}

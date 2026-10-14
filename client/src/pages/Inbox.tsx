@@ -7,6 +7,7 @@ import { useLinksStore } from '../store/linksStore'
 import type { SavedLink } from '../store/linksStore'
 import s from './Inbox.module.css'
 import { GridCard, FaviconImg, TypeBadge, TagChip, FullContentModal, useDeleteConfirm, timeAgo, TYPE_COLOR } from '../components/LinkCard'
+import Glyph from '../components/Glyph'
 
 
 type OutletCtx = { onOpenSearch: (q?: string) => void; onOpenSaveLink: () => void }
@@ -15,12 +16,12 @@ type View    = 'grid' | 'list' | 'compact'
 type Filter  = 'todos' | 'link' | 'pdf' | 'nota' | 'imagem' | 'prompt'
 
 const FILTERS: { key: Filter; label: string; icon: string }[] = [
-  { key: 'todos',   label: 'Todos',    icon: '📋' },
-  { key: 'link',    label: 'Links',    icon: '🔗' },
-  { key: 'pdf',     label: 'PDFs',     icon: '📄' },
-  { key: 'nota',    label: 'Notas',    icon: '📝' },
-  { key: 'imagem',  label: 'Imagens',  icon: '🖼️' },
-  { key: 'prompt',  label: 'Prompts',  icon: '🤖' },
+  { key: 'todos',   label: 'Todos',    icon: 'ph:clipboard' },
+  { key: 'link',    label: 'Links',    icon: 'ph:link' },
+  { key: 'pdf',     label: 'PDFs',     icon: 'ph:file-text' },
+  { key: 'nota',    label: 'Notas',    icon: 'ph:note-pencil' },
+  { key: 'imagem',  label: 'Imagens',  icon: 'ph:image' },
+  { key: 'prompt',  label: 'Prompts',  icon: 'ph:robot' },
 ]
 
 
@@ -65,7 +66,7 @@ function ListRow({ item, onDelete, onTagSearch }: { item: SavedLink; onDelete: (
               <div className={s.listExpandedContent}>
                 <div className={s.listFullText}>{item.desc}</div>
                 <button className={s.listCopyBtn} onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(item.desc || '').catch(() => {}); }}>
-                  📋 Copiar
+                  <Glyph value="ph:clipboard" size={13} /> Copiar
                 </button>
               </div>
             )}
@@ -163,7 +164,7 @@ export default function Inbox() {
         </div>
         <div className={s.topRight}>
           <div className={s.searchWrap}>
-            <span className={s.searchIcon}>🔍</span>
+            <span className={s.searchIcon}><Glyph value="ph:magnifying-glass" size={16} /></span>
             <input
               className={s.searchInput}
               placeholder="Filtrar..."
@@ -197,7 +198,7 @@ export default function Inbox() {
             className={`${s.filterBtn} ${filter === f.key ? s.filterBtnActive : ''}`}
             onClick={() => setFilter(f.key)}
           >
-            {f.icon} {f.label}
+            <Glyph value={f.icon} size={14} /> {f.label}
             <span className={s.filterCount}>
               {f.key === 'todos' ? links.length : links.filter(l => l.type === f.key).length}
             </span>

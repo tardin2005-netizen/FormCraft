@@ -15,6 +15,7 @@ import { useHubToolsStore } from '../store/hubToolsStore'
 import { toolsForHub, findTools } from '../utils/hubTools'
 import { searchPatternsByIntent } from '../utils/globalSearch'
 import s from './BibliotecaModule.module.css'
+import Glyph from '../components/Glyph'
 
 const splitList = (v: string) => v.split(',').map(x => x.trim()).filter(Boolean)
 
@@ -93,7 +94,7 @@ export default function BibliotecaModule({ hubId, isDesignHub }: { hubId: string
 
   const patternsGrid = visible.length === 0 ? (
     <div className={s.empty}>
-      <div className={s.emptyIcon}>{patterns.length === 0 ? '📚' : '🔍'}</div>
+      <div className={s.emptyIcon}><Glyph value={patterns.length === 0 ? 'ph:books' : 'ph:magnifying-glass'} size={32} /></div>
       <div className={s.emptyTitle}>{patterns.length === 0 ? 'Nenhum padrão cadastrado' : 'Nenhum padrão com esse filtro'}</div>
       {patterns.length === 0 && (
         <>
@@ -119,7 +120,7 @@ export default function BibliotecaModule({ hubId, isDesignHub }: { hubId: string
 
   const toolsGrid = toolHits.length === 0 ? (
     <div className={s.empty}>
-      <div className={s.emptyIcon}>🧰</div>
+      <div className={s.emptyIcon}><Glyph value="ph:toolbox" size={32} /></div>
       <div className={s.emptyTitle}>{hasQuery ? 'Nenhuma ferramenta combina' : 'Nenhuma ferramenta neste hub ainda'}</div>
       <div className={s.emptyDesc}>As ferramentas de cada hub são escolhidas por você. Adicione do catálogo de {ALL_TOOLS.length}.</div>
       <button className={s.secondaryBtn} onClick={() => setPicker(true)}>+ Ferramenta</button>

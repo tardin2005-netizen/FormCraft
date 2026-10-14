@@ -5,7 +5,6 @@ import { useHubsStore, type HubType, type Hub } from '../store/hubsStore'
 import { useContentItemsStore } from '../store/contentItemsStore'
 import { useLibraryStore, isDesignHubName } from '../store/libraryStore'
 import { useHubToolsStore } from '../store/hubToolsStore'
-import { toolsForHub } from '../utils/hubTools'
 import EditBtn from '../modules/EditBtn'
 import DeleteBtn from '../modules/DeleteBtn'
 import Glyph from '../components/Glyph'
@@ -51,7 +50,7 @@ export default function Hubs() {
       for (const [key, label] of Object.entries(MODULE_LABELS)) {
         mods.push({ label, n: contentItems.filter(i => i.moduleId === `hub-${hub.id}-${key}`).length })
       }
-      mods.push({ label: 'Biblioteca', n: patterns.filter(p => p.hubId === hub.id || (!p.hubId && isDesignHubName(hub.name))).length + toolsForHub(hub, toolOverrides).length })
+      mods.push({ label: 'Biblioteca', n: patterns.filter(p => p.hubId === hub.id || (!p.hubId && isDesignHubName(hub.name))).length + (toolOverrides[hub.id]?.add.length ?? 0) })
     }
     const filled = mods.filter(m => m.n > 0).sort((a, b) => b.n - a.n)
     return { filled, total: filled.reduce((a, m) => a + m.n, 0) }

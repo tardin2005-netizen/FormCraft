@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { ModuleProps } from './moduleProps'
 import s from './modules.module.css'
 import DeleteBtn from './DeleteBtn'
+import Glyph from '../components/Glyph'
 
 interface ColorData {
   name: string
@@ -102,7 +103,7 @@ export default function ColorLibrary({ module, workspaceId, items, addItem, remo
                   <div className={s.colorTopRow}>
                     <span className={s.colorName}>{d.name}</span>
                     <div style={{ display: 'flex', gap: 4 }}>
-                      <button className={`${s.starBtn} ${item.starred ? s.starActive : ''}`} onClick={() => toggleStar(item.id)}>{item.starred ? '★' : '☆'}</button>
+                      <button className={`${s.starBtn} ${item.starred ? s.starActive : ''}`} onClick={() => toggleStar(item.id)}><Glyph value="ph:star" size={15} weight={item.starred ? 'fill' : 'bold'} /></button>
                       <DeleteBtn onConfirm={() => removeItem(item.id)} />
                     </div>
                   </div>

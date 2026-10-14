@@ -3,6 +3,7 @@ import type { ModuleProps } from './moduleProps'
 import s from './modules.module.css'
 import vs from './VideoEffectsLibrary.module.css'
 import DeleteBtn from './DeleteBtn'
+import Glyph from '../components/Glyph'
 
 interface VideoEffectData {
   name: string
@@ -100,7 +101,7 @@ export default function VideoEffectsLibrary({ module, workspaceId, items, addIte
 
       {items.length === 0 ? (
         <div className={vs.emptyState}>
-          <div className={vs.emptyIcon}>🎬</div>
+          <div className={vs.emptyIcon}><Glyph value="ph:film-strip" size={32} /></div>
           <div className={vs.emptyTitle}>Nenhum efeito de vídeo registrado</div>
           <div className={vs.emptyDesc}>Documente técnicas cinematográficas com como gravar, como editar e prompts prontos.</div>
           <div className={vs.emptySuggestion}>
@@ -131,7 +132,7 @@ export default function VideoEffectsLibrary({ module, workspaceId, items, addIte
                   </div>
                   <div style={{ display: 'flex', gap: 4 }}>
                     <button className={`${s.starBtn} ${item.starred ? s.starActive : ''}`} onClick={() => toggleStar(item.id)}>
-                      {item.starred ? '★' : '☆'}
+                      <Glyph value="ph:star" size={15} weight={item.starred ? 'fill' : 'bold'} />
                     </button>
                     <DeleteBtn onConfirm={() => removeItem(item.id)} />
                   </div>
@@ -159,19 +160,19 @@ export default function VideoEffectsLibrary({ module, workspaceId, items, addIte
                   <div className={vs.expandedContent}>
                     {d.howToShoot && (
                       <div className={vs.infoBlock}>
-                        <div className={vs.infoLabel} style={{ color: '#4f8ef7' }}>📷 Como gravar</div>
+                        <div className={vs.infoLabel} style={{ color: '#4f8ef7' }}><Glyph value="ph:camera" size={14} /> Como gravar</div>
                         <div className={vs.infoText} style={{ whiteSpace: 'pre-line' }}>{d.howToShoot}</div>
                       </div>
                     )}
                     {d.howToEdit && (
                       <div className={vs.infoBlock}>
-                        <div className={vs.infoLabel} style={{ color: '#7c6ef7' }}>✂️ Como editar</div>
+                        <div className={vs.infoLabel} style={{ color: '#7c6ef7' }}><Glyph value="ph:scissors" size={14} /> Como editar</div>
                         <div className={vs.infoText} style={{ whiteSpace: 'pre-line' }}>{d.howToEdit}</div>
                       </div>
                     )}
                     {d.tools && (
                       <div className={vs.infoBlock}>
-                        <div className={vs.infoLabel} style={{ color: '#f59e0b' }}>🛠️ Ferramentas</div>
+                        <div className={vs.infoLabel} style={{ color: '#f59e0b' }}><Glyph value="ph:toolbox" size={14} /> Ferramentas</div>
                         <div className={vs.infoText}>{d.tools}</div>
                       </div>
                     )}

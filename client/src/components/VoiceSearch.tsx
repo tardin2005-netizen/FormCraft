@@ -3,6 +3,7 @@ import { getFunctions, httpsCallable } from 'firebase/functions'
 import app from '../firebase'
 import { ALL_TOOLS } from '../data/tools'
 import s from './VoiceSearch.module.css'
+import Glyph from './Glyph'
 
 interface Props {
   onToolClick?: (url: string) => void
@@ -83,14 +84,14 @@ export default function VoiceSearch({ onToolClick }: Props) {
           onClick={startListening}
           title="Buscar por voz"
         >
-          🎤
+          <Glyph value="ph:microphone" size={16} />
         </button>
       )}
 
       {state === 'listening' && (
         <button className={`${s.micBtn} ${s.micActive}`} onClick={stopListening} title="Parar">
           <span className={s.pulse} />
-          🎤
+          <Glyph value="ph:microphone" size={16} />
         </button>
       )}
 
@@ -130,7 +131,7 @@ export default function VoiceSearch({ onToolClick }: Props) {
           )}
 
           <button className={s.newSearch} onClick={() => { reset(); startListening() }}>
-            🎤 Nova busca por voz
+            <Glyph value="ph:microphone" size={14} /> Nova busca por voz
           </button>
         </div>
       )}

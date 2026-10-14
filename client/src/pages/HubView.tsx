@@ -168,7 +168,7 @@ function ContextMenu({ state, onClose }: { state: CtxMenuState; onClose: () => v
           if (confirm(`Excluir "${state.label}"?`)) state.onDelete()
           onClose()
         }}
-      >🗑 Excluir</button>
+      ><Glyph value="ph:trash" size={14} /> Excluir</button>
     </div>
   )
 }
@@ -197,7 +197,7 @@ function ContentCard({ c, onDelete }: { c: HubContent; onDelete: () => void }) {
   return (
     <div className={s.contentCard}>
       <div className={s.contentCardHead}>
-        <span className={s.cardTypeIcon}>{CONTENT_ICON[c.type]}</span>
+        <span className={s.cardTypeIcon}><Glyph value={CONTENT_ICON[c.type]} size={16} /></span>
         <span className={s.cardTitle}>
           {c.url && !isPdf
             ? <a href={c.url} target="_blank" rel="noopener noreferrer">{c.title}</a>
@@ -533,7 +533,7 @@ function FaculdadeView({ hubId }: { hubId: string }) {
                         <button className={s.actionBtn} onClick={() => setContentModal(true)}>+ Material</button>
                         <button className={s.actionBtn} onClick={() => setClassModal(true)}>+ Aula</button>
                         <button className={s.actionBtn} onClick={() => setConceptModal(true)} disabled={!selClass}>+ Conceito</button>
-                        <button className={s.actionBtnPdf} onClick={() => setPdfModal(true)}>📄 PDF</button>
+                        <button className={s.actionBtnPdf} onClick={() => setPdfModal(true)}><Glyph value="ph:file-pdf" size={14} /> PDF</button>
                       </div>
                     </div>
 
@@ -749,7 +749,7 @@ function FaculdadeView({ hubId }: { hubId: string }) {
                     className={`${s.typeBtn} ${ctxForm.type === t ? s.typeActive : ''}`}
                     onClick={() => { setCtxForm(f => ({ ...f, type: t })); setCtxFile(null); setCtxUpload({ busy: false, pct: 0, error: '' }) }}
                     disabled={ctxUpload.busy}
-                  >{CONTENT_ICON[t]} {CONTENT_LABEL[t]}</button>
+                  ><Glyph value={CONTENT_ICON[t]} size={14} /> {CONTENT_LABEL[t]}</button>
                 ))}
               </div>
             </div>
@@ -781,7 +781,7 @@ function FaculdadeView({ hubId }: { hubId: string }) {
                 >
                   {ctxFile ? (
                     <>
-                      <span className={s.dropIcon}>{ctxForm.type === 'pdf' ? '📄' : '📁'}</span>
+                      <span className={s.dropIcon}><Glyph value={ctxForm.type === 'pdf' ? 'ph:file-pdf' : 'ph:folder'} size={28} /></span>
                       <span className={s.dropName}>{ctxFile.name}</span>
                       <span className={s.dropHint}>{(ctxFile.size / 1024 / 1024).toFixed(1)} MB · clique para trocar</span>
                     </>
@@ -852,7 +852,7 @@ function FaculdadeView({ hubId }: { hubId: string }) {
                 </div>
               ) : (
                 <button className={s.uploadBtn} onClick={() => cptImgRef.current?.click()} disabled={cptUploading}>
-                  {cptUploading ? 'Carregando…' : '📷 Escolher imagem'}
+                  {cptUploading ? 'Carregando…' : <><Glyph value="ph:camera" size={14} /> Escolher imagem</>}
                 </button>
               )}
             </div>
@@ -1200,7 +1200,7 @@ function ChatsView({ hubId }: { hubId: string }) {
       <div className={s.chatMain}>
         {!selChat ? (
           <div className={s.chatEmpty}>
-            <div className={s.chatEmptyIcon}>💬</div>
+            <div className={s.chatEmptyIcon}><Glyph value="ph:chat-circle" size={36} /></div>
             <div>Selecione um canal para começar</div>
           </div>
         ) : (
@@ -1237,7 +1237,7 @@ function ChatsView({ hubId }: { hubId: string }) {
                       <div className={s.msgText}>{msg.text}</div>
                       {msg.url && (
                         <a href={msg.url} target="_blank" rel="noopener noreferrer" className={s.msgLink}>
-                          🔗 {msg.url}
+                          <Glyph value="ph:link" size={12} /> {msg.url}
                         </a>
                       )}
                       <DeleteBtn variant="icon" onConfirm={() => removeChatMessage(msg.id)} />
@@ -1326,11 +1326,11 @@ export default function HubView() {
             <button
               className={`${s.hubTab} ${activeTab === 'content' ? s.hubTabActive : ''}`}
               onClick={() => setActiveTab('content')}
-            >📁 Conteúdo</button>
+            ><Glyph value="ph:folder" size={14} /> Conteúdo</button>
             <button
               className={`${s.hubTab} ${activeTab === 'chats' ? s.hubTabActive : ''}`}
               onClick={() => setActiveTab('chats')}
-            >💬 Conversas</button>
+            ><Glyph value="ph:chat-circle" size={14} /> Conversas</button>
           </div>
           <button
             className={s.deleteHubBtn}
@@ -1340,7 +1340,7 @@ export default function HubView() {
                 navigate('/hubs')
               }
             }}
-          >🗑</button>
+           aria-label="Apagar hub"><Glyph value="ph:trash" size={16} /></button>
         </div>
       </div>
 

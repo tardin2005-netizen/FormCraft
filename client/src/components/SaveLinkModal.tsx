@@ -5,6 +5,7 @@ import app from '../firebase'
 import { useLinksStore } from '../store/linksStore'
 import { useAreasStore } from '../store/areasStore'
 import s from './SaveLinkModal.module.css'
+import Glyph from './Glyph'
 
 interface Props { onClose: () => void }
 
@@ -202,7 +203,7 @@ export default function SaveLinkModal({ onClose }: Props) {
         transition={{ type: 'spring', stiffness: 400, damping: 28 }}
       >
         <div className={s.header} onMouseDown={onHeaderMouseDown} style={{ cursor: 'grab', userSelect: 'none' }}>
-          <span className={s.headerTitle}>🔗 Salvar conteúdo</span>
+          <span className={s.headerTitle}><Glyph value="ph:link" size={16} /> Salvar conteúdo</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: 10, color: 'var(--text2)', background: 'var(--surface2)', padding: '2px 7px', borderRadius: 5, border: '1px solid var(--border)', cursor: 'default', userSelect: 'none' }}>
               ⌘V para colar imagem
@@ -222,7 +223,7 @@ export default function SaveLinkModal({ onClose }: Props) {
               >
                 <img src={pastedImage} alt="Screenshot colado" className={s.previewImg} style={{ height: 120, objectFit: 'contain', background: 'var(--surface2)' }} />
                 <div className={s.previewOverlay} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span className={s.previewDomain}>📋 Imagem do clipboard</span>
+                  <span className={s.previewDomain}><Glyph value="ph:clipboard" size={13} /> Imagem do clipboard</span>
                   <button onClick={() => setPastedImage('')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,.8)', cursor: 'pointer', fontSize: 13 }}>✕</button>
                 </div>
               </motion.div>
@@ -276,7 +277,7 @@ export default function SaveLinkModal({ onClose }: Props) {
                   className={`${s.typeBtn} ${type === t ? s.typeBtnActive : ''}`}
                   onClick={() => setType(t)}
                 >
-                  {TYPE_ICONS[t]} <span>{t}</span>
+                  <Glyph value={TYPE_ICONS[t]} size={15} /> <span>{t}</span>
                 </button>
               ))}
             </div>

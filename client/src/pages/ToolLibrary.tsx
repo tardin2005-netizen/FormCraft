@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ALL_TOOLS, TOOL_CATS, PRICING_COLOR, PRICING_LABEL, type ToolCategory } from '../data/tools'
 import { useSavedToolsStore } from '../store/savedToolsStore'
 import s from './ToolLibrary.module.css'
+import Glyph from '../components/Glyph'
 
 export default function ToolLibrary() {
   const [cat, setCat]       = useState<ToolCategory>('Todas')
@@ -29,7 +30,7 @@ export default function ToolLibrary() {
         </div>
         <input
           className={s.searchInput}
-          placeholder="🔍 Buscar ferramenta..."
+          placeholder="Buscar ferramenta..."
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
@@ -58,7 +59,7 @@ export default function ToolLibrary() {
                   <div className={s.cardCat}>Por {t.cat}</div>
                 </div>
                 {saved
-                  ? <span className={s.savedStar}>★</span>
+                  ? <span className={s.savedStar}><Glyph value="ph:star" size={14} weight="fill" /></span>
                   : <span className={s.pricingBadge} style={{ color: PRICING_COLOR[t.pricing], background: PRICING_COLOR[t.pricing] + '22' }}>{PRICING_LABEL[t.pricing]}</span>
                 }
               </div>
@@ -80,7 +81,7 @@ export default function ToolLibrary() {
                   className={`${s.saveBtn} ${saved ? s.savedBtn : ''}`}
                   onClick={() => saved ? unsaveTool(t.name) : saveTool(t.name)}
                 >
-                  {saved ? '★ Salva' : '☆ Salvar'}
+                  <Glyph value="ph:star" size={13} weight={saved ? 'fill' : 'bold'} /> {saved ? 'Salva' : 'Salvar'}
                 </button>
               </div>
             </div>
@@ -90,7 +91,7 @@ export default function ToolLibrary() {
 
       {filtered.length === 0 && (
         <div className={s.empty}>
-          <div>🔍</div>
+          <div><Glyph value="ph:magnifying-glass" size={28} /></div>
           <div>Nenhuma ferramenta encontrada para "{search}"</div>
         </div>
       )}

@@ -3,6 +3,7 @@ import type { ModuleProps } from './moduleProps'
 import s from './GenericModule.module.css'
 import DeleteBtn from './DeleteBtn'
 import EditBtn from './EditBtn'
+import Glyph from '../components/Glyph'
 
 interface NoteData {
   title: string
@@ -206,7 +207,7 @@ function LinkCard({
       </a>
       <div className={s.cardActions} onClick={e => e.stopPropagation()}>
         <button className={s.pinBtn} onClick={onToggleStar} title={item.starred ? 'Desafixar' : 'Fixar'}>
-          {item.starred ? '📌' : '☆'}
+          <Glyph value="ph:push-pin" size={15} weight={item.starred ? 'fill' : 'bold'} />
         </button>
         <EditBtn onClick={() => onEdit()} />
         <DeleteBtn onConfirm={onDelete} />
@@ -290,7 +291,7 @@ export default function GenericModule({ module, workspaceId, items, addItem, upd
         <>
           {pinnedItems.length > 0 && (
             <>
-              <div className={s.sectionLabel}>📌 Fixados</div>
+              <div className={s.sectionLabel}><Glyph value="ph:push-pin" size={13} /> Fixados</div>
               <div className={s.linkGrid}>
                 {pinnedItems.map(item => (
                   <LinkCard
@@ -325,7 +326,7 @@ export default function GenericModule({ module, workspaceId, items, addItem, upd
         <>
           {pinnedItems.length > 0 && (
             <>
-              <div className={s.sectionLabel}>📌 Fixadas</div>
+              <div className={s.sectionLabel}><Glyph value="ph:push-pin" size={13} /> Fixadas</div>
               <div className={s.grid}>
                 {pinnedItems.map(item => {
                   const d = item.data as unknown as NoteData
@@ -347,7 +348,7 @@ export default function GenericModule({ module, workspaceId, items, addItem, upd
                         </div>
                       )}
                       <div className={s.cardActions} onClick={e => e.stopPropagation()}>
-                        <button className={s.pinBtn} onClick={() => toggleStar(item.id)} title="Desafixar">📌</button>
+                        <button className={s.pinBtn} onClick={() => toggleStar(item.id)} title="Desafixar" aria-label="Desafixar"><Glyph value="ph:push-pin" size={15} weight="fill" /></button>
                         <DeleteBtn onConfirm={() => removeItem(item.id)} />
                       </div>
                     </div>
@@ -381,7 +382,7 @@ export default function GenericModule({ module, workspaceId, items, addItem, upd
                         </div>
                       )}
                       <div className={s.cardActions} onClick={e => e.stopPropagation()}>
-                        <button className={s.pinBtn} onClick={() => toggleStar(item.id)} title="Fixar">☆</button>
+                        <button className={s.pinBtn} onClick={() => toggleStar(item.id)} title="Fixar" aria-label="Fixar"><Glyph value="ph:push-pin" size={15} /></button>
                         <DeleteBtn onConfirm={() => removeItem(item.id)} />
                       </div>
                     </div>

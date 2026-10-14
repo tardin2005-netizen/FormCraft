@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, X, Check, Calendar, Tag, ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
 import { useTasksStore, type Task, type TaskStatus, type TaskUrgency, type TaskRecurrence, type SubTask } from '../store/tasksStore'
 import s from './Tarefas.module.css'
+import Glyph from '../components/Glyph'
 
 // ── Constants ──────────────────────────────────────────────────────────────
 const URGENCY_LABEL: Record<TaskUrgency, string> = {
@@ -464,7 +465,7 @@ export default function Tarefas() {
             <span className={s.stat}><span className={s.statDot} style={{ background: 'var(--text2)' }} />{todoCount} a fazer</span>
             <span className={s.stat}><span className={s.statDot} style={{ background: '#f59e0b' }} />{doingCount} em andamento</span>
             <span className={s.stat}><span className={s.statDot} style={{ background: 'var(--accent)' }} />{doneCount} concluídas</span>
-            {overdueCount > 0 && <span className={`${s.stat} ${s.statOverdue}`}>⚠ {overdueCount} atrasada{overdueCount > 1 ? 's' : ''}</span>}
+            {overdueCount > 0 && <span className={`${s.stat} ${s.statOverdue}`}><Glyph value="ph:warning" size={13} /> {overdueCount} atrasada{overdueCount > 1 ? 's' : ''}</span>}
           </div>
         </div>
 

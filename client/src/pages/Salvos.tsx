@@ -27,7 +27,7 @@ export default function Salvos() {
   return (
     <div className={s.page}>
       <div className={s.header}>
-        <span className={s.icon}>🔖</span>
+        <span className={s.icon}><Glyph value="ph:bookmark-simple" size={16} /></span>
         <div>
           <h1 className={s.title}>Salvos</h1>
           <p className={s.sub}>Mensagens marcadas como importantes em todos os canais</p>
@@ -36,9 +36,9 @@ export default function Salvos() {
 
       {bookmarked.length === 0 ? (
         <div className={s.empty}>
-          <div className={s.emptyIcon}>🔖</div>
+          <div className={s.emptyIcon}><Glyph value="ph:bookmark-simple" size={32} /></div>
           <div className={s.emptyTitle}>Nenhuma mensagem salva ainda</div>
-          <div className={s.emptySub}>Passe o mouse sobre uma mensagem num canal e clique em 🔖 para salvar aqui.</div>
+          <div className={s.emptySub}>Passe o mouse sobre uma mensagem num canal e clique no marcador para salvar aqui.</div>
         </div>
       ) : (
         <div className={s.groups}>
@@ -61,7 +61,7 @@ export default function Salvos() {
                   {msgs.map(msg => (
                     <div key={msg.id} className={s.msgCard}>
                       <div className={s.msgCardText}>
-                        {msg.text || (msg.fileName && <span className={s.msgFile}>📎 {msg.fileName}</span>)}
+                        {msg.text || (msg.fileName && <span className={s.msgFile}><Glyph value="ph:paperclip" size={13} /> {msg.fileName}</span>)}
                       </div>
                       <div className={s.msgCardMeta}>
                         <span className={s.msgCardDate}>{formatDate(msg.timestamp)}</span>

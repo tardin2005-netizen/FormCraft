@@ -4,6 +4,7 @@ import s from './modules.module.css'
 import vs from './SnippetsModule.module.css'
 import DeleteBtn from './DeleteBtn'
 import EditBtn from './EditBtn'
+import Glyph from '../components/Glyph'
 
 type SnippetCategory = 'Mensagem' | 'Endereço' | 'Preço' | 'Procedimento' | 'Outro'
 
@@ -98,7 +99,7 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
       {items.length > 0 && (
         <div className={vs.toolbar}>
           <div className={vs.searchWrap}>
-            <span className={vs.searchIcon}>🔍</span>
+            <span className={vs.searchIcon}><Glyph value="ph:magnifying-glass" size={15} /></span>
             <input
               className={vs.searchInput}
               placeholder="Buscar snippets…"
@@ -125,7 +126,7 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
 
       {items.length === 0 ? (
         <div className={vs.empty}>
-          <div className={vs.emptyIcon}>📋</div>
+          <div className={vs.emptyIcon}><Glyph value="ph:clipboard" size={32} /></div>
           <div className={vs.emptyTitle}>Nenhum snippet salvo</div>
           <div className={vs.emptyDesc}>
             Guarde mensagens prontas, endereços, tabelas de preço e procedimentos. Copie com um clique quando precisar.
@@ -133,7 +134,7 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
         </div>
       ) : visible.length === 0 ? (
         <div className={vs.empty}>
-          <div className={vs.emptyIcon}>🔍</div>
+          <div className={vs.emptyIcon}><Glyph value="ph:magnifying-glass" size={32} /></div>
           <div className={vs.emptyTitle}>Nenhum resultado</div>
           <div className={vs.emptyDesc}>Tente ajustar o filtro ou a busca.</div>
         </div>
@@ -158,7 +159,7 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
                       className={`${s.starBtn} ${item.starred ? s.starActive : ''}`}
                       onClick={e => { e.stopPropagation(); toggleStar(item.id) }}
                     >
-                      {item.starred ? '★' : '☆'}
+                      <Glyph value="ph:star" size={15} weight={item.starred ? 'fill' : 'bold'} />
                     </button>
                     <EditBtn onClick={e => openEdit(item.id, e)} />
                     <span onClick={e => e.stopPropagation()}>
@@ -178,7 +179,7 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
                   className={`${vs.copyBtn} ${isCopied ? vs.copied : ''}`}
                   onClick={e => { e.stopPropagation(); copy(d.body, item.id) }}
                 >
-                  {isCopied ? '✓ Copiado!' : '📋 Copiar'}
+                  {isCopied ? <><Glyph value="ph:check" size={13} /> Copiado!</> : <><Glyph value="ph:clipboard" size={13} /> Copiar</>}
                 </button>
               </div>
             )
@@ -211,7 +212,7 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
                 className={`${vs.copyBtn} ${copied === expandedId ? vs.copied : ''}`}
                 onClick={() => copy(expandedData.body, expandedId)}
               >
-                {copied === expandedId ? '✓ Copiado!' : '📋 Copiar conteúdo'}
+                {copied === expandedId ? <><Glyph value="ph:check" size={13} /> Copiado!</> : <><Glyph value="ph:clipboard" size={13} /> Copiar conteúdo</>}
               </button>
             </div>
           </div>

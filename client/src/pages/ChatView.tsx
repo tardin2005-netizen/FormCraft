@@ -5,6 +5,7 @@ import { useAreaItemsStore } from '../store/areaItemsStore'
 import { useChatMessagesStore } from '../store/chatMessagesStore'
 import { useAuth } from '../contexts/AuthContext'
 import s from './ChatView.module.css'
+import Glyph from '../components/Glyph'
 
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
@@ -250,7 +251,7 @@ export default function ChatView() {
       {pinnedMsgs.length > 0 && (
         <div className={s.pinnedBanner}>
           <button className={s.pinnedBannerRow} onClick={() => setShowPinned(v => !v)}>
-            <span>📌</span>
+            <Glyph value="ph:push-pin" size={14} />
             <span className={s.pinnedBannerLabel}>{pinnedMsgs.length} mensagem{pinnedMsgs.length > 1 ? 's' : ''} fixada{pinnedMsgs.length > 1 ? 's' : ''}</span>
             <span className={s.pinnedChevron}>{showPinned ? '∧' : '∨'}</span>
           </button>
@@ -304,8 +305,8 @@ export default function ChatView() {
                       <div className={s.msgMeta}>
                         <span className={s.msgSender}>{user?.displayName ?? 'Você'}</span>
                         <span className={s.msgTime}>{formatTime(msg.timestamp)}</span>
-                        {msg.pinned && <span className={s.msgPinnedBadge}>📌</span>}
-                        {msg.bookmarked && <span className={s.msgPinnedBadge}>🔖</span>}
+                        {msg.pinned && <span className={s.msgPinnedBadge}><Glyph value="ph:push-pin" size={12} /></span>}
+                        {msg.bookmarked && <span className={s.msgPinnedBadge}><Glyph value="ph:bookmark-simple" size={12} /></span>}
                       </div>
                     )}
                     {msg.text && <div className={s.msgText}>{renderMarkdown(msg.text)}</div>}
@@ -316,7 +317,7 @@ export default function ChatView() {
                     )}
                     {msg.fileData && !msg.fileType?.startsWith('image/') && (
                       <a className={s.msgFile} href={msg.fileData} download={msg.fileName}>
-                        <span className={s.msgFileIcon}>📎</span>
+                        <span className={s.msgFileIcon}><Glyph value="ph:paperclip" size={14} /></span>
                         <span className={s.msgFileName}>{msg.fileName}</span>
                         <span className={s.msgFileDown}>↓</span>
                       </a>
@@ -327,12 +328,12 @@ export default function ChatView() {
                       className={`${s.msgActionBtn} ${msg.pinned ? s.msgActionActive : ''}`}
                       onClick={() => pinMessage(msg.id)}
                       title={msg.pinned ? 'Desafixar' : 'Fixar mensagem'}
-                    >📌</button>
+                     aria-label="Fixar mensagem"><Glyph value="ph:push-pin" size={15} /></button>
                     <button
                       className={`${s.msgActionBtn} ${msg.bookmarked ? s.msgActionActive : ''}`}
                       onClick={() => bookmarkMessage(msg.id)}
                       title={msg.bookmarked ? 'Remover dos salvos' : 'Salvar mensagem'}
-                    >🔖</button>
+                     aria-label="Marcar mensagem"><Glyph value="ph:bookmark-simple" size={15} /></button>
                     <DeleteMsgBtn onDelete={() => deleteMessage(msg.id)} />
                   </div>
                 </div>
@@ -347,7 +348,7 @@ export default function ChatView() {
         {file && (
           <div className={s.filePreview}>
             {file.type.startsWith('image/') && <img className={s.fileThumb} src={file.data} alt={file.name} />}
-            {!file.type.startsWith('image/') && <span className={s.fileIcon}>📎</span>}
+            {!file.type.startsWith('image/') && <span className={s.fileIcon}><Glyph value="ph:paperclip" size={14} /></span>}
             <span className={s.fileName}>{file.name}</span>
             <button className={s.fileRemove} onClick={() => setFile(null)} title="Remover">✕</button>
           </div>

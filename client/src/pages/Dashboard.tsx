@@ -52,15 +52,15 @@ function GitHubWidget() {
   })
 
   if (loading) return <div className={s.ghLoading}>Carregando dados do GitHub...</div>
-  if (error)   return <div className={s.ghError}>⚠️ Repo não encontrado ou privado.</div>
+  if (error)   return <div className={s.ghError}><Glyph value="ph:warning" size={14} /> Repo não encontrado ou privado.</div>
 
   return (
     <div className={s.ghWidget}>
       <div className={s.ghHeader}>
         <span className={s.ghTitle}>tardin2005-netizen/FormCraft</span>
         <div className={s.ghMeta}>
-          <span>⭐ {repo?.stargazers_count}</span>
-          <span>🐛 {repo?.open_issues_count}</span>
+          <span><Glyph value="ph:star" size={13} /> {repo?.stargazers_count}</span>
+          <span><Glyph value="ph:bug" size={13} /> {repo?.open_issues_count}</span>
           <span>{repo?.pushed_at ? new Date(repo.pushed_at).toLocaleDateString('pt-BR') : '—'}</span>
         </div>
       </div>
@@ -250,7 +250,7 @@ export default function Dashboard() {
               const areaName = areas.find(a => a.id === link.areaId)?.title ?? ''
               return (
                 <div key={link.id} className={s.recentItem}>
-                  <span className={s.recentIcon}>{TYPE_ICON[link.type] ?? '🔗'}</span>
+                  <span className={s.recentIcon}><Glyph value={TYPE_ICON[link.type] ?? '🔗'} size={16} /></span>
                   <div className={s.recentInfo}>
                     <div className={s.recentTitle}>{link.title}</div>
                     <div className={s.recentMeta}>

@@ -4,6 +4,7 @@ import s from './modules.module.css'
 import d from './TroubleshootingModule.module.css'
 import DeleteBtn from './DeleteBtn'
 import EditBtn from './EditBtn'
+import Glyph from '../components/Glyph'
 
 type Severidade = 'critico' | 'alto' | 'medio' | 'baixo'
 type Status = 'aberto' | 'investigando' | 'resolvido'
@@ -148,7 +149,7 @@ export default function TroubleshootingModule({ module, workspaceId, items, addI
                     {data.ambiente && <span className={d.envChip}>{data.ambiente}</span>}
                   </div>
                   <div className={d.cardActions}>
-                    <button className={`${s.starBtn} ${item.starred?s.starActive:''}`} onClick={e=>{e.stopPropagation();toggleStar(item.id)}}>{item.starred?'★':'☆'}</button>
+                    <button className={`${s.starBtn} ${item.starred?s.starActive:''}`} onClick={e=>{e.stopPropagation();toggleStar(item.id)}}><Glyph value="ph:star" size={15} weight={item.starred ? 'fill' : 'bold'} /></button>
                     <EditBtn onClick={() => openEdit(item)} />
                     <DeleteBtn onConfirm={()=>removeItem(item.id)}/>
                     <span className={d.chevron}>{isOpen?'↑':'↓'}</span>
