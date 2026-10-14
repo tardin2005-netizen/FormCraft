@@ -11,6 +11,7 @@ import RecommendPanel from '../modules/RecommendPanel'
 import { ALL_TOOLS, type Tool } from '../data/tools'
 import { useHubToolsStore } from '../store/hubToolsStore'
 import { toolsForHub, hubsForTool, findTools } from '../utils/hubTools'
+import { searchPatternsByIntent } from '../utils/globalSearch'
 import { normalize } from '../utils/globalSearch'
 import { imageToDataUrl } from '../utils/imageData'
 import RichText, { plainText } from '../components/RichText'
@@ -89,6 +90,7 @@ export default function Biblioteca() {
   const hasQuery = filter.trim().length > 0
   const toolHits: Tool[] = useMemo(() => (hasQuery ? findTools(filter, toolsInScope) : toolsInScope), [filter, toolsInScope, hasQuery])
   const recommend = hasQuery && tab === 'tudo'
+  const intentPatterns = useMemo(() => (recommend ? searchPatternsByIntent(filter, inScope) : []), [recommend, filter, inScope])
   const countOf = (h: typeof hubs[number]) => patterns.filter(p => hubIdOf(p) === h.id).length + (toolsByHub[h.id]?.length ?? 0)
   const hubsWithPatterns = hubs.filter(h => countOf(h) > 0)
   const defaultHubForNew = hubFilter !== 'todos' ? hubFilter : (designHubId ?? '')
@@ -153,7 +155,7 @@ export default function Biblioteca() {
         <RecommendPanel
           query={filter}
           tools={toolHits}
-          patterns={visible}
+          patterns={intentPatterns}
           hubsOfTool={tl => hubsForTool(tl, hubs, overrides)}
           onOpenPattern={p => navigate(`/biblioteca/${p.id}`)}
         />

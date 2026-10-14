@@ -13,6 +13,7 @@ import { ALL_TOOLS, type Tool } from '../data/tools'
 import { useHubsStore } from '../store/hubsStore'
 import { useHubToolsStore } from '../store/hubToolsStore'
 import { toolsForHub, findTools } from '../utils/hubTools'
+import { searchPatternsByIntent } from '../utils/globalSearch'
 import s from './BibliotecaModule.module.css'
 
 const splitList = (v: string) => v.split(',').map(x => x.trim()).filter(Boolean)
@@ -81,6 +82,7 @@ export default function BibliotecaModule({ hubId, isDesignHub }: { hubId: string
     return findTools(pickerQ, ALL_TOOLS.filter(x => !inHub.has(x.name)), 30)
   }, [pickerQ, hubTools])
   const recommend = hasQuery && tab === 'tudo'
+  const intentPatterns = useMemo(() => (recommend ? searchPatternsByIntent(filter, patterns) : []), [recommend, filter, patterns])
 
   function handleSave(f: FormState) {
     const input = toInput(f)
@@ -168,7 +170,7 @@ export default function BibliotecaModule({ hubId, isDesignHub }: { hubId: string
         <RecommendPanel
           query={filter}
           tools={toolHits}
-          patterns={visible}
+          patterns={intentPatterns}
           onOpenPattern={setDetail}
           onSearchAll={allCatalog ? undefined : () => setAllCatalog(true)}
         />

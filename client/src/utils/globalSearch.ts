@@ -21,6 +21,7 @@ const INTENT_SYNONYMS: Record<string, string[]> = {
   logo: ['design', 'grafi'], thum: ['design', 'imag'], cria: [], foto: ['imag', 'foto'],
   vide: ['vide'], reel: ['vide'], clip: ['vide'], musi: ['musi'], metr: ['metr', 'analyt', 'anal'],
   site: ['site', 'cms', 'web'], land: ['site'], cod: ['codi', 'program', 'dev'], resu: ['resum', 'texto'],
+  edit: ['edic', 'editor'], anim: ['anim', 'motion'], efei: ['efei', 'transic'],
 }
 const GENERIC = new Set(['gera', 'cria', 'crie', 'faze', 'usar', 'ferr', 'melh', 'app', 'apps', 'onli', 'grat'])
 
@@ -188,4 +189,28 @@ export function searchFaculdade(query: string, src: { hubs: Hub[]; subjects: Sub
     if (match(c.title, c.content, c.url, subj?.name, hub?.name)) out.push({ kind: 'content', id: c.id, hub, title: c.title, sub: `${hub?.name ?? ''} · ${subj?.name ?? 'Material'}`, href: `/hub/${c.hubId}?sem=${c.semesterId ?? ''}&subj=${c.subjectId ?? ''}&cls=${c.classId ?? ''}` })
   }
   return out.slice(0, limit)
+}
+
+
+/** Patterns that answer a request like "preciso editar um vídeo": any distinctive word (or its synonym) in name, category, tags or description. */
+export function searchPatternsByIntent(query: string, patterns: DesignPattern[], limit = 6): DesignPattern[] {
+  const tokens = normalize(query).split(/[^a-z0-9]+/).filter(x => x.length >= 3 && !STOPWORDS.has(x) && !GENERIC.has(stem(x))).map(stem)
+  if (tokens.length === 0) return []
+  const groups = tokens.map(tk => [tk, ...(Object.entries(INTENT_SYNONYMS).find(([k]) => tk.startsWith(k))?.[1] ?? [])])
+  const need = Math.max(1, Math.ceil(groups.length / 2))
+  return patterns
+    .map(p => {
+      const nameWords = wordsOf(normalize([p.nomePrincipal, ...p.sinonimos, p.categoria].join(' ')))
+      const words = [...nameWords, ...wordsOf(normalize([...p.tags, p.oQueE, p.ondeUsar].join(' ')))]
+      let score = 0, hits = 0
+      for (const alts of groups) {
+        if (alts.some(a => nameWords.some(w => w.startsWith(a)))) { score += 2; hits++ }
+        else if (alts.some(a => words.some(w => w.startsWith(a)))) { score += 1; hits++ }
+      }
+      return { p, score, ok: hits >= need }
+    })
+    .filter(x => x.ok)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map(x => x.p)
 }
