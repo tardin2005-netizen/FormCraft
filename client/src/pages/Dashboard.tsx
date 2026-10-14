@@ -162,7 +162,7 @@ export default function Dashboard() {
       <section className={s.section}>
         <div className={s.sectionRow}>
           <div>
-            <h2 className={s.sectionTitle}>Meus Hubs</h2>
+            <h2 className={s.sectionTitle}>Hubs</h2>
             <p className={s.sectionDesc}>Espaços estruturados para projetos longos — faculdade, estudos ou qualquer projeto com semestres, matérias e materiais organizados.</p>
           </div>
           <Link to="/hubs" className={s.sectionLink}>Ver todos →</Link>

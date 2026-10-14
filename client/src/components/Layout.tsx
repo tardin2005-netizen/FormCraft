@@ -30,7 +30,7 @@ const ACCENT_LABELS: Record<Accent, string> = {
 
 const NAV_ITEMS = [
   { to: '/',            Icon: LayoutDashboard, label: 'Início' },
-  { to: '/hubs',        Icon: Hexagon,         label: 'Meus Hubs' },
+  { to: '/hubs',        Icon: Hexagon,         label: 'Hubs' },
   { to: '/conceitos',   Icon: Lightbulb,       label: 'Conceitos' },
   { to: '/biblioteca',  Icon: Library,         label: 'Biblioteca' },
   { to: '/tarefas',     Icon: CheckSquare,     label: 'Tarefas' },
@@ -759,7 +759,7 @@ export default function Layout() {
             onClick={() => setMoreOpen(false)}
           >
             <Icon size={20} />
-            <span>{label === 'Meus Hubs' ? 'Hubs' : label}</span>
+            <span>{label}</span>
           </NavLink>
         ))}
         <button

@@ -234,9 +234,9 @@
   background: var(--surface); flex-shrink: 0; position: relative; z-index: 10;
 }
 .topLeft { display: flex; align-items: center; gap: 8px; }
+.topLogo { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: var(--accent); white-space: nowrap; }
 .topLogoDup { display: none; }
 @media (max-width: 768px) { .topLogoDup { display: inline-flex; } }
-.topLogo { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: var(--accent); white-space: nowrap; }
 
 .topActions { display: flex; align-items: center; gap: 6px; }
 .topSearchBtn {

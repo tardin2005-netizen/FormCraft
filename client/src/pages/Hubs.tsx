@@ -124,7 +124,7 @@ export default function Hubs() {
     <div className={s.page}>
       <div className={s.pageHeader}>
         <div>
-          <h1 className={s.title}>Meus Hubs</h1>
+          <h1 className={s.title}>Hubs</h1>
           <p className={s.sub}>Organize seu conhecimento em espaços dedicados</p>
         </div>
         <button className={s.newBtn} onClick={openModal}>+ Novo Hub</button>
