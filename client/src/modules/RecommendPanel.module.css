@@ -1,0 +1,24 @@
+.panel { display: flex; flex-direction: column; gap: 16px; }
+.intent { font-size: 13px; font-weight: 600; color: var(--accent); }
+.cols { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+.col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.colTitle { display: flex; align-items: baseline; gap: 8px; font-size: 15px; font-weight: 700; color: var(--text); }
+.colSub { font-size: 12px; font-weight: 400; color: var(--text2); }
+.patBtn {
+  display: flex; flex-direction: column; text-align: left; padding: 0; overflow: hidden; cursor: pointer; color: inherit; font: inherit;
+  background: var(--surface); border: 2px solid var(--text); border-radius: 14px; box-shadow: 5px 5px 0 var(--border);
+  transition: transform .12s, box-shadow .12s;
+}
+.patBtn:hover { transform: translate(-2px, -2px); box-shadow: 7px 7px 0 var(--accent); }
+.patBtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.patBody { padding: 10px 14px; border-top: 2px solid var(--text); display: flex; flex-direction: column; gap: 2px; }
+.patCat { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
+.patTitle { font-size: 14px; font-weight: 600; color: var(--text); }
+.none { font-size: 13px; color: var(--text2); display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.moreBtn {
+  height: 32px; padding: 0 14px; border-radius: 10px; background: var(--surface); color: var(--text); font: 600 12.5px inherit; font-family: inherit;
+  border: 1.5px solid var(--text); cursor: pointer;
+}
+.moreBtn:hover { background: var(--surface2); }
+@media (max-width: 760px) { .cols { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .patBtn { transition: none; } .patBtn:hover { transform: none; } }

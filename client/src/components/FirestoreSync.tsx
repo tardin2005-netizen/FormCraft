@@ -8,6 +8,7 @@ import { useAreasStore } from '../store/areasStore'
 import { useAreaItemsStore } from '../store/areaItemsStore'
 import { useHubsStore } from '../store/hubsStore'
 import { useSavedToolsStore } from '../store/savedToolsStore'
+import { useHubToolsStore } from '../store/hubToolsStore'
 import { useContentItemsStore } from '../store/contentItemsStore'
 import { useTasksStore } from '../store/tasksStore'
 import { useLibraryStore } from '../store/libraryStore'
@@ -137,6 +138,12 @@ export default function FirestoreSync() {
         doc(db, 'users', uid, 'meta', 'savedTools'),
         snap => {
           if (snap.exists()) useSavedToolsStore.getState().hydrate(snap.data().saved ?? [])
+        }
+      ),
+      onSnapshot(
+        doc(db, 'users', uid, 'meta', 'hubTools'),
+        snap => {
+          if (snap.exists()) useHubToolsStore.getState().hydrate(snap.data().overrides ?? {})
         }
       ),
       onSnapshot(

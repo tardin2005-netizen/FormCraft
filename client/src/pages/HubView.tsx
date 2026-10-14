@@ -23,6 +23,8 @@ import KeepNotes from '../modules/KeepNotes'
 import SnippetsModule from '../modules/SnippetsModule'
 import BibliotecaModule from '../modules/BibliotecaModule'
 import { useLibraryStore, isDesignHubName } from '../store/libraryStore'
+import { useHubToolsStore } from '../store/hubToolsStore'
+import { toolsForHub } from '../utils/hubTools'
 import s from './HubView.module.css'
 
 /* ─── helpers ─── */
@@ -910,6 +912,9 @@ function GenericHubView({ hubId }: { hubId: string }) {
   const { items } = useContentItemsStore()
   const hubName = useHubsStore(st => st.hubs.find(h => h.id === hubId)?.name ?? '')
   const patternCount = useLibraryStore(st => st.patterns.filter(p => p.hubId === hubId || (!p.hubId && isDesignHubName(hubName))).length)
+  const hubObj = useHubsStore(st => st.hubs.find(h => h.id === hubId))
+  const toolOverrides = useHubToolsStore(st => st.overrides)
+  const toolCount = hubObj ? toolsForHub(hubObj, toolOverrides).length : 0
   const [searchParams] = useSearchParams()
   const tabParam = searchParams.get('tab')
   const [activeTab, setActiveTab] = useState(WORKSPACE_TABS.some(t => t.key === tabParam) ? tabParam! : WORKSPACE_TABS[0].key)
@@ -921,7 +926,7 @@ function GenericHubView({ hubId }: { hubId: string }) {
   const addModuleBtnRef = useRef<HTMLButtonElement>(null)
 
   const itemCount = (key: string) =>
-    key === 'biblioteca' ? patternCount : items.filter(i => i.moduleId === `hub-${hubId}-${key}`).length
+    key === 'biblioteca' ? patternCount + toolCount : items.filter(i => i.moduleId === `hub-${hubId}-${key}`).length
 
   const populatedTabs = WORKSPACE_TABS.filter(t => itemCount(t.key) > 0)
   const emptyTabs = WORKSPACE_TABS.filter(t => itemCount(t.key) === 0)

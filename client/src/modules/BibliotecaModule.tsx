@@ -7,6 +7,12 @@ import { normalize } from '../utils/globalSearch'
 import { imageToDataUrl } from '../utils/imageData'
 import RichText, { plainText } from '../components/RichText'
 import PatternPreview from './PatternPreview'
+import ToolTile from './ToolTile'
+import RecommendPanel from './RecommendPanel'
+import { ALL_TOOLS, type Tool } from '../data/tools'
+import { useHubsStore } from '../store/hubsStore'
+import { useHubToolsStore } from '../store/hubToolsStore'
+import { toolsForHub, findTools } from '../utils/hubTools'
 import s from './BibliotecaModule.module.css'
 
 const splitList = (v: string) => v.split(',').map(x => x.trim()).filter(Boolean)
@@ -40,6 +46,14 @@ export default function BibliotecaModule({ hubId, isDesignHub }: { hubId: string
     () => allPatterns.filter(p => p.hubId === hubId || (!p.hubId && isDesignHub)),
     [allPatterns, hubId, isDesignHub],
   )
+  const hub = useHubsStore(st => st.hubs.find(h => h.id === hubId))
+  const overrides = useHubToolsStore(st => st.overrides)
+  const { addTool, removeTool } = useHubToolsStore()
+  const [tab, setTab] = useState<'tudo' | 'padroes' | 'ferramentas'>('tudo')
+  const [allCatalog, setAllCatalog] = useState(false)
+  const [picker, setPicker] = useState(false)
+  const [pickerQ, setPickerQ] = useState('')
+  const hubTools = useMemo(() => (hub ? toolsForHub(hub, overrides) : []), [hub, overrides])
   const [filter, setFilter] = useState('')
   const [cat, setCat] = useState<PatternCategory | 'Todas'>('Todas')
   const [detail, setDetail] = useState<DesignPattern | null>(null)
@@ -59,6 +73,15 @@ export default function BibliotecaModule({ hubId, isDesignHub }: { hubId: string
 
   const usedCats = PATTERN_CATEGORIES.filter(c => patterns.some(p => p.categoria === c))
 
+  const hasQuery = filter.trim().length > 0
+  const toolPool = allCatalog ? ALL_TOOLS : hubTools
+  const toolHits: Tool[] = useMemo(() => (hasQuery ? findTools(filter, toolPool) : toolPool), [filter, toolPool, hasQuery])
+  const pickerList = useMemo(() => {
+    const inHub = new Set(hubTools.map(x => x.name))
+    return findTools(pickerQ, ALL_TOOLS.filter(x => !inHub.has(x.name)), 30)
+  }, [pickerQ, hubTools])
+  const recommend = hasQuery && tab === 'tudo'
+
   function handleSave(f: FormState) {
     const input = toInput(f)
     if (editing && editing !== 'new') updatePattern(editing.id, { ...input, hubId: editing.hubId })
@@ -66,56 +89,125 @@ export default function BibliotecaModule({ hubId, isDesignHub }: { hubId: string
     setEditing(null)
   }
 
+  const patternsGrid = visible.length === 0 ? (
+    <div className={s.empty}>
+      <div className={s.emptyIcon}>{patterns.length === 0 ? '📚' : '🔍'}</div>
+      <div className={s.emptyTitle}>{patterns.length === 0 ? 'Nenhum padrão cadastrado' : 'Nenhum padrão com esse filtro'}</div>
+      {patterns.length === 0 && (
+        <>
+          <div className={s.emptyDesc}>Esta biblioteca é só deste hub. Cadastre seus padrões ou comece com os padrões iniciais de design.</div>
+          <button className={s.secondaryBtn} onClick={() => DEFAULT_PATTERNS.forEach(d => addPattern({ ...d, hubId }))}>Adicionar padrões iniciais</button>
+        </>
+      )}
+    </div>
+  ) : (
+    <div className={s.grid}>
+      {visible.map(p => (
+        <button key={p.id} className={s.card} onClick={() => setDetail(p)}>
+          <PatternPreview pattern={p} />
+          <div className={s.cardBody}>
+            <span className={s.cardCat}>{p.categoria}</span>
+            <div className={s.cardTitle}>{p.nomePrincipal}</div>
+            <div className={s.cardDef}>{plainText(p.oQueE)}</div>
+          </div>
+        </button>
+      ))}
+    </div>
+  )
+
+  const toolsGrid = toolHits.length === 0 ? (
+    <div className={s.empty}>
+      <div className={s.emptyIcon}>🧰</div>
+      <div className={s.emptyTitle}>{hasQuery ? 'Nenhuma ferramenta combina' : 'Nenhuma ferramenta neste hub ainda'}</div>
+      <div className={s.emptyDesc}>As ferramentas de cada hub são escolhidas por você. Adicione do catálogo de {ALL_TOOLS.length}.</div>
+      <button className={s.secondaryBtn} onClick={() => setPicker(true)}>+ Ferramenta</button>
+    </div>
+  ) : (
+    <div className={s.toolGrid}>
+      {toolHits.map(tl => (
+        <ToolTile key={tl.name} tool={tl} onRemoveFromHub={allCatalog ? undefined : () => removeTool(hubId, tl.name)} />
+      ))}
+    </div>
+  )
+
   return (
     <div className={s.wrap}>
       <div className={s.header}>
         <h2 className={s.title}>Biblioteca</h2>
-        <button className={s.addBtn} onClick={() => setEditing('new')}>+ Padrão</button>
+        <div className={s.headerBtns}>
+          <button className={s.secondaryBtn} onClick={() => setPicker(true)}>+ Ferramenta</button>
+          <button className={s.addBtn} onClick={() => setEditing('new')}>+ Padrão</button>
+        </div>
+      </div>
+
+      <div className={s.tabs} role="tablist">
+        {([['tudo', 'Tudo'], ['padroes', `Padrões · ${patterns.length}`], ['ferramentas', `Ferramentas · ${hubTools.length}`]] as const).map(([k, label]) => (
+          <button key={k} role="tab" aria-selected={tab === k} className={`${s.tab} ${tab === k ? s.tabActive : ''}`} onClick={() => setTab(k)}>{label}</button>
+        ))}
       </div>
 
       <div className={s.toolbar}>
         <input
           className={s.filterInput}
-          placeholder="Filtrar por nome, sinônimo ou tag…"
+          placeholder="Busque ou descreva o que precisa: “preciso editar um vídeo”…"
           value={filter}
-          onChange={e => setFilter(e.target.value)}
+          onChange={e => { setFilter(e.target.value); setAllCatalog(false) }}
         />
-        <div className={s.catRow}>
-          {(['Todas', ...usedCats] as const).map(c => (
-            <button key={c} className={`${s.catChip} ${cat === c ? s.catChipActive : ''}`} onClick={() => setCat(c)}>
-              {c}
-            </button>
-          ))}
-        </div>
+        {tab !== 'ferramentas' && !recommend && (
+          <div className={s.catRow}>
+            {(['Todas', ...usedCats] as const).map(c => (
+              <button key={c} className={`${s.catChip} ${cat === c ? s.catChipActive : ''}`} onClick={() => setCat(c)}>
+                {c}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {patterns.length === 0 ? (
-        <div className={s.empty}>
-          <div className={s.emptyIcon}>📚</div>
-          <div className={s.emptyTitle}>Nenhum padrão cadastrado</div>
-          <div className={s.emptyDesc}>Esta biblioteca é só deste hub. Cadastre seus padrões ou comece com os padrões iniciais de design.</div>
-          <button className={s.secondaryBtn} onClick={() => DEFAULT_PATTERNS.forEach(d => addPattern({ ...d, hubId }))}>
-            Adicionar padrões iniciais
-          </button>
-        </div>
-      ) : visible.length === 0 ? (
-        <div className={s.empty}>
-          <div className={s.emptyIcon}>🔍</div>
-          <div className={s.emptyTitle}>Nenhum resultado</div>
-          <div className={s.emptyDesc}>Tente ajustar o filtro ou a categoria.</div>
-        </div>
+      {recommend ? (
+        <RecommendPanel
+          query={filter}
+          tools={toolHits}
+          patterns={visible}
+          onOpenPattern={setDetail}
+          onSearchAll={allCatalog ? undefined : () => setAllCatalog(true)}
+        />
       ) : (
-        <div className={s.grid}>
-          {visible.map(p => (
-            <button key={p.id} className={s.card} onClick={() => setDetail(p)}>
-              <PatternPreview pattern={p} />
-              <div className={s.cardBody}>
-                <span className={s.cardCat}>{p.categoria}</span>
-                <div className={s.cardTitle}>{p.nomePrincipal}</div>
-                <div className={s.cardDef}>{plainText(p.oQueE)}</div>
-              </div>
-            </button>
-          ))}
+        <>
+          {(tab === 'tudo' || tab === 'padroes') && (
+            <section className={s.block}>
+              {tab === 'tudo' && <h3 className={s.blockTitle}>Padrões <span>{visible.length}</span></h3>}
+              {patternsGrid}
+            </section>
+          )}
+          {(tab === 'tudo' || tab === 'ferramentas') && (
+            <section className={s.block}>
+              {tab === 'tudo' && <h3 className={s.blockTitle}>Ferramentas <span>{toolHits.length}</span></h3>}
+              {toolsGrid}
+            </section>
+          )}
+        </>
+      )}
+
+      {picker && (
+        <div className={s.backdrop} onClick={() => setPicker(false)}>
+          <div className={s.detail} onClick={e => e.stopPropagation()}>
+            <div className={s.detailHead}>
+              <h2 className={s.formTitle}>Adicionar ferramenta a este hub</h2>
+              <button className={s.iconBtn} onClick={() => setPicker(false)} aria-label="Fechar">✕</button>
+            </div>
+            <input className={s.input} autoFocus placeholder="Buscar no catálogo…" value={pickerQ} onChange={e => setPickerQ(e.target.value)} />
+            <div className={s.pickerList}>
+              {pickerList.length === 0 && <div className={s.emptyDesc}>Todas as ferramentas que combinam já estão neste hub.</div>}
+              {pickerList.map(tl => (
+                <div key={tl.name} className={s.pickerRow}>
+                  <span className={s.pickerLogo} style={{ background: tl.color }}>{tl.letter}</span>
+                  <span className={s.pickerText}><strong>{tl.name}</strong><small>{tl.cat} · {tl.desc}</small></span>
+                  <button className={s.secondaryBtn} onClick={() => addTool(hubId, tl.name)}>Adicionar</button>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 

@@ -1,0 +1,31 @@
+.tile {
+  display: flex; flex-direction: column; gap: 10px; padding: 14px;
+  background: var(--surface); border: 2px solid var(--text); border-radius: 14px;
+  box-shadow: 5px 5px 0 var(--border); transition: transform .12s, box-shadow .12s;
+}
+.tile:hover { transform: translate(-2px, -2px); box-shadow: 7px 7px 0 var(--accent); }
+.head { display: flex; align-items: center; gap: 10px; }
+.logo {
+  width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0; color: #fff; font-weight: 800; font-size: 17px;
+  display: flex; align-items: center; justify-content: center;
+}
+.names { display: flex; flex-direction: column; min-width: 0; }
+.name { font-size: 15px; font-weight: 700; color: var(--text); }
+.cat { font-size: 11px; color: var(--text2); }
+.desc { font-size: 12.5px; line-height: 1.5; color: var(--text2); }
+.reason { font-size: 12px; font-weight: 600; color: var(--accent); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { padding: 2px 9px; border-radius: 20px; font-size: 10.5px; font-weight: 600; background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+.hubChip { background: var(--accent-muted); color: var(--accent); border-color: transparent; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
+.open, .ghost {
+  display: inline-flex; align-items: center; justify-content: center; height: 30px; padding: 0 12px; border-radius: 9px;
+  font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: none; transition: background-color .15s, transform .12s;
+}
+.open { background: var(--accent); color: #fff; border: 1.5px solid var(--accent); }
+.open:hover { opacity: .9; transform: translateY(-1px); }
+.ghost { background: transparent; color: var(--text); border: 1.5px solid var(--border); }
+.ghost:hover { border-color: var(--text); background: var(--surface2); }
+.saved { color: #f59e0b; border-color: #f59e0b; }
+.open:focus-visible, .ghost:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .tile, .open, .ghost { transition: none; } .tile:hover, .open:hover { transform: none; } }

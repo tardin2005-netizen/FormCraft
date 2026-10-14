@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useHubsStore, type HubType, type Hub } from '../store/hubsStore'
 import { useContentItemsStore } from '../store/contentItemsStore'
 import { useLibraryStore, isDesignHubName } from '../store/libraryStore'
+import { useHubToolsStore } from '../store/hubToolsStore'
+import { toolsForHub } from '../utils/hubTools'
 import EditBtn from '../modules/EditBtn'
 import DeleteBtn from '../modules/DeleteBtn'
 import s from './Hubs.module.css'
@@ -32,6 +34,7 @@ export default function Hubs() {
   const { hubs, semesters, subjects, classes, contents, concepts, addHub, updateHub, removeHub } = useHubsStore()
   const contentItems = useContentItemsStore(st => st.items)
   const patterns = useLibraryStore(st => st.patterns)
+  const toolOverrides = useHubToolsStore(st => st.overrides)
 
   function hubSummary(hub: Hub) {
     const mods: { label: string; n: number }[] = []
@@ -46,7 +49,7 @@ export default function Hubs() {
       for (const [key, label] of Object.entries(MODULE_LABELS)) {
         mods.push({ label, n: contentItems.filter(i => i.moduleId === `hub-${hub.id}-${key}`).length })
       }
-      mods.push({ label: 'Biblioteca', n: patterns.filter(p => p.hubId === hub.id || (!p.hubId && isDesignHubName(hub.name))).length })
+      mods.push({ label: 'Biblioteca', n: patterns.filter(p => p.hubId === hub.id || (!p.hubId && isDesignHubName(hub.name))).length + toolsForHub(hub, toolOverrides).length })
     }
     const filled = mods.filter(m => m.n > 0).sort((a, b) => b.n - a.n)
     return { filled, total: filled.reduce((a, m) => a + m.n, 0) }

@@ -6,6 +6,11 @@ import {
 } from '../store/libraryStore'
 import { useHubsStore, type Hub } from '../store/hubsStore'
 import PatternPreview from '../modules/PatternPreview'
+import ToolTile from '../modules/ToolTile'
+import RecommendPanel from '../modules/RecommendPanel'
+import { ALL_TOOLS, type Tool } from '../data/tools'
+import { useHubToolsStore } from '../store/hubToolsStore'
+import { toolsForHub, hubsForTool, findTools } from '../utils/hubTools'
 import { normalize } from '../utils/globalSearch'
 import { imageToDataUrl } from '../utils/imageData'
 import RichText, { plainText } from '../components/RichText'
@@ -52,6 +57,8 @@ export default function Biblioteca() {
   const hubIdOf = (p: DesignPattern) => (p.hubId && hubs.some(h => h.id === p.hubId) ? p.hubId : designHubId)
   const hubById = (hid?: string) => hubs.find(h => h.id === hid)
 
+  const overrides = useHubToolsStore(st => st.overrides)
+  const [tab, setTab] = useState<'tudo' | 'padroes' | 'ferramentas'>('tudo')
   const [hubFilter, setHubFilter] = useState<string>('todos')
   const [filter, setFilter] = useState('')
   const [cat, setCat] = useState<PatternCategory | 'Todas'>('Todas')
@@ -74,7 +81,16 @@ export default function Biblioteca() {
 
   const inScope = patterns.filter(p => hubFilter === 'todos' || hubIdOf(p) === hubFilter)
   const usedCats = PATTERN_CATEGORIES.filter(c => inScope.some(p => p.categoria === c))
-  const hubsWithPatterns = hubs.filter(h => patterns.some(p => hubIdOf(p) === h.id))
+  const toolsByHub = useMemo(() => Object.fromEntries(hubs.map(h => [h.id, toolsForHub(h, overrides)])) as Record<string, Tool[]>, [hubs, overrides])
+  const toolsInScope: Tool[] = useMemo(() => {
+    if (hubFilter === 'todos') return ALL_TOOLS
+    return toolsByHub[hubFilter] ?? []
+  }, [hubFilter, toolsByHub])
+  const hasQuery = filter.trim().length > 0
+  const toolHits: Tool[] = useMemo(() => (hasQuery ? findTools(filter, toolsInScope) : toolsInScope), [filter, toolsInScope, hasQuery])
+  const recommend = hasQuery && tab === 'tudo'
+  const countOf = (h: typeof hubs[number]) => patterns.filter(p => hubIdOf(p) === h.id).length + (toolsByHub[h.id]?.length ?? 0)
+  const hubsWithPatterns = hubs.filter(h => countOf(h) > 0)
   const defaultHubForNew = hubFilter !== 'todos' ? hubFilter : (designHubId ?? '')
 
   function handleSave(f: FormState) {
@@ -103,53 +119,89 @@ export default function Biblioteca() {
       <div className={s.toolbar}>
         <div className={s.catRow}>
           <button className={`${s.catChip} ${hubFilter === 'todos' ? s.catChipActive : ''}`} onClick={() => { setHubFilter('todos'); setCat('Todas') }}>
-            Todos os hubs ({patterns.length})
+            Todos os hubs ({patterns.length + ALL_TOOLS.length})
           </button>
           {hubsWithPatterns.map(h => (
             <button key={h.id} className={`${s.catChip} ${hubFilter === h.id ? s.catChipActive : ''}`} onClick={() => { setHubFilter(h.id); setCat('Todas') }}>
-              {h.emoji} {h.name} ({patterns.filter(p => hubIdOf(p) === h.id).length})
+              {h.emoji} {h.name} ({countOf(h)})
             </button>
+          ))}
+        </div>
+        <div className={s.tabs} role="tablist">
+          {([['tudo', 'Tudo'], ['padroes', `Padrões · ${inScope.length}`], ['ferramentas', `Ferramentas · ${toolsInScope.length}`]] as const).map(([k, label]) => (
+            <button key={k} role="tab" aria-selected={tab === k} className={`${s.tab} ${tab === k ? s.tabActive : ''}`} onClick={() => setTab(k)}>{label}</button>
           ))}
         </div>
         <input
           className={s.filterInput}
-          placeholder="Filtrar por nome, sinônimo ou tag…"
+          placeholder="Busque ou descreva o que precisa: “preciso editar um vídeo”…"
           value={filter}
           onChange={e => setFilter(e.target.value)}
         />
-        <div className={s.catRow}>
-          {(['Todas', ...usedCats] as const).map(c => (
-            <button key={c} className={`${s.catChip} ${cat === c ? s.catChipActive : ''}`} onClick={() => setCat(c)}>
-              {c}
-            </button>
-          ))}
-        </div>
+        {tab !== 'ferramentas' && !recommend && (
+          <div className={s.catRow}>
+            {(['Todas', ...usedCats] as const).map(c => (
+              <button key={c} className={`${s.catChip} ${cat === c ? s.catChipActive : ''}`} onClick={() => setCat(c)}>
+                {c}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {patterns.length === 0 ? (
-        <button className={s.emptyCard} onClick={() => setEditing('new')}>
-          <span className={s.emptyPlus}>+</span>
-          <span className={s.emptyTitle}>Cadastre seu primeiro padrão</span>
-          <span className={s.emptyDesc}>Hover, motion, gradientes, cards flutuantes… cada padrão vira um card pesquisável.</span>
-        </button>
-      ) : visible.length === 0 ? (
-        <p className={s.noMatch}>Nenhum padrão bate com esse filtro.</p>
+      {recommend ? (
+        <RecommendPanel
+          query={filter}
+          tools={toolHits}
+          patterns={visible}
+          hubsOfTool={tl => hubsForTool(tl, hubs, overrides)}
+          onOpenPattern={p => navigate(`/biblioteca/${p.id}`)}
+        />
       ) : (
-        <div className={s.grid}>
-          {visible.map(p => (
-            <button key={p.id} className={s.card} onClick={() => navigate(`/biblioteca/${p.id}`)}>
-              <PatternPreview pattern={p} />
-              <div className={s.cardBody}>
-                <span className={s.cardCat}>{p.categoria}</span>
-                <div className={s.cardTitle}>{p.nomePrincipal}</div>
-                <div className={s.cardDef}>{plainText(p.oQueE)}</div>
-              </div>
-              {hubById(hubIdOf(p)) && (
-                <div className={s.cardFoot}>{hubById(hubIdOf(p))!.emoji} {hubById(hubIdOf(p))!.name}</div>
+        <>
+          {(tab === 'tudo' || tab === 'padroes') && (
+            <section className={s.block}>
+              {tab === 'tudo' && <h2 className={s.blockTitle}>Padrões <span>{visible.length}</span></h2>}
+              {patterns.length === 0 ? (
+                <button className={s.emptyCard} onClick={() => setEditing('new')}>
+                  <span className={s.emptyPlus}>+</span>
+                  <span className={s.emptyTitle}>Cadastre seu primeiro padrão</span>
+                  <span className={s.emptyDesc}>Hover, motion, gradientes, cards flutuantes… cada padrão vira um card pesquisável.</span>
+                </button>
+              ) : visible.length === 0 ? (
+                <p className={s.noMatch}>Nenhum padrão bate com esse filtro.</p>
+              ) : (
+                <div className={s.grid}>
+                  {visible.map(p => (
+                    <button key={p.id} className={s.card} onClick={() => navigate(`/biblioteca/${p.id}`)}>
+                      <PatternPreview pattern={p} />
+                      <div className={s.cardBody}>
+                        <span className={s.cardCat}>{p.categoria}</span>
+                        <div className={s.cardTitle}>{p.nomePrincipal}</div>
+                        <div className={s.cardDef}>{plainText(p.oQueE)}</div>
+                      </div>
+                      {hubById(hubIdOf(p)) && (
+                        <div className={s.cardFoot}>{hubById(hubIdOf(p))!.emoji} {hubById(hubIdOf(p))!.name}</div>
+                      )}
+                    </button>
+                  ))}
+                </div>
               )}
-            </button>
-          ))}
-        </div>
+            </section>
+          )}
+          {(tab === 'tudo' || tab === 'ferramentas') && (
+            <section className={s.block}>
+              {tab === 'tudo' && <h2 className={s.blockTitle}>Ferramentas <span>{toolHits.length}</span></h2>}
+              {toolHits.length === 0 ? (
+                <p className={s.noMatch}>Nenhuma ferramenta {hubFilter === 'todos' ? 'combina com a busca' : 'neste hub ainda. Adicione pela aba Biblioteca do próprio hub'}.</p>
+              ) : (
+                <div className={s.toolGrid}>
+                  {toolHits.map(tl => <ToolTile key={tl.name} tool={tl} hubs={hubsForTool(tl, hubs, overrides)} />)}
+                </div>
+              )}
+            </section>
+          )}
+        </>
       )}
 
       {detail && !editing && (

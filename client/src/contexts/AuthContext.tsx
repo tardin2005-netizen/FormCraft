@@ -20,6 +20,7 @@ import { useTasksStore } from '../store/tasksStore'
 import { useHubsStore } from '../store/hubsStore'
 import { useContentItemsStore } from '../store/contentItemsStore'
 import { useSavedToolsStore } from '../store/savedToolsStore'
+import { useHubToolsStore } from '../store/hubToolsStore'
 import { useChatMessagesStore } from '../store/chatMessagesStore'
 import { useLibraryStore } from '../store/libraryStore'
 
@@ -76,6 +77,7 @@ function clearDataStores() {
   useContentItemsStore.getState().hydrate([])
   useTasksStore.getState().hydrate([])
   useSavedToolsStore.getState().hydrate([])
+  useHubToolsStore.getState().hydrate({})
   useHubsStore.getState().hydrateHubs([])
   useHubsStore.getState().hydrateSemesters([])
   useHubsStore.getState().hydrateSubjects([])
