@@ -22,7 +22,7 @@ import ReferenceGallery from '../modules/ReferenceGallery'
 import KeepNotes from '../modules/KeepNotes'
 import SnippetsModule from '../modules/SnippetsModule'
 import BibliotecaModule from '../modules/BibliotecaModule'
-import { useLibraryStore } from '../store/libraryStore'
+import { useLibraryStore, isDesignHubName } from '../store/libraryStore'
 import s from './HubView.module.css'
 
 /* ─── helpers ─── */
@@ -871,8 +871,6 @@ function FaculdadeView({ hubId }: { hubId: string }) {
 }
 
 /* ─── Workspace tabs for generic hubs ─── */
-const isDesignHubName = (name: string) => /design|ux|ui/i.test(name)
-
 const WORKSPACE_TABS: { key: string; label: string; icon: string; type: ModuleType; layout: ModuleLayout }[] = [
   { key: 'snippets',         label: 'Snippets',        icon: '📋',  type: 'snippets',         layout: 'grid'    },
   { key: 'tools-db',         label: 'Ferramentas',     icon: '🛠',  type: 'tools-db',         layout: 'grid'    },

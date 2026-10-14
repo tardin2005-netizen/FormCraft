@@ -1,9 +1,11 @@
 import { useMemo, useRef, useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
-  useLibraryStore, PATTERN_CATEGORIES,
+  useLibraryStore, PATTERN_CATEGORIES, isDesignHubName,
   type DesignPattern, type DesignPatternInput, type PatternCategory,
 } from '../store/libraryStore'
+import { useHubsStore, type Hub } from '../store/hubsStore'
+import PatternPreview from '../modules/PatternPreview'
 import { normalize } from '../utils/globalSearch'
 import { imageToDataUrl } from '../utils/imageData'
 import RichText, { plainText } from '../components/RichText'
@@ -13,7 +15,7 @@ const splitList = (v: string) => v.split(',').map(x => x.trim()).filter(Boolean)
 
 const EMPTY_FORM = {
   nomePrincipal: '', sinonimos: '', categoria: 'Motion' as PatternCategory,
-  oQueE: '', comoFunciona: '', ondeUsar: '', tags: '', exemploImagem: '', exemploCodigo: '',
+  oQueE: '', comoFunciona: '', ondeUsar: '', tags: '', exemploImagem: '', exemploCodigo: '', hubId: '',
 }
 type FormState = typeof EMPTY_FORM
 
@@ -21,7 +23,7 @@ function toForm(p: DesignPattern): FormState {
   return {
     nomePrincipal: p.nomePrincipal, sinonimos: p.sinonimos.join(', '), categoria: p.categoria,
     oQueE: p.oQueE, comoFunciona: p.comoFunciona, ondeUsar: p.ondeUsar, tags: p.tags.join(', '),
-    exemploImagem: p.exemploImagem ?? '', exemploCodigo: p.exemploCodigo ?? '',
+    exemploImagem: p.exemploImagem ?? '', exemploCodigo: p.exemploCodigo ?? '', hubId: p.hubId ?? '',
   }
 }
 
@@ -36,6 +38,7 @@ function toInput(f: FormState): DesignPatternInput {
     tags: splitList(f.tags),
     exemploImagem: f.exemploImagem || undefined,
     exemploCodigo: f.exemploCodigo.trim() || undefined,
+    hubId: f.hubId || undefined,
   }
 }
 
@@ -44,6 +47,12 @@ export default function Biblioteca() {
   const navigate = useNavigate()
   const { patterns, addPattern, updatePattern, removePattern } = useLibraryStore()
 
+  const hubs = useHubsStore(st => st.hubs)
+  const designHubId = hubs.find(h => isDesignHubName(h.name))?.id
+  const hubIdOf = (p: DesignPattern) => (p.hubId && hubs.some(h => h.id === p.hubId) ? p.hubId : designHubId)
+  const hubById = (hid?: string) => hubs.find(h => h.id === hid)
+
+  const [hubFilter, setHubFilter] = useState<string>('todos')
   const [filter, setFilter] = useState('')
   const [cat, setCat] = useState<PatternCategory | 'Todas'>('Todas')
   const [editing, setEditing] = useState<DesignPattern | 'new' | null>(null)
@@ -53,6 +62,7 @@ export default function Biblioteca() {
   const visible = useMemo(() => {
     const tokens = normalize(filter).split(/\s+/).filter(Boolean)
     return patterns
+      .filter(p => hubFilter === 'todos' || hubIdOf(p) === hubFilter)
       .filter(p => cat === 'Todas' || p.categoria === cat)
       .filter(p => {
         if (tokens.length === 0) return true
@@ -60,9 +70,12 @@ export default function Biblioteca() {
         return tokens.every(t => hay.includes(t))
       })
       .sort((a, b) => a.nomePrincipal.localeCompare(b.nomePrincipal))
-  }, [patterns, filter, cat])
+  }, [patterns, filter, cat, hubFilter, hubs])
 
-  const usedCats = PATTERN_CATEGORIES.filter(c => patterns.some(p => p.categoria === c))
+  const inScope = patterns.filter(p => hubFilter === 'todos' || hubIdOf(p) === hubFilter)
+  const usedCats = PATTERN_CATEGORIES.filter(c => inScope.some(p => p.categoria === c))
+  const hubsWithPatterns = hubs.filter(h => patterns.some(p => hubIdOf(p) === h.id))
+  const defaultHubForNew = hubFilter !== 'todos' ? hubFilter : (designHubId ?? '')
 
   function handleSave(f: FormState) {
     const input = toInput(f)
@@ -88,6 +101,16 @@ export default function Biblioteca() {
       </header>
 
       <div className={s.toolbar}>
+        <div className={s.catRow}>
+          <button className={`${s.catChip} ${hubFilter === 'todos' ? s.catChipActive : ''}`} onClick={() => { setHubFilter('todos'); setCat('Todas') }}>
+            Todos os hubs ({patterns.length})
+          </button>
+          {hubsWithPatterns.map(h => (
+            <button key={h.id} className={`${s.catChip} ${hubFilter === h.id ? s.catChipActive : ''}`} onClick={() => { setHubFilter(h.id); setCat('Todas') }}>
+              {h.emoji} {h.name} ({patterns.filter(p => hubIdOf(p) === h.id).length})
+            </button>
+          ))}
+        </div>
         <input
           className={s.filterInput}
           placeholder="Filtrar por nome, sinônimo ou tag…"
@@ -115,16 +138,14 @@ export default function Biblioteca() {
         <div className={s.grid}>
           {visible.map(p => (
             <button key={p.id} className={s.card} onClick={() => navigate(`/biblioteca/${p.id}`)}>
-              {p.exemploImagem && (
-                <div className={s.cardImg}><img src={p.exemploImagem} alt={p.nomePrincipal} /></div>
-              )}
+              <PatternPreview pattern={p} />
               <div className={s.cardBody}>
                 <span className={s.cardCat}>{p.categoria}</span>
                 <div className={s.cardTitle}>{p.nomePrincipal}</div>
                 <div className={s.cardDef}>{plainText(p.oQueE)}</div>
               </div>
-              {p.sinonimos.length > 0 && (
-                <div className={s.cardFoot}>também: {p.sinonimos.slice(0, 2).join(', ')}{p.sinonimos.length > 2 ? ` +${p.sinonimos.length - 2}` : ''}</div>
+              {hubById(hubIdOf(p)) && (
+                <div className={s.cardFoot}>{hubById(hubIdOf(p))!.emoji} {hubById(hubIdOf(p))!.name}</div>
               )}
             </button>
           ))}
@@ -134,6 +155,7 @@ export default function Biblioteca() {
       {detail && !editing && (
         <PatternDetail
           p={detail}
+          hub={hubById(hubIdOf(detail))}
           onClose={() => navigate('/biblioteca')}
           onEdit={() => setEditing(detail)}
           onDelete={() => handleDelete(detail)}
@@ -142,7 +164,8 @@ export default function Biblioteca() {
 
       {editing && (
         <PatternForm
-          initial={editing === 'new' ? EMPTY_FORM : toForm(editing)}
+          initial={editing === 'new' ? { ...EMPTY_FORM, hubId: defaultHubForNew } : { ...toForm(editing), hubId: hubIdOf(editing) ?? '' }}
+          hubs={hubs}
           isNew={editing === 'new'}
           onClose={() => setEditing(null)}
           onSave={handleSave}
@@ -160,8 +183,8 @@ function useEscape(fn: () => void) {
   }, [fn])
 }
 
-function PatternDetail({ p, onClose, onEdit, onDelete }: {
-  p: DesignPattern; onClose: () => void; onEdit: () => void; onDelete: () => void
+function PatternDetail({ p, hub, onClose, onEdit, onDelete }: {
+  p: DesignPattern; hub?: Hub; onClose: () => void; onEdit: () => void; onDelete: () => void
 }) {
   useEscape(onClose)
 
@@ -170,7 +193,7 @@ function PatternDetail({ p, onClose, onEdit, onDelete }: {
       <article className={s.detail} onClick={e => e.stopPropagation()}>
         <div className={s.detailHead}>
           <div>
-            <span className={s.cardCat}>{p.categoria}</span>
+            <span className={s.cardCat}>{p.categoria}{hub ? ` · ${hub.emoji} ${hub.name}` : ''}</span>
             <h2 className={s.detailTitle}>{p.nomePrincipal}</h2>
           </div>
           <button className={s.iconBtn} onClick={onClose} aria-label="Fechar">✕</button>
@@ -183,9 +206,7 @@ function PatternDetail({ p, onClose, onEdit, onDelete }: {
           </div>
         )}
 
-        {p.exemploImagem && (
-          <div className={s.detailImg}><img src={p.exemploImagem} alt={p.nomePrincipal} /></div>
-        )}
+        <PatternPreview pattern={p} large />
 
         <section className={s.detailSection}>
           <h3>O que é</h3>
@@ -228,8 +249,8 @@ function PatternDetail({ p, onClose, onEdit, onDelete }: {
   )
 }
 
-function PatternForm({ initial, isNew, onClose, onSave }: {
-  initial: FormState; isNew: boolean; onClose: () => void; onSave: (f: FormState) => void
+function PatternForm({ initial, hubs, isNew, onClose, onSave }: {
+  initial: FormState; hubs: Hub[]; isNew: boolean; onClose: () => void; onSave: (f: FormState) => void
 }) {
   const [f, setF] = useState(initial)
   const imgRef = useRef<HTMLInputElement>(null)
@@ -261,6 +282,14 @@ function PatternForm({ initial, isNew, onClose, onSave }: {
           <span className={s.label}>Nome principal *</span>
           <input className={s.input} autoFocus placeholder="ex: Floating Card Effect"
             value={f.nomePrincipal} onChange={e => set('nomePrincipal', e.target.value)} />
+        </label>
+
+        <label className={s.field}>
+          <span className={s.label}>Hub</span>
+          <select className={s.input} value={f.hubId} onChange={e => set('hubId', e.target.value)}>
+            <option value="">Sem hub</option>
+            {hubs.map(h => <option key={h.id} value={h.id}>{h.emoji} {h.name}</option>)}
+          </select>
         </label>
 
         <label className={s.field}>

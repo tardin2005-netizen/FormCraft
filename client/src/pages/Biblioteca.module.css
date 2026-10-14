@@ -41,20 +41,21 @@
 .catChip:hover { color: var(--text); }
 .catChipActive { background: var(--accent-muted); color: var(--accent); border-color: transparent; }
 
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 22px; }
 .card {
   display: flex; flex-direction: column; text-align: left; padding: 0;
-  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  background: var(--surface); border: 2px solid var(--text); border-radius: 14px;
   overflow: hidden; cursor: pointer; color: inherit; font: inherit;
-  transition: border-color .15s, transform .12s;
+  box-shadow: 5px 5px 0 var(--border);
+  transition: transform .12s, box-shadow .12s;
 }
-.card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.card:hover { transform: translate(-2px, -2px); box-shadow: 7px 7px 0 var(--accent); }
 .cardImg {
   background: var(--surface2); border-bottom: 1px solid var(--border);
   display: flex; align-items: center; justify-content: center; max-height: 180px; overflow: hidden;
 }
 .cardImg img { width: 100%; max-height: 180px; object-fit: contain; display: block; }
-.cardBody { padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.cardBody { padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; flex: 1; border-top: 2px solid var(--text); }
 .cardCat {
   align-self: flex-start; font-size: 10px; font-weight: 700; letter-spacing: .06em;
   text-transform: uppercase; color: var(--accent);

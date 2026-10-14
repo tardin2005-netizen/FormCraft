@@ -22,6 +22,8 @@ export interface DesignPattern {
   criadoEm: string
 }
 
+export const isDesignHubName = (name: string) => /design|ux|ui/i.test(name)
+
 export type DesignPatternInput = Omit<DesignPattern, 'id' | 'criadoEm'>
 
 interface LibraryStore {
