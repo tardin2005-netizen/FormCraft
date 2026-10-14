@@ -226,3 +226,36 @@
   .rCard:hover { transform: none; }
   .stepsBar i { transition: none; }
 }
+
+/* Guias e glossário */
+.guide {
+  display: flex; flex-direction: column; gap: 14px; padding: 18px 20px;
+  background: var(--surface); border: 2px solid var(--text); border-radius: 16px; box-shadow: 5px 5px 0 var(--border);
+}
+.guideHead { display: flex; align-items: center; gap: 10px; }
+.guideHead h2 { margin: 0; font-size: 19px; font-weight: 700; color: var(--text); }
+.guideTag { padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; background: var(--accent); color: #fff; }
+.guideLead { margin: 0; font-size: 14px; line-height: 1.6; color: var(--text); max-width: 72ch; }
+.guideSteps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; line-height: 1.5; color: var(--text); max-width: 72ch; }
+.guideSteps li::marker { color: var(--accent); font-weight: 700; }
+.guideTerms { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.guideTerms > span { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text2); margin-right: 4px; }
+
+.termGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; align-items: start; }
+.termCard {
+  display: flex; flex-direction: column; gap: 8px; padding: 14px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px; transition: border-color .15s;
+}
+.termCard:hover, .termOpen { border-color: var(--accent); }
+.termHead { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; text-align: left; padding: 0; background: none; border: 0; color: inherit; font: inherit; cursor: pointer; }
+.termHead:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+.termTitle { font-size: 15px; font-weight: 700; color: var(--text); }
+.termMeta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.termMeta .chip { margin-right: 0; }
+.nivel { padding: 1px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; border: 1px solid; background: transparent; }
+.termDef { margin: 0; font-size: 13px; line-height: 1.55; color: var(--text2); }
+.termOpen .termDef { color: var(--text); }
+.termMore { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 12.5px; line-height: 1.5; color: var(--text2); }
+.termMore p { margin: 0; }
+.termMore b { color: var(--text); }
+@media (prefers-reduced-motion: reduce) { .termCard { transition: none; } }

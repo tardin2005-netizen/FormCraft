@@ -1,5 +1,7 @@
 import type { Concept, Hub, Subject, ClassItem, HubContent } from '../store/hubsStore'
 import type { ContentItem } from '../store/contentItemsStore'
+import { GLOSSARY, GUIDES, type GlossaryTerm, type Guide } from '../data/glossary'
+import { ALL_TOOLS, type Tool } from '../data/tools'
 import type { DesignPattern } from '../store/libraryStore'
 
 export function normalize(str: string) {
@@ -213,4 +215,47 @@ export function searchPatternsByIntent(query: string, patterns: DesignPattern[],
     .sort((a, b) => b.score - a.score)
     .slice(0, limit)
     .map(x => x.p)
+}
+
+
+const GLOSSARY_FILLER = new Set(['o', 'a', 'os', 'as', 'um', 'uma', 'que', 'e', 'de', 'do', 'da', 'dos', 'das', 'para', 'pra', 'em', 'no', 'na', 'sao', 'significa', 'quer', 'dizer', 'definicao', 'explica', 'explique', 'preciso', 'quero', 'saber', 'entender', 'meu', 'minha'])
+
+/** Terms from the built-in glossary (marketing, TI, design, vídeo). Understands "o que é React", "matriz bcg", "match cut". */
+export function searchGlossary(query: string, limit = 8): GlossaryTerm[] {
+  const all = normalize(query.trim()).split(/\s+/).filter(Boolean)
+  const tokens = all.filter(x => !GLOSSARY_FILLER.has(x))
+  const use = tokens.length ? tokens : all
+  if (use.length === 0) return []
+  const q = use.join(' ')
+  const out: { t: GlossaryTerm; rank: number }[] = []
+  for (const t of GLOSSARY) {
+    const nameList = [t.termo, ...t.sinonimos].map(normalize)
+    const names = nameList.join(' | ')
+    const hay = names + ' ' + normalize(`${t.definicao} ${t.area}`)
+    if (!use.every(tk => tokenHit(hay, wordsOf(hay), tk))) continue
+    const nameWords = wordsOf(names)
+    const rank = nameList.some(n => n === q) ? 0
+      : nameList.some(n => n.startsWith(q)) ? 1
+      : names.includes(q) ? 2
+      : use.every(tk => tokenHit(names, nameWords, tk)) ? 3 : 4
+    out.push({ t, rank })
+  }
+  return out.sort((a, b) => a.rank - b.rank).slice(0, limit).map(x => x.t)
+}
+
+/** Guides for requests like "preciso criar um site" or "editar um vídeo". */
+export function findGuides(query: string): Guide[] {
+  const words = wordsOf(normalize(query))
+  if (words.length === 0) return []
+  return GUIDES.filter(g => g.gatilhos.some(trig => trig.every(p => words.some(w => w.startsWith(p)))))
+}
+
+export function guideTools(g: Guide, limit = 6): Tool[] {
+  const named = (g.ferramentas ?? []).map(n => ALL_TOOLS.find(x => x.name === n)).filter((x): x is Tool => !!x)
+  const rest = ALL_TOOLS.filter(x => g.categorias.includes(x.cat) && !named.includes(x))
+  return [...named, ...rest].slice(0, limit)
+}
+
+export function glossaryByName(name: string): GlossaryTerm | undefined {
+  return GLOSSARY.find(t => t.termo === name)
 }

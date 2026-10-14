@@ -1,22 +1,26 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, Plus, X, Link2, StickyNote, FileUp, GraduationCap, Sparkles, Wrench, Layers, Lightbulb } from 'lucide-react'
+import { Search, Plus, X, Link2, StickyNote, FileUp, GraduationCap, Sparkles, Wrench, Layers, Lightbulb, BookOpen } from 'lucide-react'
 import { useHubsStore } from '../../store/hubsStore'
 import { useLibraryStore } from '../../store/libraryStore'
 import { useLinksStore } from '../../store/linksStore'
 import { ALL_TOOLS } from '../../data/tools'
-import { normalize, searchAll, searchTools, conceptHref } from '../../utils/globalSearch'
+import { normalize, searchAll, searchTools, conceptHref, searchGlossary, findGuides, guideTools, glossaryByName } from '../../utils/globalSearch'
+import type { Nivel } from '../../data/glossary'
 import VoiceSearch from '../VoiceSearch'
 import { plainText } from '../RichText'
 import s from './Home.module.css'
 
-export type Scope = 'tudo' | 'conceitos' | 'faculdade' | 'biblioteca' | 'ferramentas'
+export type Scope = 'tudo' | 'conceitos' | 'faculdade' | 'biblioteca' | 'ferramentas' | 'glossario'
+
+const NIVEL_COLOR: Record<Nivel, string> = { Fácil: '#2a9a52', Média: '#c47a1a', Difícil: '#c03a28' }
 
 const SCOPES: { id: Scope; label: string; Icon: typeof Layers; placeholder: string; examples: string[] }[] = [
-  { id: 'tudo', label: 'Tudo', Icon: Layers, placeholder: 'Buscar em aulas, Biblioteca, ferramentas e links…', examples: ['brand equity', 'funil', 'hover', 'gerar vídeo com IA'] },
+  { id: 'tudo', label: 'Tudo', Icon: Layers, placeholder: 'Buscar em aulas, Biblioteca, glossário, ferramentas e links…', examples: ['preciso criar um site', 'matriz BCG', 'editar um vídeo', 'hover'] },
   { id: 'conceitos', label: 'Conceitos', Icon: Lightbulb, placeholder: 'Buscar termo, definição ou tag em todos os seus conceitos…', examples: ['brand equity', 'funil', 'persona'] },
   { id: 'faculdade', label: 'Faculdade', Icon: GraduationCap, placeholder: 'Buscar conceito, aula ou matéria de qualquer semestre…', examples: ['brand equity', 'prova', 'Gestão de Marcas'] },
   { id: 'biblioteca', label: 'Biblioteca', Icon: Sparkles, placeholder: 'Buscar padrão de design, efeito ou técnica…', examples: ['hover', 'card flutuante', 'animações'] },
+  { id: 'glossario', label: 'Glossário', Icon: BookOpen, placeholder: 'Termo ou expressão: matriz BCG, match cut, React, persona, “preciso criar um site”…', examples: ['matriz BCG', 'match cut', 'o que é React', 'persona', 'preciso criar um site'] },
   { id: 'ferramentas', label: 'Ferramentas', Icon: Wrench, placeholder: 'Descreva o que precisa fazer: gerar narração, editar vídeo…', examples: ['gerar vídeo com IA', 'criar artes e posts', 'analisar métricas', 'gerar narração'] },
 ]
 
@@ -44,6 +48,7 @@ export default function HomeSearch({ query, setQuery, onSaveLink, onQuickNote }:
   const { links } = useLinksStore()
   const [scope, setScope] = useState<Scope>('tudo')
   const [addOpen, setAddOpen] = useState(false)
+  const [openTerm, setOpenTerm] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const addRef = useRef<HTMLDivElement>(null)
   const cfg = SCOPES.find(x => x.id === scope)!
@@ -72,7 +77,9 @@ export default function HomeSearch({ query, setQuery, onSaveLink, onQuickNote }:
       : []
     const tools = scope === 'tudo' || scope === 'ferramentas' ? searchTools(q, ALL_TOOLS, scope === 'ferramentas' ? 12 : 4) : []
     const saved = scope === 'tudo' ? links.filter(l => has(l.title, l.desc, ...l.tags)).slice(0, 5) : []
-    return { cards, aulas, tools, saved, total: cards.length + aulas.length + tools.length + saved.length }
+    const guides = scope === 'tudo' || scope === 'glossario' ? findGuides(q) : []
+    const terms = scope === 'tudo' ? searchGlossary(q, 6) : scope === 'glossario' ? searchGlossary(q, 30) : []
+    return { cards, aulas, tools, saved, guides, terms, total: cards.length + aulas.length + tools.length + saved.length + guides.length + terms.length }
   }, [q, scope, concepts, hubs, subjects, classes, patterns, links])
 
   const openClass = (c: { hubId: string; semesterId: string; subjectId: string; id: string }) =>
@@ -145,6 +152,66 @@ export default function HomeSearch({ query, setQuery, onSaveLink, onQuickNote }:
           ) : (
             <>
               <p className={s.resultCount}>{res.total} {res.total === 1 ? 'resultado' : 'resultados'}</p>
+
+              {res.guides.map(g => (
+                <section key={g.id} className={s.guide}>
+                  <div className={s.guideHead}><span className={s.guideTag}>Guia</span><h2>{g.titulo}</h2></div>
+                  <p className={s.guideLead}>{g.resumo}</p>
+                  <ol className={s.guideSteps}>{g.passos.map(p => <li key={p}>{p}</li>)}</ol>
+                  <div className={s.guideTerms}>
+                    <span>Termos para conhecer</span>
+                    {g.termos.map(tm => (
+                      <button key={tm} className={s.example} onClick={() => { setScope('glossario'); setQuery(tm); setOpenTerm(tm) }}>{tm}</button>
+                    ))}
+                  </div>
+                  <div className={s.toolGrid}>
+                    {guideTools(g).map(tl => (
+                      <a key={tl.name} className={s.tool} href={tl.url} target="_blank" rel="noopener noreferrer">
+                        <span className={s.toolLetter} style={{ background: tl.color }}>{tl.letter}</span>
+                        <span className={s.toolInfo}><b>{tl.name}</b><span>{tl.desc}</span></span>
+                        <span className={s.toolPrice}>{tl.pricing.toLowerCase()}</span>
+                      </a>
+                    ))}
+                  </div>
+                </section>
+              ))}
+
+              {res.terms.length > 0 && (
+                <div className={s.group}>
+                  <h2 className={s.groupTitle}>Glossário</h2>
+                  <div className={s.termGrid}>
+                    {res.terms.map(tm => {
+                      const open = openTerm === tm.termo || res.terms.length === 1
+                      return (
+                        <article key={tm.termo} className={`${s.termCard} ${open ? s.termOpen : ''}`}>
+                          <button className={s.termHead} onClick={() => setOpenTerm(open && res.terms.length > 1 ? null : tm.termo)} aria-expanded={open}>
+                            <span className={s.termTitle}><Highlight text={tm.termo} query={q} /></span>
+                            <span className={s.termMeta}>
+                              <span className={`${s.chip} ${s.chipLib}`}>{tm.area}</span>
+                              {tm.nivel && <span className={s.nivel} style={{ color: NIVEL_COLOR[tm.nivel], borderColor: NIVEL_COLOR[tm.nivel] }}>Dificuldade: {tm.nivel}</span>}
+                            </span>
+                          </button>
+                          <p className={s.termDef}>{tm.definicao}</p>
+                          {open && (
+                            <div className={s.termMore}>
+                              {tm.sinonimos.length > 0 && <p><b>Também chamado de:</b> {tm.sinonimos.join(', ')}</p>}
+                              {tm.exemplo && <p><b>Exemplo:</b> {tm.exemplo}</p>}
+                              {tm.relacionados && tm.relacionados.length > 0 && (
+                                <div className={s.guideTerms}>
+                                  <span>Relacionados</span>
+                                  {tm.relacionados.filter(r => glossaryByName(r)).map(r => (
+                                    <button key={r} className={s.example} onClick={() => { setScope('glossario'); setQuery(r); setOpenTerm(r) }}>{r}</button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </article>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
 
               {res.cards.length > 0 && (
                 <div className={s.cardGrid}>
