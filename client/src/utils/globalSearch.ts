@@ -252,7 +252,8 @@ export function findGuides(query: string): Guide[] {
 
 export function guideTools(g: Guide, limit = 6): Tool[] {
   const named = (g.ferramentas ?? []).map(n => ALL_TOOLS.find(x => x.name === n)).filter((x): x is Tool => !!x)
-  const rest = ALL_TOOLS.filter(x => g.categorias.includes(x.cat) && !named.includes(x))
+  const perCat = Math.max(2, Math.ceil((limit - named.length) / g.categorias.length))
+  const rest = g.categorias.flatMap(c => ALL_TOOLS.filter(x => x.cat === c && !named.includes(x)).slice(0, perCat))
   return [...named, ...rest].slice(0, limit)
 }
 
