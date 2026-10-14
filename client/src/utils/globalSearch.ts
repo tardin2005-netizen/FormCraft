@@ -250,11 +250,14 @@ export function findGuides(query: string): Guide[] {
   return GUIDES.filter(g => g.gatilhos.some(trig => trig.every(p => words.some(w => w.startsWith(p)))))
 }
 
-export function guideTools(g: Guide, limit = 6): Tool[] {
-  const named = (g.ferramentas ?? []).map(n => ALL_TOOLS.find(x => x.name === n)).filter((x): x is Tool => !!x)
-  const perCat = Math.max(2, Math.ceil((limit - named.length) / g.categorias.length))
-  const rest = g.categorias.flatMap(c => ALL_TOOLS.filter(x => x.cat === c && !named.includes(x)).slice(0, perCat))
-  return [...named, ...rest].slice(0, limit)
+export function guideTools(g: Guide, limit = 4): Tool[] {
+  const used = new Set(g.etapas.flatMap(e => e.ferramentas ?? []))
+  const perCat = Math.max(2, Math.ceil(limit / g.categorias.length))
+  return g.categorias.flatMap(c => ALL_TOOLS.filter(x => x.cat === c && !used.has(x.name)).slice(0, perCat)).slice(0, limit)
+}
+
+export function toolByName(name: string): Tool | undefined {
+  return ALL_TOOLS.find(x => x.name === name)
 }
 
 export function glossaryByName(name: string): GlossaryTerm | undefined {

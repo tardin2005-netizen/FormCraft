@@ -1,13 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, Plus, X, Link2, StickyNote, FileUp, GraduationCap, Sparkles, Wrench, Layers, Lightbulb, BookOpen } from 'lucide-react'
 import { useHubsStore } from '../../store/hubsStore'
 import { useLibraryStore } from '../../store/libraryStore'
 import { useLinksStore } from '../../store/linksStore'
 import { ALL_TOOLS } from '../../data/tools'
-import { normalize, searchAll, searchTools, conceptHref, searchGlossary, findGuides, guideTools, glossaryByName } from '../../utils/globalSearch'
+import { normalize, searchAll, searchTools, conceptHref, searchGlossary, findGuides, guideTools, glossaryByName, toolByName } from '../../utils/globalSearch'
 import type { Nivel } from '../../data/glossary'
 import VoiceSearch from '../VoiceSearch'
+import Glyph from '../Glyph'
 import { plainText } from '../RichText'
 import s from './Home.module.css'
 
@@ -153,28 +154,72 @@ export default function HomeSearch({ query, setQuery, onSaveLink, onQuickNote }:
             <>
               <p className={s.resultCount}>{res.total} {res.total === 1 ? 'resultado' : 'resultados'}</p>
 
-              {res.guides.map(g => (
-                <section key={g.id} className={s.guide}>
-                  <div className={s.guideHead}><span className={s.guideTag}>Guia</span><h2>{g.titulo}</h2></div>
-                  <p className={s.guideLead}>{g.resumo}</p>
-                  <ol className={s.guideSteps}>{g.passos.map(p => <li key={p}>{p}</li>)}</ol>
-                  <div className={s.guideTerms}>
-                    <span>Termos para conhecer</span>
-                    {g.termos.map(tm => (
-                      <button key={tm} className={s.example} onClick={() => { setScope('glossario'); setQuery(tm); setOpenTerm(tm) }}>{tm}</button>
-                    ))}
-                  </div>
-                  <div className={s.toolGrid}>
-                    {guideTools(g).map(tl => (
-                      <a key={tl.name} className={s.tool} href={tl.url} target="_blank" rel="noopener noreferrer">
-                        <span className={s.toolLetter} style={{ background: tl.color }}>{tl.letter}</span>
-                        <span className={s.toolInfo}><b>{tl.name}</b><span>{tl.desc}</span></span>
-                        <span className={s.toolPrice}>{tl.pricing.toLowerCase()}</span>
-                      </a>
-                    ))}
-                  </div>
-                </section>
-              ))}
+              {res.guides.map(g => {
+                const openGlossary = (name: string) => { setScope('glossario'); setQuery(name); setOpenTerm(name) }
+                const termChips = (names: string[] = []) => names.filter(n => glossaryByName(n)).map(n => (
+                  <button key={n} className={s.stepChip} onClick={() => openGlossary(n)} title="Abrir no glossário">{n}</button>
+                ))
+                return (
+                  <section key={g.id} className={s.guide}>
+                    <div className={s.guideHead}><span className={s.guideTag}>Guia</span><h2>{g.titulo}</h2></div>
+                    <p className={s.guideLead}>{g.resumo}</p>
+
+                    {g.camadas && (
+                      <>
+                        <h3 className={s.guideLabel}>Como funciona</h3>
+                        <div className={s.layers}>
+                          {g.camadas.map((c, i) => (
+                            <Fragment key={c.titulo}>
+                              {i > 0 && <span className={s.layerArrow} aria-hidden="true"><Glyph value="ph:arrow-right" size={22} /></span>}
+                              <div className={s.layer} data-i={i}>
+                                <span className={s.layerKicker}>{c.rotulo}</span>
+                                <strong className={s.layerTitle}>{c.titulo}</strong>
+                                <div className={s.stepChips}>{termChips(c.termos)}</div>
+                                <span className={s.nivelChip} data-n={c.nivel}>Dificuldade: {c.nivel}</span>
+                              </div>
+                            </Fragment>
+                          ))}
+                        </div>
+                      </>
+                    )}
+
+                    <h3 className={s.guideLabel}>Passo a passo</h3>
+                    <ol className={s.steps}>
+                      {g.etapas.map((e, i) => (
+                        <li key={e.titulo} className={s.step} data-i={i % 6}>
+                          <div className={s.stepHead}><span className={s.stepNum}>{i + 1}</span><strong>{e.titulo}</strong></div>
+                          <p>{e.texto}</p>
+                          {e.termos && e.termos.length > 0 && <div className={s.stepChips}>{termChips(e.termos)}</div>}
+                          {e.ferramentas && e.ferramentas.length > 0 && (
+                            <div className={s.stepTools}>
+                              {e.ferramentas.map(n => toolByName(n)).filter((x): x is NonNullable<typeof x> => !!x).map(tl => (
+                                <a key={tl.name} href={tl.url} target="_blank" rel="noopener noreferrer" className={s.stepTool} title={`${tl.name}: ${tl.desc}`}>
+                                  <span className={s.toolLetter} style={{ background: tl.color }}>{tl.letter}</span>{tl.name}
+                                </a>
+                              ))}
+                            </div>
+                          )}
+                        </li>
+                      ))}
+                    </ol>
+
+                    {guideTools(g).length > 0 && (
+                      <>
+                        <h3 className={s.guideLabel}>Mais ferramentas desse assunto</h3>
+                        <div className={s.toolGrid}>
+                          {guideTools(g).map(tl => (
+                            <a key={tl.name} className={s.tool} href={tl.url} target="_blank" rel="noopener noreferrer">
+                              <span className={s.toolLetter} style={{ background: tl.color }}>{tl.letter}</span>
+                              <span className={s.toolInfo}><b>{tl.name}</b><span>{tl.desc}</span></span>
+                              <span className={s.toolPrice}>{tl.pricing.toLowerCase()}</span>
+                            </a>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </section>
+                )
+              })}
 
               {res.terms.length > 0 && (
                 <div className={s.group}>

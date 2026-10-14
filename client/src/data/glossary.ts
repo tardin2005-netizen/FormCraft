@@ -176,17 +176,19 @@ export const GLOSSARY: GlossaryTerm[] = [
 
 /* ───────────── Guias para pedidos ───────────── */
 
+export interface Camada { rotulo: string; titulo: string; termos: string[]; nivel: Nivel }
+export interface Etapa { titulo: string; texto: string; termos?: string[]; ferramentas?: string[] }
+
 export interface Guide {
   id: string
   titulo: string
   /** Cada gatilho é uma lista de prefixos; todos precisam aparecer na pergunta (palavras normalizadas). */
   gatilhos: string[][]
   resumo: string
-  passos: string[]
-  termos: string[]
+  /** Mapa de blocos que explica o assunto por inteiro (opcional). */
+  camadas?: Camada[]
+  etapas: Etapa[]
   categorias: Exclude<ToolCategory, 'Todas'>[]
-  /** Nomes de ferramentas do catálogo que valem destacar. */
-  ferramentas?: string[]
 }
 
 export const GUIDES: Guide[] = [
@@ -194,112 +196,108 @@ export const GUIDES: Guide[] = [
     id: 'site',
     titulo: 'Criar um site',
     gatilhos: [['site'], ['landing'], ['pagina', 'web'], ['portfolio'], ['loja', 'virtual']],
-    resumo: 'Todo site tem três camadas: o que a pessoa vê (front-end), o que roda por trás e guarda os dados (back-end e banco de dados) e onde ele mora (hospedagem e domínio). Você pode montar sem código, num construtor, ou com código, e o caminho muda a dificuldade.',
-    passos: [
-      'Defina o objetivo do site e as páginas necessárias (início, sobre, contato).',
-      'Desenhe um wireframe e depois o visual no Figma.',
-      'Escolha o caminho: sem código (WordPress, Wix, Framer; fácil) ou com código (HTML, CSS e JavaScript; depois React com Vite; média).',
-      'Se precisar de login ou dados, adicione um back-end ou use o Firebase, que já traz banco de dados e hospedagem.',
-      'Publique (deploy), conecte o domínio e confira se o cadeado HTTPS está ativo.',
-      'Meça as visitas e melhore o SEO para ser encontrado no Google.',
+    resumo: 'Todo site tem três camadas. Você escolhe se monta sem código ou com código, e isso muda a dificuldade.',
+    camadas: [
+      { rotulo: 'O que a pessoa vê', titulo: 'Front-end', termos: ['HTML', 'CSS', 'JavaScript', 'React'], nivel: 'Média' },
+      { rotulo: 'O que roda por trás', titulo: 'Back-end e dados', termos: ['Node.js', 'API', 'Banco de dados', 'Firebase'], nivel: 'Difícil' },
+      { rotulo: 'Onde o site mora', titulo: 'Hospedagem e domínio', termos: ['Hospedagem', 'Domínio e DNS', 'HTTPS e SSL'], nivel: 'Fácil' },
     ],
-    termos: ['Como funciona um site', 'Front-end', 'Back-end', 'HTML', 'CSS', 'JavaScript', 'React', 'Vite', 'Hospedagem', 'Domínio e DNS', 'Responsivo', 'SEO'],
-    categorias: ['CMS & Sites', 'Imagem & Design'],
-    ferramentas: ['Figma'],
+    etapas: [
+      { titulo: 'Planejar', texto: 'Defina o objetivo do site e as páginas: início, sobre, contato.', termos: ['Briefing', 'Persona'] },
+      { titulo: 'Desenhar', texto: 'Faça um wireframe e depois o visual, pensando em celular e computador.', termos: ['Wireframe', 'Protótipo', 'Responsivo'], ferramentas: ['Figma', 'Canva'] },
+      { titulo: 'Construir', texto: 'Sem código (fácil) ou com código: HTML, CSS e JavaScript, depois React com Vite (média).', termos: ['CMS', 'No-code e low-code', 'HTML', 'CSS', 'React', 'Vite'], ferramentas: ['WordPress', 'Wix', 'Framer'] },
+      { titulo: 'Dados e login', texto: 'Se precisar de login ou dados, use um back-end ou o Firebase, que já traz banco de dados e hospedagem.', termos: ['API', 'Banco de dados', 'Firebase', 'Autenticação'] },
+      { titulo: 'Publicar', texto: 'Publique, conecte o domínio e confira se o cadeado HTTPS está ativo.', termos: ['Deploy', 'Hospedagem', 'Domínio e DNS', 'HTTPS e SSL'] },
+      { titulo: 'Medir', texto: 'Acompanhe as visitas e melhore o SEO para ser encontrado no Google.', termos: ['SEO', 'Taxa de conversão'] },
+    ],
+    categorias: ['CMS & Sites'],
   },
   {
     id: 'programar',
     titulo: 'Aprender programação do zero',
     gatilhos: [['aprender', 'program'], ['comecar', 'program'], ['aprender', 'cod'], ['programar']],
-    resumo: 'Comece pelo que aparece na tela e vá subindo: HTML (estrutura, fácil), CSS (aparência, média) e JavaScript (comportamento, média). Depois escolha entre front-end (React) e back-end (Node.js ou Python).',
-    passos: [
-      'HTML e CSS: monte uma página simples do zero.',
-      'JavaScript: faça a página reagir (cliques, formulários).',
-      'Git e GitHub: aprenda a guardar e publicar seu código.',
-      'Escolha um caminho: front-end com React ou back-end com Node.js/Python.',
-      'Construa um projeto real pequeno e publique.',
+    resumo: 'Comece pelo que aparece na tela e vá subindo: HTML (fácil), CSS (média) e JavaScript (média). Depois escolha entre front-end e back-end.',
+    etapas: [
+      { titulo: 'HTML e CSS', texto: 'Monte uma página simples do zero.', termos: ['HTML', 'CSS'] },
+      { titulo: 'JavaScript', texto: 'Faça a página reagir: cliques e formulários.', termos: ['JavaScript', 'Bug e debug'] },
+      { titulo: 'Git e GitHub', texto: 'Aprenda a guardar e publicar o seu código.', termos: ['Git e GitHub'] },
+      { titulo: 'Escolher um caminho', texto: 'Front-end com React ou back-end com Node.js ou Python.', termos: ['Front-end', 'Back-end', 'React', 'Node.js', 'Python'] },
+      { titulo: 'Projeto real', texto: 'Construa um projeto pequeno e publique.', termos: ['Deploy', 'Algoritmo'] },
     ],
-    termos: ['HTML', 'CSS', 'JavaScript', 'Git e GitHub', 'React', 'Python', 'Node.js', 'Algoritmo'],
     categorias: ['IA & Pesquisa'],
   },
   {
     id: 'video',
     titulo: 'Editar um vídeo',
     gatilhos: [['edit', 'vide'], ['edic', 'vide'], ['cort', 'vide'], ['mont', 'vide'], ['edit', 'reel'], ['edit', 'tiktok']],
-    resumo: 'Editar é organizar clipes na timeline, cortar o que sobra, cobrir com B-roll, ajustar cor e áudio e exportar no formato da plataforma. O que mais prende a pessoa é o gancho dos primeiros segundos e o ritmo dos cortes.',
-    passos: [
-      'Planeje com roteiro e pense no hook dos primeiros segundos.',
-      'Importe os clipes e monte o corte bruto na timeline.',
-      'Corte pausas (jump cut) e cubra com B-roll.',
-      'Ajuste ritmo, transições, zoom e legendas.',
-      'Corrija a cor e mixe o áudio (voz acima da música).',
-      'Exporte na proporção certa: 16:9 para YouTube, 9:16 para Reels e TikTok.',
+    resumo: 'Editar é organizar clipes na timeline, cortar o que sobra, cobrir com B-roll, ajustar cor e áudio e exportar no formato da plataforma.',
+    etapas: [
+      { titulo: 'Planejar', texto: 'Escreva o roteiro e pense no gancho dos primeiros segundos.', termos: ['Roteiro e storyboard', 'Hook'] },
+      { titulo: 'Montar', texto: 'Importe os clipes e monte o corte bruto na timeline.', termos: ['Timeline', 'Corte'], ferramentas: ['CapCut'] },
+      { titulo: 'Cortar e cobrir', texto: 'Corte pausas e cubra com imagens de apoio.', termos: ['Jump cut', 'A-roll e B-roll'] },
+      { titulo: 'Ritmo e texto', texto: 'Ajuste ritmo, transições, zoom e legendas.', termos: ['Ritmo', 'Transição', 'Zoom e punch-in', 'Legenda'] },
+      { titulo: 'Cor e áudio', texto: 'Corrija a cor e mixe o áudio, com a voz acima da música.', termos: ['Correção e gradação de cor', 'Mixagem de áudio'] },
+      { titulo: 'Exportar', texto: 'Escolha a proporção: 16:9 para YouTube, 9:16 para Reels e TikTok.', termos: ['Resolução e proporção', 'Exportação', 'Codec e bitrate'], ferramentas: ['HandBrake', 'RunwayML'] },
     ],
-    termos: ['Timeline', 'Corte', 'A-roll e B-roll', 'Jump cut', 'Hook', 'Legenda', 'Correção e gradação de cor', 'Mixagem de áudio', 'Resolução e proporção', 'Exportação'],
     categorias: ['Criar vídeo', 'Áudio & Voz'],
   },
   {
     id: 'identidade',
     titulo: 'Criar uma identidade visual ou logo',
     gatilhos: [['logo'], ['identidade', 'visual'], ['criar', 'marca'], ['brandbook']],
-    resumo: 'Identidade visual é o conjunto de logo, cores, fontes e estilo de imagens. Ela nasce do posicionamento da marca: primeiro entender para quem e por quê, depois desenhar.',
-    passos: [
-      'Defina posicionamento, público e tom de voz da marca.',
-      'Monte um moodboard com referências.',
-      'Esboce o logotipo (em vetor, para ampliar sem perder qualidade).',
-      'Escolha a paleta de cores e a tipografia.',
-      'Teste em fundo claro, escuro e em mockups.',
-      'Reúna tudo em um brandbook com as regras de uso.',
+    resumo: 'Identidade visual é o conjunto de logo, cores, fontes e estilo de imagens. Ela nasce do posicionamento: primeiro entender para quem e por quê, depois desenhar.',
+    etapas: [
+      { titulo: 'Entender a marca', texto: 'Defina posicionamento, público e tom de voz.', termos: ['Posicionamento', 'Tom de voz', 'Persona'] },
+      { titulo: 'Referências', texto: 'Monte um moodboard com o clima visual que você quer.', termos: ['Moodboard'] },
+      { titulo: 'Logotipo', texto: 'Esboce o logo em vetor, para ampliar sem perder qualidade.', termos: ['Logotipo e identidade visual', 'Vetor e raster'], ferramentas: ['Figma'] },
+      { titulo: 'Cores e fontes', texto: 'Escolha a paleta e a tipografia, cuidando do contraste.', termos: ['Paleta de cores', 'Tipografia', 'Contraste'] },
+      { titulo: 'Testar', texto: 'Teste em fundo claro, escuro e em mockups.', termos: ['Mockup'] },
+      { titulo: 'Brandbook', texto: 'Reúna as regras de uso em um manual da marca.', termos: ['Brandbook'] },
     ],
-    termos: ['Branding', 'Posicionamento', 'Tom de voz', 'Moodboard', 'Logotipo e identidade visual', 'Paleta de cores', 'Tipografia', 'Vetor e raster', 'Brandbook', 'Mockup'],
     categorias: ['Imagem & Design', 'Ícones & SVG'],
   },
   {
     id: 'plano-marketing',
     titulo: 'Montar um plano de marketing',
     gatilhos: [['plano', 'marketing'], ['estrategia', 'marketing'], ['lancar', 'campanha'], ['campanha']],
-    resumo: 'Um bom plano parte do diagnóstico (SWOT e concorrentes), define para quem é (persona), quais metas (SMART, KPIs) e como chegar lá (4 Ps, funil e canais).',
-    passos: [
-      'Faça o diagnóstico: análise SWOT e benchmarking.',
-      'Defina o público com personas e a jornada do cliente.',
-      'Escreva metas SMART e escolha os KPIs.',
-      'Defina o posicionamento e a proposta de valor.',
-      'Planeje os 4 Ps e o funil, com conteúdo para cada etapa.',
-      'Execute, meça (CTR, CAC, ROI) e ajuste com testes A/B.',
+    resumo: 'Um bom plano parte do diagnóstico, define para quem é, quais as metas e como chegar lá.',
+    etapas: [
+      { titulo: 'Diagnóstico', texto: 'Analise a sua marca e os concorrentes.', termos: ['Análise SWOT', 'Benchmarking', 'Cinco Forças de Porter'] },
+      { titulo: 'Público', texto: 'Defina quem é o cliente e o caminho que ele percorre.', termos: ['Persona', 'Jornada do cliente'] },
+      { titulo: 'Metas', texto: 'Escreva metas claras e escolha os indicadores.', termos: ['Metas SMART', 'KPI', 'OKR'] },
+      { titulo: 'Posicionamento', texto: 'Decida o lugar da marca e a promessa de valor.', termos: ['Posicionamento', 'Proposta de valor'] },
+      { titulo: 'Plano', texto: 'Planeje o mix e o funil, com conteúdo para cada etapa.', termos: ['4 Ps do marketing', 'Funil de vendas'] },
+      { titulo: 'Medir e ajustar', texto: 'Execute, meça e melhore com testes.', termos: ['CTR', 'CAC', 'ROI', 'Teste A/B'] },
     ],
-    termos: ['Análise SWOT', 'Benchmarking', 'Persona', 'Jornada do cliente', 'Metas SMART', 'KPI', 'Posicionamento', 'Proposta de valor', '4 Ps do marketing', 'Funil de vendas', 'ROI', 'Teste A/B'],
     categorias: ['Métricas', 'Redes Sociais'],
   },
   {
     id: 'social',
     titulo: 'Criar conteúdo para redes sociais',
     gatilhos: [['conteudo', 'rede'], ['post'], ['instagram'], ['reels'], ['criar', 'conteudo']],
-    resumo: 'Conteúdo que funciona tem um gancho forte, entrega valor rápido e termina com uma chamada para ação. Planeje por funil: conteúdo para atrair, para educar e para converter.',
-    passos: [
-      'Defina a persona e o objetivo do conteúdo (alcance, engajamento ou venda).',
-      'Escreva o gancho e a mensagem principal com copywriting.',
-      'Crie a arte ou grave e edite o vídeo no formato vertical.',
-      'Feche com um CTA claro.',
-      'Poste, acompanhe engajamento e retenção e repita o que funcionou.',
+    resumo: 'Conteúdo que funciona tem um gancho forte, entrega valor rápido e termina com uma chamada para ação.',
+    etapas: [
+      { titulo: 'Entender o público', texto: 'Defina a persona e o objetivo: alcance, engajamento ou venda.', termos: ['Persona', 'Funil de vendas'] },
+      { titulo: 'Gancho e mensagem', texto: 'Escreva o gancho e a mensagem principal.', termos: ['Hook', 'Copywriting', 'Storytelling'] },
+      { titulo: 'Criar', texto: 'Faça a arte ou grave e edite o vídeo na vertical.', ferramentas: ['Canva', 'CapCut'] },
+      { titulo: 'Chamar para ação', texto: 'Feche com um CTA claro.', termos: ['CTA'] },
+      { titulo: 'Medir', texto: 'Acompanhe e repita o que funcionou.', termos: ['Engajamento', 'Alcance e impressões', 'Retenção'] },
     ],
-    termos: ['Persona', 'Hook', 'Copywriting', 'CTA', 'Storytelling', 'Engajamento', 'Alcance e impressões', 'Retenção', 'Funil de vendas'],
     categorias: ['Redes Sociais', 'Imagem & Design', 'Criar vídeo'],
   },
   {
     id: 'app',
     titulo: 'Criar um app ou produto digital',
     gatilhos: [['criar', 'app'], ['fazer', 'app'], ['aplicativo'], ['produto', 'digital'], ['startup']],
-    resumo: 'Comece pequeno: valide a ideia com um MVP. Desenhe o fluxo (wireframe e protótipo), teste com pessoas e só então programe, usando um design system para manter tudo consistente.',
-    passos: [
-      'Descreva o problema, para quem é e a persona.',
-      'Faça wireframes e um protótipo clicável.',
-      'Teste com usuários reais e ajuste.',
-      'Monte o MVP: com no-code para validar rápido ou com código (React e Firebase).',
-      'Crie um design system conforme o produto cresce.',
-      'Publique, meça e evolua.',
+    resumo: 'Comece pequeno: valide a ideia com um MVP. Desenhe o fluxo, teste com pessoas e só então programe.',
+    etapas: [
+      { titulo: 'Problema e pessoa', texto: 'Descreva o problema e para quem é.', termos: ['Persona', 'MVP'] },
+      { titulo: 'Desenhar', texto: 'Faça wireframes e um protótipo clicável.', termos: ['Wireframe', 'Protótipo', 'UI e UX'], ferramentas: ['Figma'] },
+      { titulo: 'Testar', texto: 'Teste com usuários reais e ajuste.', termos: ['Heurísticas de Nielsen'] },
+      { titulo: 'Construir o MVP', texto: 'No-code para validar rápido ou código com React e Firebase.', termos: ['No-code e low-code', 'React', 'Firebase', 'Autenticação'] },
+      { titulo: 'Design system', texto: 'Crie peças reutilizáveis conforme o produto cresce.', termos: ['Design system', 'Componente'] },
+      { titulo: 'Publicar e medir', texto: 'Publique, meça e evolua.', termos: ['Deploy', 'KPI'] },
     ],
-    termos: ['MVP', 'Persona', 'Wireframe', 'Protótipo', 'UI e UX', 'Design system', 'No-code e low-code', 'React', 'Firebase', 'Autenticação'],
     categorias: ['Imagem & Design', 'IA & Pesquisa'],
-    ferramentas: ['Figma'],
   },
 ]

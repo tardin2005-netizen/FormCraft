@@ -105,7 +105,7 @@ export default function BibliotecaModule({ hubId, isDesignHub }: { hubId: string
     </div>
   ) : (
     <div className={s.grid}>
-      {visible.map(p => (
+      {(tab === 'tudo' ? visible.slice(0, 4) : visible).map(p => (
         <button key={p.id} className={s.card} onClick={() => setDetail(p)}>
           <PatternPreview pattern={p} />
           <div className={s.cardBody}>
@@ -127,7 +127,7 @@ export default function BibliotecaModule({ hubId, isDesignHub }: { hubId: string
     </div>
   ) : (
     <div className={s.toolGrid}>
-      {toolHits.map(tl => (
+      {(tab === 'tudo' ? toolHits.slice(0, 3) : toolHits).map(tl => (
         <ToolTile key={tl.name} tool={tl} onRemoveFromHub={allCatalog ? undefined : () => removeTool(hubId, tl.name)} />
       ))}
     </div>
@@ -179,13 +179,13 @@ export default function BibliotecaModule({ hubId, isDesignHub }: { hubId: string
         <>
           {(tab === 'tudo' || tab === 'padroes') && (
             <section className={s.block}>
-              {tab === 'tudo' && <h3 className={s.blockTitle}>Padrões <span>{visible.length}</span></h3>}
+              {tab === 'tudo' && <div className={s.shelfHead}><h3 className={s.blockTitle}>Padrões <span>{visible.length}</span></h3>{visible.length > 4 && <button className={s.seeAll} onClick={() => setTab('padroes')}>Ver todos →</button>}</div>}
               {patternsGrid}
             </section>
           )}
           {(tab === 'tudo' || tab === 'ferramentas') && (
             <section className={s.block}>
-              {tab === 'tudo' && <h3 className={s.blockTitle}>Ferramentas <span>{toolHits.length}</span></h3>}
+              {tab === 'tudo' && <div className={s.shelfHead}><h3 className={s.blockTitle}>Ferramentas <span>{toolHits.length}</span></h3>{toolHits.length > 3 && <button className={s.seeAll} onClick={() => setTab('ferramentas')}>Ver todas →</button>}</div>}
               {toolsGrid}
             </section>
           )}

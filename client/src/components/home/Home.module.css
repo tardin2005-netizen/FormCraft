@@ -259,3 +259,46 @@
 .termMore p { margin: 0; }
 .termMore b { color: var(--text); }
 @media (prefers-reduced-motion: reduce) { .termCard { transition: none; } }
+
+/* Guia: mapa de camadas + cartões de passos */
+.guideLabel { margin: 4px 0 -4px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text2); }
+.layers { display: flex; flex-wrap: wrap; align-items: stretch; gap: 10px; }
+.layerArrow { display: flex; align-items: center; color: var(--text); }
+.layer {
+  --bg: #ffe3b0;
+  flex: 1 1 220px; display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border-radius: 14px; border: 2px solid #1a1a2e;
+  background: var(--bg); color: #1a1a2e;
+}
+.layer[data-i='1'] { --bg: #e6e3ff; }
+.layer[data-i='2'] { --bg: #d9fbea; }
+.layerKicker { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; opacity: .7; }
+.layerTitle { font-size: 17px; font-weight: 700; }
+.stepChips { display: flex; flex-wrap: wrap; gap: 6px; }
+.stepChip {
+  padding: 3px 10px; border-radius: 20px; border: 1.5px solid #1a1a2e; background: #fff; color: #1a1a2e;
+  font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; transition: transform .12s, background-color .15s;
+}
+.stepChip:hover { transform: translateY(-1px); background: #f1ecff; }
+.stepChip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.nivelChip { align-self: flex-start; margin-top: auto; padding: 2px 9px; border-radius: 20px; font-size: 10.5px; font-weight: 700; background: #fff8; border: 1.5px solid #1a1a2e; }
+.nivelChip[data-n='Fácil'] { background: #a7f3d0; }
+.nivelChip[data-n='Média'] { background: #fde68a; }
+.nivelChip[data-n='Difícil'] { background: #fecdd3; }
+
+.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+.step {
+  --bg: #ffe3b0;
+  display: flex; flex-direction: column; gap: 8px; padding: 14px; border-radius: 14px; border: 2px solid #1a1a2e;
+  background: var(--bg); color: #1a1a2e;
+}
+.step[data-i='1'] { --bg: #ffe0e5; } .step[data-i='2'] { --bg: #e6e3ff; } .step[data-i='3'] { --bg: #dde9ff; }
+.step[data-i='4'] { --bg: #d9fbea; } .step[data-i='5'] { --bg: #fde68a; }
+.stepHead { display: flex; align-items: center; gap: 10px; font-size: 16px; }
+.stepNum { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: #fff; border: 2px solid #1a1a2e; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+.step p { margin: 0; font-size: 12.5px; line-height: 1.5; }
+.stepTools { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; }
+.stepTool { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 4px; border-radius: 20px; background: #fff; border: 1.5px solid #1a1a2e; color: #1a1a2e; font-size: 11.5px; font-weight: 600; text-decoration: none; }
+.stepTool .toolLetter { width: 20px; height: 20px; border-radius: 6px; font-size: 10px; }
+.stepTool:hover { background: #f1ecff; }
+.stepTool:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .stepChip { transition: none; } .stepChip:hover { transform: none; } }

@@ -1,5 +1,5 @@
 import {
-  Airplane, Archive, Atom, Barbell, Bell, Book, BookOpen, BookmarkSimple, Books, Brain, Briefcase, Bug, Buildings,
+  Airplane, ArrowRight, Archive, Atom, Barbell, Bell, Book, BookOpen, BookmarkSimple, Books, Brain, Briefcase, Bug, Buildings,
   CalendarBlank, Camera, Car, ChalkboardTeacher, ChartBar, ChartLineUp, ChartLineDown, ChartPie, ChatCircle, Check,
   Clipboard, Clock, Cloud, Code, Coffee, Compass, CookingPot, Crown, Cube, Cursor, Database, Desktop, DeviceMobile,
   Diamond, DownloadSimple, Envelope, Exam, Eyedropper, FilePdf, FileText, FilmStrip, Fire, Flag, Flask, Folder,
@@ -157,6 +157,7 @@ export const PH_ICONS: PhEntry[] = [
   { key: 'plus', C: Plus, words: 'mais adicionar' },
   { key: 'trash', C: Trash, words: 'lixeira excluir' },
   { key: 'x', C: X, words: 'fechar cancelar' },
+  { key: 'arrow-right', C: ArrowRight, words: 'seta direita próximo' },
 ]
 
 export const PH_BY_KEY: Record<string, Icon> = Object.fromEntries(PH_ICONS.map(i => [i.key, i.C]))

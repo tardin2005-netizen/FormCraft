@@ -164,7 +164,7 @@ export default function Biblioteca() {
         <>
           {(tab === 'tudo' || tab === 'padroes') && (
             <section className={s.block}>
-              {tab === 'tudo' && <h2 className={s.blockTitle}>Padrões <span>{visible.length}</span></h2>}
+              {tab === 'tudo' && <div className={s.shelfHead}><h2 className={s.blockTitle}>Padrões <span>{visible.length}</span></h2>{visible.length > 4 && <button className={s.seeAll} onClick={() => setTab('padroes')}>Ver todos →</button>}</div>}
               {patterns.length === 0 ? (
                 <button className={s.emptyCard} onClick={() => setEditing('new')}>
                   <span className={s.emptyPlus}>+</span>
@@ -175,7 +175,7 @@ export default function Biblioteca() {
                 <p className={s.noMatch}>Nenhum padrão bate com esse filtro.</p>
               ) : (
                 <div className={s.grid}>
-                  {visible.map(p => (
+                  {(tab === 'tudo' ? visible.slice(0, 4) : visible).map(p => (
                     <button key={p.id} className={s.card} onClick={() => navigate(`/biblioteca/${p.id}`)}>
                       <PatternPreview pattern={p} />
                       <div className={s.cardBody}>
@@ -194,12 +194,12 @@ export default function Biblioteca() {
           )}
           {(tab === 'tudo' || tab === 'ferramentas') && (
             <section className={s.block}>
-              {tab === 'tudo' && <h2 className={s.blockTitle}>Ferramentas <span>{toolHits.length}</span></h2>}
+              {tab === 'tudo' && <div className={s.shelfHead}><h2 className={s.blockTitle}>Ferramentas <span>{toolHits.length}</span></h2>{toolHits.length > 3 && <button className={s.seeAll} onClick={() => setTab('ferramentas')}>Ver todas →</button>}</div>}
               {toolHits.length === 0 ? (
                 <p className={s.noMatch}>Nenhuma ferramenta {hubFilter === 'todos' ? 'combina com a busca' : 'neste hub ainda. Adicione pela aba Biblioteca do próprio hub'}.</p>
               ) : (
                 <div className={s.toolGrid}>
-                  {toolHits.map(tl => <ToolTile key={tl.name} tool={tl} hubs={hubsForTool(tl, hubs, overrides)} />)}
+                  {(tab === 'tudo' ? toolHits.slice(0, 3) : toolHits).map(tl => <ToolTile key={tl.name} tool={tl} hubs={hubsForTool(tl, hubs, overrides)} />)}
                 </div>
               )}
             </section>
