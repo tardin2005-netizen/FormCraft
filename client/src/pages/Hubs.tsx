@@ -1,7 +1,9 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useHubsStore, type HubType } from '../store/hubsStore'
+import { useHubsStore, type HubType, type Hub } from '../store/hubsStore'
+import { useContentItemsStore } from '../store/contentItemsStore'
+import { useLibraryStore, isDesignHubName } from '../store/libraryStore'
 import s from './Hubs.module.css'
 
 const HUB_TYPES: { type: HubType; label: string; emoji: string; desc: string; color: string }[] = [
@@ -14,12 +16,39 @@ const HUB_TYPES: { type: HubType; label: string; emoji: string; desc: string; co
 const EMOJIS = ['🎓','🌱','🚀','✦','💡','🔬','🎨','💼','🏆','📊','🎵','📷','🔥','⚡','🌍']
 const COLORS  = ['#7c6ef7','#4f8ef7','#3ecf8e','#f78c4f','#e46ef7','#facc15','#f43f5e']
 
+const MODULE_LABELS: Record<string, string> = {
+  snippets: 'Snippets', 'tools-db': 'Ferramentas', scripts: 'Scripts', troubleshooting: 'Troubleshooting',
+  notes: 'Notas', references: 'Referências', links: 'Links',
+}
+const MAX_CHIPS = 3
+
 interface NewHubForm {
   type: HubType; name: string; emoji: string; color: string
 }
 
 export default function Hubs() {
-  const { hubs, addHub, updateHub, removeHub } = useHubsStore()
+  const { hubs, semesters, subjects, classes, contents, concepts, addHub, updateHub, removeHub } = useHubsStore()
+  const contentItems = useContentItemsStore(st => st.items)
+  const patterns = useLibraryStore(st => st.patterns)
+
+  function hubSummary(hub: Hub) {
+    const mods: { label: string; n: number }[] = []
+    if (hub.type === 'faculdade') {
+      mods.push(
+        { label: 'Disciplinas', n: subjects.filter(x => x.hubId === hub.id).length },
+        { label: 'Aulas', n: classes.filter(x => x.hubId === hub.id).length },
+        { label: 'Materiais', n: contents.filter(x => x.hubId === hub.id).length },
+        { label: 'Conceitos', n: concepts.filter(x => x.hubId === hub.id).length },
+      )
+    } else {
+      for (const [key, label] of Object.entries(MODULE_LABELS)) {
+        mods.push({ label, n: contentItems.filter(i => i.moduleId === `hub-${hub.id}-${key}`).length })
+      }
+      mods.push({ label: 'Biblioteca', n: patterns.filter(p => p.hubId === hub.id || (!p.hubId && isDesignHubName(hub.name))).length })
+    }
+    const filled = mods.filter(m => m.n > 0).sort((a, b) => b.n - a.n)
+    return { filled, total: filled.reduce((a, m) => a + m.n, 0) }
+  }
   const [modal,    setModal]    = useState(false)
   const [step,     setStep]     = useState<'type' | 'details'>('type')
   const [form,     setForm]     = useState<NewHubForm>({
@@ -120,6 +149,7 @@ export default function Hubs() {
         <div className={s.grid}>
           {hubs.map((hub, i) => {
             const info = HUB_TYPES.find(t => t.type === hub.type)
+            const sum = hubSummary(hub)
             return (
               <motion.div
                 key={hub.id}
@@ -128,18 +158,21 @@ export default function Hubs() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * .04 }}
               >
-                <Link to={`/hub/${hub.id}`} className={s.hubCard}>
-                  <div className={s.hubCardCover}>
-                    <div
-                      className={s.hubCardCoverBg}
-                      style={{ background: `linear-gradient(135deg, ${hub.color}ee 0%, ${hub.color}99 60%, ${hub.color}55 100%)` }}
-                    />
-                    <span className={s.hubCardCoverEmoji}>{hub.emoji}</span>
-                    <span className={s.hubCardCoverTitle}>{hub.name}</span>
+                <Link to={`/hub/${hub.id}`} className={s.hubCard} style={{ ['--hub' as string]: hub.color }}>
+                  <div className={s.cover}>
+                    <span className={s.blobA} /><span className={s.blobB} /><span className={s.blobC} />
+                    <span className={s.sticker}>{hub.emoji}</span>
+                    <span className={s.countPill}>{sum.total} {sum.total === 1 ? 'item' : 'itens'}</span>
+                    <span className={s.coverName}>{hub.name}</span>
                   </div>
-                  <div className={s.hubCardMeta}>
-                    <span className={s.hubCardMetaName}>{hub.name}</span>
-                    <span className={s.hubCardMetaType}>{info?.label}</span>
+                  <div className={s.inside}>
+                    <span className={s.insideLabel}>Dentro deste hub</span>
+                    <div className={s.chips}>
+                      {sum.filled.length === 0 && <span className={s.chipEmpty}>Nada por aqui ainda</span>}
+                      {sum.filled.slice(0, MAX_CHIPS).map(m => <span key={m.label} className={s.chip}>{m.label}</span>)}
+                      {sum.filled.length > MAX_CHIPS && <span className={s.chip}>+{sum.filled.length - MAX_CHIPS}</span>}
+                    </div>
+                    <span className={s.typeLine}>Hub {info?.label.toLowerCase()}</span>
                   </div>
                 </Link>
                 <button
