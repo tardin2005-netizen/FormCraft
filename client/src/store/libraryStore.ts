@@ -4,7 +4,7 @@ import { normList, normPattern } from './normalize'
 import { auth, db } from '../firebase'
 import { doc, setDoc, deleteDoc, getDoc, arrayUnion } from 'firebase/firestore'
 
-export const PATTERN_CATEGORIES = ['Hover', 'Motion', 'Texto', 'Card', 'Fundo', 'Layout', 'Navegação', 'Vídeo', 'PWA', 'Outro'] as const
+export const PATTERN_CATEGORIES = ['Hover', 'Motion', 'Texto', 'Card', 'Fundo', 'Layout', 'Navegação', 'Vídeo', 'PWA', 'Design System', 'Outro'] as const
 export type PatternCategory = typeof PATTERN_CATEGORIES[number]
 
 export interface DesignPattern {
@@ -70,9 +70,78 @@ const RESIZE_HANDLE: DesignPatternInput = {
     exemploCodigo: '/* Handle horizontal — cursor e indicador visual */\n.resize-handle {\n  width: 6px;\n  cursor: col-resize;\n  position: relative;\n}\n.resize-handle::after {\n  content: "";\n  position: absolute;\n  inset: 0; left: 2px; width: 2px;\n  background: var(--accent);\n  opacity: 0;\n  transition: opacity .18s;\n}\n.resize-handle:hover::after { opacity: .55; }\n\n/* Lógica de drag em JS */\nhandle.addEventListener("mousedown", e => {\n  const startX = e.clientX;\n  const startW = panel.offsetWidth;\n  const onMove = ev => panel.style.width = startW + (ev.clientX - startX) + "px";\n  const onUp = () => document.removeEventListener("mousemove", onMove);\n  document.addEventListener("mousemove", onMove);\n  document.addEventListener("mouseup", onUp, { once: true });\n});',
 }
 
-const UPGRADE_ID = 'v2-menu-hamburguer'
+const UPGRADE_IDS = ['v2-menu-hamburguer', 'v3-design-system'] as const
 const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase()
 const addMissing = (list: string[], extra: string[]) => [...list, ...extra.filter(x => !list.some(y => sameName(x, y)))]
+
+const DS_PATTERNS: DesignPatternInput[] = [
+  {
+    nomePrincipal: 'Tipografia',
+    sinonimos: ['Typography', 'Escala tipográfica', 'Type scale', 'Hierarquia de texto'],
+    categoria: 'Design System',
+    oQueE: 'A escolha das fontes, tamanhos e pesos do texto. Ela organiza a leitura: o olho vai primeiro no que é maior e mais pesado, depois no que é menor e mais leve.',
+    comoFunciona: 'Display: o texto de maior impacto, usado em capas e números grandes (ex.: 40 px, ExtraBold).\nHeadline: título de página ou seção (ex.: 28 px, Bold).\nSubheading: subtítulo ou nome de bloco (ex.: 20 px, SemiBold).\nBody: o texto corrido, que o usuário realmente lê (ex.: 16 px, Regular).\nCaption: apoio, legenda, dica abaixo do campo (ex.: 13 px, Medium, em cinza).\n\nRegra de ouro: quanto maior e mais pesado, mais importante. Se tudo grita, nada é lido.',
+    ondeUsar: 'Toda tela do produto. Com poucos níveis bem definidos, qualquer tela fica legível sem esforço. O título da página é Headline, o rótulo do campo é Body em negrito, a dica embaixo do campo é Caption.',
+    tags: ['tipografia', 'fonte', 'hierarquia', 'texto', 'design-system', 'escala'],
+  },
+  {
+    nomePrincipal: 'Cores',
+    sinonimos: ['Colors', 'Paleta de cores', 'Color palette', 'Tokens de cor'],
+    categoria: 'Design System',
+    oQueE: 'A paleta do produto. Cada cor tem um papel (o que ela significa) e uma escala (do tom mais escuro ao mais claro, normalmente 10 tons).',
+    comoFunciona: 'Primária (índigo): ação e marca — botão "Enviar", campo em foco.\nNeutra (cinzas): texto, bordas, fundos — rótulos, linhas de separação.\nSucesso (verde): deu certo — campo válido, "Publicado".\nErro (vermelho): deu errado ou é perigoso — validação, botão de excluir.\nAlerta (âmbar): atenção — "Pendente", aviso antes de sair.\nInformação (azul): dica neutra — tooltip, link, aviso informativo.\n\nComo ler a escala: tons escuros → texto e hover, tom do meio → botão e destaque, claros → fundos e bordas suaves.\nAcessibilidade: nunca deixe só a cor carregar o significado. Use sempre cor + ícone ou texto.',
+    ondeUsar: 'Todos os elementos visuais do produto. Se mudar a cor primária, todos os botões mudam juntos. Consistência e velocidade saem de graça.',
+    tags: ['cores', 'paleta', 'primária', 'semântica', 'design-system', 'acessibilidade'],
+  },
+  {
+    nomePrincipal: 'Componentes',
+    sinonimos: ['Components', 'Peças prontas', 'UI Components', 'Blocos reutilizáveis'],
+    categoria: 'Design System',
+    oQueE: 'As peças prontas que juntam tipografia e cor em algo reutilizável. Você monta a tela com elas em vez de desenhar tudo do zero.',
+    comoFunciona: 'Botão: dispara uma ação. Primário (preenchido), secundário (só borda) e só ícone. Estados: padrão, hover, foco, pressionado, desabilitado.\nCampo de texto: onde o usuário digita. Estados: vazio, em foco (borda índigo), erro (borda vermelha com mensagem). Sempre com rótulo visível.\nBadge e chip: etiquetas pequenas de status ("Rascunho", "Publicado", "Pendente", "Erro"). Mostram estado de relance.\nTag: parecido com badge, mas pra classificar ou filtrar (categorias, marcadores).\nTooltip: dica que aparece ao passar o mouse, pra explicar algo sem ocupar espaço.',
+    ondeUsar: 'Toda tela do produto. Se mudar a cor primária, todos os componentes mudam juntos. Tipografia + Cores são as regras. Componentes são as peças feitas com essas regras.',
+    tags: ['componentes', 'botão', 'campo', 'badge', 'design-system', 'reutilizável'],
+  },
+  {
+    nomePrincipal: 'Botão',
+    sinonimos: ['Button', 'CTA', 'Call to action', 'Botão de ação'],
+    categoria: 'Design System',
+    oQueE: 'Elemento que dispara uma ação quando clicado. Existem o primário (preenchido, ação principal), o secundário (só com borda) e o só ícone.',
+    comoFunciona: 'Padrão: estado de repouso, com cor de fundo (primário) ou só borda (secundário).\nHover: cor escurece levemente ao passar o mouse, sinalizando interatividade.\nFoco: borda de destaque para navegação por teclado (Tab).\nPresionado: cor mais escura momentaneamente ao clicar.\nDesabilitado: opacidade reduzida, cursor not-allowed, sem resposta ao clique.\n\nPrimário: ação mais importante da tela (salvar, enviar). Secundário: ação alternativa (cancelar, voltar). Só ícone: ações compactas (fechar, editar).',
+    ondeUsar: 'Formulários, modais, barras de ação, cards. Use apenas um primário por grupo — se tudo é primário, nada se destaca.',
+    tags: ['botão', 'primário', 'secundário', 'estados', 'design-system', 'ação'],
+    exemploCodigo: '.btn {\n  padding: 10px 20px; border-radius: 8px;\n  font-weight: 600; cursor: pointer;\n  transition: all .15s;\n}\n.btn-primary {\n  background: var(--accent); color: #fff; border: none;\n}\n.btn-primary:hover { filter: brightness(.9); }\n.btn-primary:disabled { opacity: .5; cursor: not-allowed; }\n.btn-secondary {\n  background: transparent; border: 1px solid var(--border);\n  color: var(--text);\n}\n.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }',
+  },
+  {
+    nomePrincipal: 'Campo de texto',
+    sinonimos: ['Input field', 'Text input', 'Text field', 'Campo de entrada'],
+    categoria: 'Design System',
+    oQueE: 'Elemento onde o usuário digita informação. É o coração de um formulário — sempre com um rótulo visível que diz o que preencher.',
+    comoFunciona: 'Vazio: borda neutra, rótulo acima, placeholder em cinza claro.\nEm foco: borda muda para a cor primária (índigo), indicando que está ativo.\nErro: borda vermelha com mensagem de erro abaixo ("Informe um e-mail válido").\nPreenchido: texto do usuário substitui o placeholder.\n\nSempre use rótulo visível (label), nunca só placeholder — ele some ao digitar e o usuário esquece o que era.',
+    ondeUsar: 'Formulários de cadastro, login, busca, configurações. O campo é a peça mais usada de qualquer app que coleta dados.',
+    tags: ['campo', 'input', 'formulário', 'foco', 'erro', 'design-system'],
+    exemploCodigo: '.input {\n  width: 100%; padding: 10px 14px;\n  border: 1px solid var(--border); border-radius: 8px;\n  font-size: 14px; color: var(--text);\n  background: var(--surface);\n  transition: border-color .15s;\n}\n.input:focus { border-color: var(--accent); outline: none; }\n.input-error { border-color: var(--error); }\n.input-msg { font-size: 12px; color: var(--error); margin-top: 4px; }',
+  },
+  {
+    nomePrincipal: 'Badge e Tag',
+    sinonimos: ['Badge', 'Tag', 'Chip', 'Status label', 'Etiqueta de status'],
+    categoria: 'Design System',
+    oQueE: 'Etiquetas pequenas que mostram status (badge) ou classificam conteúdo (tag). Servem pra o usuário entender o estado de algo de relance.',
+    comoFunciona: 'Badge de status: fundo colorido + texto curto. Rascunho (amarelo), Publicado (verde), Pendente (laranja), Erro (vermelho).\nChip com borda: apenas borda e texto, sem fundo preenchido. Menos chamativo, ideal para metadados.\nTag: geralmente com # na frente, usada para classificar. Pode ser clicável para filtrar.\n\nA cor do badge é semântica (verde = sucesso, vermelho = erro) — separada da cor de destaque (accent) do produto.',
+    ondeUsar: 'Listas de formulários (status), cards de conteúdo (categorias), tabelas, kanban boards.',
+    tags: ['badge', 'tag', 'chip', 'status', 'etiqueta', 'design-system'],
+  },
+  {
+    nomePrincipal: 'Tooltip',
+    sinonimos: ['Dica flutuante', 'Hover tip', 'Title attribute', 'Info popup'],
+    categoria: 'Design System',
+    oQueE: 'Pequena caixa de texto que aparece ao passar o mouse sobre um elemento, para explicar algo sem poluir a tela.',
+    comoFunciona: 'Gatilho: hover do mouse (desktop) ou long-press (mobile).\nPosicionamento: aparece acima, abaixo ou ao lado do elemento, com uma setinha apontando para ele.\nConteúdo: texto curto (1-2 frases). Se precisar de mais, use um popover ou modal.\nAnimação: fade-in suave (200ms) com pequeno delay (300ms) para não disparar acidentalmente.\n\nDica ao passar o mouse, sem poluir a tela. Marcado como "Campo obrigatório", por exemplo.',
+    ondeUsar: 'Ícones sem rótulo, abreviações, campos com regras especiais, botões de ação que precisam de contexto extra.',
+    tags: ['tooltip', 'dica', 'hover', 'informação', 'design-system'],
+    exemploCodigo: '.tooltip-wrap { position: relative; }\n.tooltip {\n  position: absolute; bottom: calc(100% + 8px); left: 50%;\n  transform: translateX(-50%);\n  background: var(--text); color: var(--bg); \n  padding: 6px 10px; border-radius: 6px;\n  font-size: 12px; white-space: nowrap;\n  opacity: 0; pointer-events: none;\n  transition: opacity .2s .3s;\n}\n.tooltip-wrap:hover .tooltip { opacity: 1; }',
+  },
+]
 
 export const DEFAULT_PATTERNS: DesignPatternInput[] = [
   {
@@ -143,6 +212,7 @@ export const DEFAULT_PATTERNS: DesignPatternInput[] = [
   },
   HAMBURGER,
   RESIZE_HANDLE,
+  ...DS_PATTERNS,
 ]
 
 let upgrading: string | null = null
@@ -185,23 +255,36 @@ export const useLibraryStore = create<LibraryStore>()(
         try {
           const metaRef = doc(db, 'users', uid, 'meta', 'library')
           const meta = await getDoc(metaRef)
-          if ((meta.data()?.upgrades ?? []).includes(UPGRADE_ID)) return
-          const { patterns } = get()
-          for (const extra of [HAMBURGER, RESIZE_HANDLE]) {
-            if (!patterns.some(p => sameName(p.nomePrincipal, extra.nomePrincipal))) get().addPattern(extra)
+          const done = meta.data()?.upgrades ?? []
+
+          // v2: hamburger + resize-handle + sidebar extras
+          if (!done.includes('v2-menu-hamburguer')) {
+            const { patterns } = get()
+            for (const extra of [HAMBURGER, RESIZE_HANDLE]) {
+              if (!patterns.some(p => sameName(p.nomePrincipal, extra.nomePrincipal))) get().addPattern(extra)
+            }
+            const sidebar = patterns.find(p => sameName(p.nomePrincipal, 'Collapsed Sidebar'))
+            if (sidebar && !sidebar.comoFunciona.includes('Menu hambúrguer')) {
+              const { id: _id, criadoEm: _c, ...rest } = sidebar
+              get().updatePattern(sidebar.id, {
+                ...rest,
+                sinonimos: addMissing(sidebar.sinonimos, SIDEBAR_EXTRA.sinonimos),
+                tags: addMissing(sidebar.tags, SIDEBAR_EXTRA.tags),
+                comoFunciona: sidebar.comoFunciona + SIDEBAR_EXTRA.comoFunciona,
+                ondeUsar: sidebar.ondeUsar + SIDEBAR_EXTRA.ondeUsar,
+              })
+            }
+            await setDoc(metaRef, { upgrades: arrayUnion('v2-menu-hamburguer') }, { merge: true })
           }
-          const sidebar = patterns.find(p => sameName(p.nomePrincipal, 'Collapsed Sidebar'))
-          if (sidebar && !sidebar.comoFunciona.includes('Menu hambúrguer')) {
-            const { id: _id, criadoEm: _c, ...rest } = sidebar
-            get().updatePattern(sidebar.id, {
-              ...rest,
-              sinonimos: addMissing(sidebar.sinonimos, SIDEBAR_EXTRA.sinonimos),
-              tags: addMissing(sidebar.tags, SIDEBAR_EXTRA.tags),
-              comoFunciona: sidebar.comoFunciona + SIDEBAR_EXTRA.comoFunciona,
-              ondeUsar: sidebar.ondeUsar + SIDEBAR_EXTRA.ondeUsar,
-            })
+
+          // v3: design system patterns
+          if (!done.includes('v3-design-system')) {
+            const { patterns } = get()
+            for (const ds of DS_PATTERNS) {
+              if (!patterns.some(p => sameName(p.nomePrincipal, ds.nomePrincipal))) get().addPattern(ds)
+            }
+            await setDoc(metaRef, { upgrades: arrayUnion('v3-design-system') }, { merge: true })
           }
-          await setDoc(metaRef, { upgrades: arrayUnion(UPGRADE_ID) }, { merge: true })
         } catch { upgrading = null }
       },
       hydrate: (patterns) => set({ patterns: normList(patterns, normPattern) as any, seeded: true }),

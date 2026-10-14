@@ -21,6 +21,8 @@ import HubGenericModule from '../modules/GenericModule'
 import ReferenceGallery from '../modules/ReferenceGallery'
 import KeepNotes from '../modules/KeepNotes'
 import SnippetsModule from '../modules/SnippetsModule'
+import BibliotecaModule from '../modules/BibliotecaModule'
+import { useLibraryStore } from '../store/libraryStore'
 import s from './HubView.module.css'
 
 /* ─── helpers ─── */
@@ -877,6 +879,7 @@ const WORKSPACE_TABS: { key: string; label: string; icon: string; type: ModuleTy
   { key: 'notes',            label: 'Notas',           icon: '📝',  type: 'notes',            layout: 'list'    },
   { key: 'references',       label: 'Referências',     icon: '🔖',  type: 'references',       layout: 'gallery' },
   { key: 'links',            label: 'Links',           icon: '🔗',  type: 'links',            layout: 'list'    },
+  { key: 'biblioteca',       label: 'Biblioteca',      icon: '📚',  type: 'biblioteca',       layout: 'grid'    },
 ]
 
 function HubModuleTab({ hubId, tabKey, type, layout }: { hubId: string; tabKey: string; type: ModuleType; layout: ModuleLayout }) {
@@ -896,6 +899,7 @@ function HubModuleTab({ hubId, tabKey, type, layout }: { hubId: string; tabKey: 
     case 'troubleshooting':  return <TroubleshootingModule {...props} />
     case 'references':       return <ReferenceGallery {...props} />
     case 'notes':            return <KeepNotes {...props} />
+    case 'biblioteca':       return <BibliotecaModule />
     default:                 return <HubGenericModule {...props} />
   }
 }
@@ -903,13 +907,14 @@ function HubModuleTab({ hubId, tabKey, type, layout }: { hubId: string; tabKey: 
 /* ─── Generic Hub ─── */
 function GenericHubView({ hubId }: { hubId: string }) {
   const { items } = useContentItemsStore()
+  const patternCount = useLibraryStore(s => s.patterns.length)
   const [activeTab, setActiveTab] = useState(WORKSPACE_TABS[0].key)
   const [showAddMenu, setShowAddMenu] = useState(false)
   const [menuPos, setMenuPos] = useState({ top: 0, right: 0 })
   const addModuleBtnRef = useRef<HTMLButtonElement>(null)
 
   const itemCount = (key: string) =>
-    items.filter(i => i.moduleId === `hub-${hubId}-${key}`).length
+    key === 'biblioteca' ? patternCount : items.filter(i => i.moduleId === `hub-${hubId}-${key}`).length
 
   const populatedTabs = WORKSPACE_TABS.filter(t => itemCount(t.key) > 0)
   const emptyTabs = WORKSPACE_TABS.filter(t => itemCount(t.key) === 0)
