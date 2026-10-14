@@ -7,7 +7,7 @@ import { type WorkspaceModule } from '../store/workspacesStore'
 import { type ModuleType, type ModuleLayout } from '../data/contextTemplates'
 import DeleteBtn from '../modules/DeleteBtn'
 import EmptyState from '../components/EmptyState'
-import RichText from '../components/RichText'
+import RichText, { plainText } from '../components/RichText'
 import { imageToDataUrl } from '../utils/imageData'
 import { CalendarDays, BookOpen, FileText, Lightbulb } from 'lucide-react'
 import { uploadUserFile, MAX_UPLOAD_MB, type UploadedFile } from '../utils/fileUpload'
@@ -275,6 +275,223 @@ function ConceptCard({ concept, onDelete }: { concept: Concept; onDelete: () => 
   )
 }
 
+
+/* ─── Painel da matéria: capa, abas, tiles e leitura da aula ─── */
+const MONTHS = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ']
+const TYPE_TINT: Record<ClassItem['type'], string> = { aula: '#d8d2ff', trabalho: '#fde68a', prova: '#fecdd3', extra: '#a7f3d0' }
+const MAT_TINT: Record<HubContent['type'], string> = { link: '#dde9ff', note: '#d8d2ff', pdf: '#fecdd3', file: '#fde68a' }
+const dayOf = (date: string) => ({ d: date.slice(8, 10) || '--', m: MONTHS[Number(date.slice(5, 7)) - 1] ?? '---' })
+
+interface SubjectPanelProps {
+  subj: Subject
+  classes: ClassItem[]
+  contents: HubContent[]
+  concepts: Concept[]
+  selClass: string | null
+  setSelClass: (id: string | null) => void
+  onAddClass: () => void
+  onAddContent: () => void
+  onAddConcept: () => void
+  onPdf: () => void
+  onRemoveClass: (id: string) => void
+  onRemoveContent: (id: string) => void
+  onRemoveConcept: (id: string) => void
+  onCtx: (e: React.MouseEvent, cl: ClassItem) => void
+}
+
+function SubjectPanel(p: SubjectPanelProps) {
+  const { subj, classes, contents, concepts, selClass } = p
+  const [tab, setTab] = useState<'aulas' | 'materiais' | 'conceitos'>('aulas')
+  const [openMat, setOpenMat] = useState<string | null>(null)
+  useEffect(() => { if (selClass) setTab('aulas') }, [selClass])
+
+  const cls = classes.find(c => c.id === selClass)
+  const countMat = (id: string) => contents.filter(c => c.classId === id).length
+  const countCpt = (id: string) => concepts.filter(c => c.classId === id).length
+  const provas = classes.filter(c => c.type === 'prova').length
+  const today = new Date().toISOString().slice(0, 10)
+  const next = classes.find(c => c.date >= today)
+
+  const classTile = (cl: ClassItem) => {
+    const { d, m } = dayOf(cl.date)
+    return (
+      <button key={cl.id} className={s.spTile} onClick={() => p.setSelClass(cl.id)} onContextMenu={e => p.onCtx(e, cl)}>
+        <span className={s.spTileCover} style={{ background: TYPE_TINT[cl.type] }}>
+          <span className={s.spDay}><i>{m}</i><b>{d}</b></span>
+          <span className={s.spTypeChip}>{CLASS_TYPE_LABEL[cl.type]}</span>
+        </span>
+        <span className={s.spTileBody}>
+          <span className={s.spTileTitle}>{cl.title}</span>
+          <span className={s.spTileMeta}>{countMat(cl.id)} {countMat(cl.id) === 1 ? 'material' : 'materiais'} · {countCpt(cl.id)} {countCpt(cl.id) === 1 ? 'conceito' : 'conceitos'}</span>
+        </span>
+      </button>
+    )
+  }
+
+  return (
+    <div className={s.mainPanel}>
+      <header className={s.spHero} style={{ ['--subj' as string]: subj.color }}>
+        <span className={s.spSticker}><Glyph value={subj.emoji} size={28} /></span>
+        <div className={s.spHeroText}>
+          <h2>{subj.name}</h2>
+          <p>
+            {classes.length} {classes.length === 1 ? 'aula' : 'aulas'}
+            {provas > 0 && <> · {provas} {provas === 1 ? 'prova' : 'provas'}</>}
+            {' '}· {contents.length} {contents.length === 1 ? 'material' : 'materiais'} · {concepts.length} {concepts.length === 1 ? 'conceito' : 'conceitos'}
+            {next && <> · próxima: {next.date.slice(8, 10)}/{next.date.slice(5, 7)}</>}
+            {subj.professor && <> · {subj.professor}</>}
+          </p>
+        </div>
+        <div className={s.spHeroActions}>
+          <button className={s.spBtn} onClick={p.onAddClass}>+ Aula</button>
+          <button className={s.spBtn} onClick={p.onAddContent}>+ Material</button>
+          <button className={s.spBtn} onClick={p.onAddConcept} disabled={!selClass} title={selClass ? 'Adicionar conceito a esta aula' : 'Abra uma aula primeiro'}>+ Conceito</button>
+          <button className={`${s.spBtn} ${s.spBtnMain}`} onClick={p.onPdf}><Glyph value="ph:file-pdf" size={14} /> PDF</button>
+        </div>
+      </header>
+
+      <div className={s.spTabs} role="tablist">
+        {([['aulas', 'Aulas', classes.length], ['materiais', 'Materiais', contents.length], ['conceitos', 'Conceitos', concepts.length]] as const).map(([k, label, n]) => (
+          <button key={k} role="tab" aria-selected={tab === k} className={`${s.spTab} ${tab === k ? s.spTabOn : ''}`} onClick={() => setTab(k)}>
+            {label} <span>{n}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className={s.spBody}>
+        {tab === 'aulas' && (
+          classes.length === 0 ? (
+            <EmptyState compact icon={<CalendarDays size={16} />} title="Nenhuma aula nesta matéria ainda" actions={[{ label: '+ Aula', onClick: p.onAddClass }]}>
+              Cadastre aulas, provas e trabalhos com data. Eles aparecem no calendário da tela inicial, e cada aula guarda seus materiais e conceitos.
+            </EmptyState>
+          ) : !cls ? (
+            <div className={s.spTiles}>{classes.map(classTile)}</div>
+          ) : (
+            <div className={s.spSplit}>
+              <ol className={s.spTimeline}>
+                {classes.map(cl => {
+                  const { d, m } = dayOf(cl.date)
+                  return (
+                    <li key={cl.id}>
+                      <button className={`${s.spItem} ${cl.id === selClass ? s.spItemOn : ''}`} onClick={() => p.setSelClass(cl.id)} onContextMenu={e => p.onCtx(e, cl)}>
+                        <span className={s.spDate}><i>{m}</i><b>{d}</b></span>
+                        <span className={s.spItemText}>
+                          <span className={s.spItemType}>{CLASS_TYPE_LABEL[cl.type]}</span>
+                          <span className={s.spItemTitle}>{cl.title}</span>
+                        </span>
+                      </button>
+                    </li>
+                  )
+                })}
+              </ol>
+
+              <article className={s.spRead}>
+                <div className={s.spReadTop}>
+                  <button className={s.spBack} onClick={() => p.setSelClass(null)}>← Todas as aulas</button>
+                  <DeleteBtn name={cls.title} onConfirm={() => p.onRemoveClass(cls.id)} />
+                </div>
+                <div className={s.spReadMeta}>
+                  <span className={s.spTypeChip} style={{ background: TYPE_TINT[cls.type] }}>{CLASS_TYPE_LABEL[cls.type]}</span>
+                  <span>{cls.date.slice(8, 10)} de {(MONTHS[Number(cls.date.slice(5, 7)) - 1] ?? '').toLowerCase()} de {cls.date.slice(0, 4)}</span>
+                </div>
+                <h3 className={s.spReadTitle}>{cls.title}</h3>
+
+                {cls.notes && (
+                  <section className={s.spNotes}>
+                    <span className={s.spLabel}>Anotações da aula</span>
+                    <RichText text={cls.notes} />
+                  </section>
+                )}
+
+                <section className={s.spSection}>
+                  <span className={s.spLabel}>Termos desta aula</span>
+                  {concepts.filter(c => c.classId === cls.id).length === 0 ? (
+                    <p className={s.spHint}>Nenhum conceito ainda. Conceitos são os termos que você quer achar depois pela busca do início.</p>
+                  ) : (
+                    <div className={s.spChips}>
+                      {concepts.filter(c => c.classId === cls.id).map(c => (
+                        <button key={c.id} className={s.spChip} onClick={() => document.getElementById('cpt-' + c.id)?.scrollIntoView({ behavior: 'smooth', block: 'center' })}>{c.termo}</button>
+                      ))}
+                    </div>
+                  )}
+                </section>
+
+                <section className={s.spSection}>
+                  <span className={s.spLabel}>Materiais da aula</span>
+                  {contents.filter(c => c.classId === cls.id).length === 0 ? (
+                    <EmptyState compact icon={<FileText size={16} />} title="Nenhum material nesta aula ainda" actions={[{ label: '+ Material', onClick: p.onAddContent }, { label: 'Resumir PDF com IA', onClick: p.onPdf }]}>
+                      Guarde o PDF dos slides, um link ou o seu resumo desta aula. Dá para arrastar o arquivo direto.
+                    </EmptyState>
+                  ) : contents.filter(c => c.classId === cls.id).map(c => (
+                    <ContentCard key={c.id} c={c} onDelete={() => p.onRemoveContent(c.id)} />
+                  ))}
+                </section>
+
+                <section className={s.spSection}>
+                  <span className={s.spLabel}>Conceitos indexados</span>
+                  {concepts.filter(c => c.classId === cls.id).length > 0 && (
+                    <div className={s.conceptList}>
+                      {concepts.filter(c => c.classId === cls.id).map(c => (
+                        <div key={c.id} id={'cpt-' + c.id}><ConceptCard concept={c} onDelete={() => p.onRemoveConcept(c.id)} /></div>
+                      ))}
+                    </div>
+                  )}
+                  <button className={s.spBtn} onClick={p.onAddConcept} style={{ alignSelf: 'flex-start' }}>+ Conceito</button>
+                </section>
+              </article>
+            </div>
+          )
+        )}
+
+        {tab === 'materiais' && (
+          contents.length === 0 ? (
+            <EmptyState compact icon={<FileText size={16} />} title="Nenhum material nesta matéria ainda" actions={[{ label: '+ Material', onClick: p.onAddContent }, { label: 'Resumir PDF com IA', onClick: p.onPdf }]}>
+              Materiais da matéria inteira, como o plano de ensino. Os de uma aula aparecem dentro dela.
+            </EmptyState>
+          ) : (
+            <>
+              <div className={s.spTiles}>
+                {contents.map(c => {
+                  const owner = classes.find(x => x.id === c.classId)
+                  const preview = c.content ? plainText(c.content).slice(0, 110) : c.url ? getDomain(c.url) : ''
+                  return (
+                    <button key={c.id} className={`${s.spTile} ${openMat === c.id ? s.spTileOn : ''}`} onClick={() => setOpenMat(openMat === c.id ? null : c.id)}>
+                      <span className={s.spTileCover} style={{ background: MAT_TINT[c.type] }}>
+                        <span className={s.spMatIcon}><Glyph value={CONTENT_ICON[c.type]} size={22} /></span>
+                        <span className={s.spTypeChip}>{CONTENT_LABEL[c.type]}</span>
+                      </span>
+                      <span className={s.spTileBody}>
+                        <span className={s.spTileTitle}>{c.title}</span>
+                        {preview && <span className={s.spTileMeta}>{preview}</span>}
+                        <span className={s.spTileMeta}>{owner ? owner.title : 'Material da matéria'}</span>
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+              {openMat && contents.find(c => c.id === openMat) && (
+                <ContentCard c={contents.find(c => c.id === openMat)!} onDelete={() => { p.onRemoveContent(openMat); setOpenMat(null) }} />
+              )}
+            </>
+          )
+        )}
+
+        {tab === 'conceitos' && (
+          concepts.length === 0 ? (
+            <EmptyState compact icon={<Lightbulb size={16} />} title="Nenhum conceito nesta matéria ainda" actions={selClass ? [{ label: '+ Conceito', onClick: p.onAddConcept }] : []}>
+              Abra uma aula e use + Conceito. Os conceitos aparecem na busca da tela inicial, de qualquer semestre.
+            </EmptyState>
+          ) : (
+            <div className={s.conceptList}>
+              {concepts.map(c => <ConceptCard key={c.id} concept={c} onDelete={() => p.onRemoveConcept(c.id)} />)}
+            </div>
+          )
+        )}
+      </div>
+    </div>
+  )
+}
+
 /* ─── Faculdade template ─── */
 function FaculdadeView({ hubId }: { hubId: string }) {
   const {
@@ -350,10 +567,6 @@ function FaculdadeView({ hubId }: { hubId: string }) {
 
   const curSubjects  = subjects.filter(x => x.semesterId === selSem)
   const curClasses   = classes.filter(x => x.subjectId === selSubj).sort((a, b) => a.date.localeCompare(b.date))
-  const curContents  = contents.filter(x =>
-    selClass ? x.classId === selClass : (x.subjectId === selSubj && !x.classId)
-  )
-  const curConcepts  = concepts.filter(x => selClass ? x.classId === selClass : x.subjectId === selSubj)
 
   function createSemester() {
     const dup = hubSemesters.find(x => x.year === semForm.year && x.period === semForm.period)
@@ -518,108 +731,22 @@ function FaculdadeView({ hubId }: { hubId: string }) {
               </EmptyState>
             )
           ) : (
-            <div className={s.mainPanel}>
-              {(() => {
-                const subj = subjects.find(x => x.id === selSubj)!
-                return (
-                  <>
-                    <div className={s.mainHeader}>
-                      <div className={s.mainTitle}>
-                        <Glyph value={subj.emoji} size={16} />
-                        <span>{subj.name}</span>
-                        {subj.professor && <span className={s.professor}>• {subj.professor}</span>}
-                      </div>
-                      <div className={s.mainActions}>
-                        <button className={s.actionBtn} onClick={() => setContentModal(true)}>+ Material</button>
-                        <button className={s.actionBtn} onClick={() => setClassModal(true)}>+ Aula</button>
-                        <button className={s.actionBtn} onClick={() => setConceptModal(true)} disabled={!selClass}>+ Conceito</button>
-                        <button className={s.actionBtnPdf} onClick={() => setPdfModal(true)}><Glyph value="ph:file-pdf" size={14} /> PDF</button>
-                      </div>
-                    </div>
-
-                    {/* Class list */}
-                    {curClasses.length === 0 && (
-                      <div className={s.contentSection} style={{ flex: 'none', paddingBottom: 0 }}>
-                        <EmptyState
-                          compact
-                          icon={<CalendarDays size={16} />}
-                          title="Nenhuma aula nesta matéria ainda"
-                          actions={[{ label: '+ Aula', onClick: () => setClassModal(true) }]}
-                        >
-                          Cadastre aulas, provas e trabalhos com data. Eles aparecem no calendário da tela inicial, e cada aula guarda seus materiais e conceitos.
-                        </EmptyState>
-                      </div>
-                    )}
-                    <div className={s.classList}>
-                      {curClasses.map(cl => (
-                        <div
-                          key={cl.id}
-                          className={`${s.classRow} ${selClass === cl.id ? s.classActive : ''}`}
-                          onClick={() => setSelClass(selClass === cl.id ? null : cl.id)}
-                          onContextMenu={e => { e.preventDefault(); setCtxMenu({ x: e.clientX, y: e.clientY, label: cl.title, onDelete: () => removeClassItem(cl.id) }) }}
-                        >
-                          <span
-                            className={s.classType}
-                            style={{ background: CLASS_TYPE_COLOR[cl.type] }}
-                          >{CLASS_TYPE_LABEL[cl.type]}</span>
-                          <span className={s.classTitle}>{cl.title}</span>
-                          <span className={s.classDate}>{cl.date}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Content list */}
-                    <div className={s.contentSection}>
-                      <div className={s.contentLabel}>
-                        {selClass ? `Materiais da aula` : 'Materiais da matéria'}
-                      </div>
-                      {curContents.length === 0 && (
-                        <EmptyState
-                          compact
-                          icon={<FileText size={16} />}
-                          title={selClass ? 'Nenhum material nesta aula ainda' : 'Nenhum material geral nesta matéria'}
-                          actions={[
-                            { label: '+ Material', onClick: () => setContentModal(true) },
-                            { label: 'Resumir PDF com IA', onClick: () => setPdfModal(true) },
-                          ]}
-                        >
-                          {selClass
-                            ? 'Guarde o PDF dos slides, um link ou seu resumo desta aula. Dá para arrastar o arquivo direto.'
-                            : 'Aqui ficam materiais da matéria inteira, como o plano de ensino. Para guardar algo de uma aula, clique na aula primeiro.'}
-                        </EmptyState>
-                      )}
-                      {curContents.map(c => (
-                        <ContentCard key={c.id} c={c} onDelete={() => removeContent(c.id)} />
-                      ))}
-                    </div>
-
-                    {/* Concepts list */}
-                    {selClass && curConcepts.length === 0 && (
-                      <div className={s.contentSection}>
-                        <EmptyState
-                          compact
-                          icon={<Lightbulb size={16} />}
-                          title="Nenhum conceito nesta aula ainda"
-                          actions={[{ label: '+ Conceito', onClick: () => setConceptModal(true) }]}
-                        >
-                          Conceitos são os termos da aula que você quer achar depois pela busca da tela inicial, de qualquer semestre. Um print do slide ajuda a lembrar.
-                        </EmptyState>
-                      </div>
-                    )}
-                    {curConcepts.length > 0 && (
-                      <div className={s.contentSection}>
-                        <div className={s.contentLabel}>Conceitos indexados</div>
-                        <div className={s.conceptList}>
-                          {curConcepts.map(c => (
-                            <ConceptCard key={c.id} concept={c} onDelete={() => removeConcept(c.id)} />
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )
-              })()}
-            </div>
+            <SubjectPanel
+              subj={subjects.find(x => x.id === selSubj)!}
+              classes={curClasses}
+              contents={contents.filter(x => x.subjectId === selSubj)}
+              concepts={concepts.filter(x => x.subjectId === selSubj)}
+              selClass={selClass}
+              setSelClass={setSelClass}
+              onAddClass={() => setClassModal(true)}
+              onAddContent={() => setContentModal(true)}
+              onAddConcept={() => setConceptModal(true)}
+              onPdf={() => setPdfModal(true)}
+              onRemoveClass={id => { removeClassItem(id); if (selClass === id) setSelClass(null) }}
+              onRemoveContent={removeContent}
+              onRemoveConcept={removeConcept}
+              onCtx={(e, cl) => { e.preventDefault(); setCtxMenu({ x: e.clientX, y: e.clientY, label: cl.title, onDelete: () => removeClassItem(cl.id) }) }}
+            />
           )}
         </div>
       )}
