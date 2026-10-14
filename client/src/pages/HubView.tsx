@@ -26,6 +26,7 @@ import { useLibraryStore, isDesignHubName } from '../store/libraryStore'
 import { useHubToolsStore } from '../store/hubToolsStore'
 import { toolsForHub } from '../utils/hubTools'
 import s from './HubView.module.css'
+import Glyph from '../components/Glyph'
 
 /* ─── helpers ─── */
 const CLASS_TYPE_LABEL: Record<ClassItem['type'], string> = {
@@ -40,7 +41,7 @@ const CONTENT_ICON: Record<HubContent['type'], string> = {
 const CONTENT_LABEL: Record<HubContent['type'], string> = {
   link: 'Link', note: 'Nota', pdf: 'PDF', file: 'Arquivo',
 }
-const EMOJIS = ['📚','💡','🔬','🎨','🖥️','📐','📊','⚗️','🌍','🏛️','📝','🎤','🎵','🧪','⚙️']
+const EMOJIS = ['ph:books','ph:lightbulb','ph:flask','ph:palette','ph:desktop','ph:ruler','ph:chart-bar','ph:atom','ph:globe','ph:buildings','ph:note-pencil','ph:microphone','ph:music-notes','ph:brain','ph:gear']
 const COLORS  = ['#7c6ef7','#4f8ef7','#3ecf8e','#f78c4f','#e46ef7','#facc15','#f43f5e']
 const CURRENT_YEAR = new Date().getFullYear()
 
@@ -311,7 +312,7 @@ function FaculdadeView({ hubId }: { hubId: string }) {
 
   // Forms
   const [semForm,  setSemForm]  = useState({ year: CURRENT_YEAR, period: '1' as '1'|'2', name: '' })
-  const [subjForm, setSubjForm] = useState({ name: '', emoji: '📚', color: '#7c6ef7', professor: '' })
+  const [subjForm, setSubjForm] = useState({ name: '', emoji: 'ph:books', color: '#7c6ef7', professor: '' })
   const [clsForm,  setClsForm]  = useState({ title: '', type: 'aula' as ClassItem['type'], date: '', notes: '' })
   const [ctxForm,  setCtxForm]  = useState({ type: 'pdf' as HubContent['type'], title: '', url: '', content: '' })
   const [ctxSource, setCtxSource] = useState<'computer' | 'url'>('computer')
@@ -368,7 +369,7 @@ function FaculdadeView({ hubId }: { hubId: string }) {
     const created = addSubject({ hubId, semesterId: selSem, name: subjForm.name.trim(), emoji: subjForm.emoji, color: subjForm.color, professor: subjForm.professor || undefined })
     setSelSubj(created.id); setSelClass(null)
     setSubjModal(false)
-    setSubjForm({ name: '', emoji: '📚', color: '#7c6ef7', professor: '' })
+    setSubjForm({ name: '', emoji: 'ph:books', color: '#7c6ef7', professor: '' })
   }
   function createClass() {
     if (!selSubj || !clsForm.title.trim()) return
@@ -494,7 +495,7 @@ function FaculdadeView({ hubId }: { hubId: string }) {
                   onContextMenu={e => { e.preventDefault(); setCtxMenu({ x: e.clientX, y: e.clientY, label: subj.name, onDelete: () => removeSubject(subj.id) }) }}
                 >
                   <div className={s.subjDot} style={{ background: subj.color }} />
-                  <span className={s.subjEmoji}>{subj.emoji}</span>
+                  <span className={s.subjEmoji}><Glyph value={subj.emoji} size={18} /></span>
                   <span className={s.subjName}>{subj.name}</span>
                 </div>
               ))
@@ -524,7 +525,7 @@ function FaculdadeView({ hubId }: { hubId: string }) {
                   <>
                     <div className={s.mainHeader}>
                       <div className={s.mainTitle}>
-                        <span>{subj.emoji}</span>
+                        <Glyph value={subj.emoji} size={16} />
                         <span>{subj.name}</span>
                         {subj.professor && <span className={s.professor}>• {subj.professor}</span>}
                       </div>
@@ -656,7 +657,7 @@ function FaculdadeView({ hubId }: { hubId: string }) {
             <div className={s.emojiRow}>
               {EMOJIS.map(e => (
                 <button key={e} className={`${s.emojiBtn} ${subjForm.emoji === e ? s.emojiActive : ''}`}
-                  onClick={() => setSubjForm(f => ({ ...f, emoji: e }))}>{e}</button>
+                  onClick={() => setSubjForm(f => ({ ...f, emoji: e }))} aria-label={e.slice(3)}><Glyph value={e} size={18} /></button>
               ))}
             </div>
             <div className={s.field}>
@@ -874,14 +875,14 @@ function FaculdadeView({ hubId }: { hubId: string }) {
 
 /* ─── Workspace tabs for generic hubs ─── */
 const WORKSPACE_TABS: { key: string; label: string; icon: string; type: ModuleType; layout: ModuleLayout }[] = [
-  { key: 'snippets',         label: 'Snippets',        icon: '📋',  type: 'snippets',         layout: 'grid'    },
-  { key: 'tools-db',         label: 'Ferramentas',     icon: '🛠',  type: 'tools-db',         layout: 'grid'    },
-  { key: 'scripts',          label: 'Scripts',         icon: '📜',  type: 'scripts',          layout: 'list'    },
-  { key: 'troubleshooting',  label: 'Troubleshooting', icon: '🔧',  type: 'troubleshooting',  layout: 'table'   },
-  { key: 'notes',            label: 'Notas',           icon: '📝',  type: 'notes',            layout: 'list'    },
-  { key: 'references',       label: 'Referências',     icon: '🔖',  type: 'references',       layout: 'gallery' },
-  { key: 'links',            label: 'Links',           icon: '🔗',  type: 'links',            layout: 'list'    },
-  { key: 'biblioteca',       label: 'Biblioteca',      icon: '📚',  type: 'biblioteca',       layout: 'grid'    },
+  { key: 'snippets',         label: 'Snippets',        icon: 'ph:clipboard',  type: 'snippets',         layout: 'grid'    },
+  { key: 'tools-db',         label: 'Ferramentas',     icon: 'ph:toolbox',  type: 'tools-db',         layout: 'grid'    },
+  { key: 'scripts',          label: 'Scripts',         icon: 'ph:scroll',  type: 'scripts',          layout: 'list'    },
+  { key: 'troubleshooting',  label: 'Troubleshooting', icon: 'ph:wrench',  type: 'troubleshooting',  layout: 'table'   },
+  { key: 'notes',            label: 'Notas',           icon: 'ph:note-pencil',  type: 'notes',            layout: 'list'    },
+  { key: 'references',       label: 'Referências',     icon: 'ph:bookmark-simple',  type: 'references',       layout: 'gallery' },
+  { key: 'links',            label: 'Links',           icon: 'ph:link',  type: 'links',            layout: 'list'    },
+  { key: 'biblioteca',       label: 'Biblioteca',      icon: 'ph:books',  type: 'biblioteca',       layout: 'grid'    },
 ]
 
 function HubModuleTab({ hubId, tabKey, type, layout }: { hubId: string; tabKey: string; type: ModuleType; layout: ModuleLayout }) {
@@ -956,7 +957,7 @@ function GenericHubView({ hubId }: { hubId: string }) {
             key={t.key}
             className={`${s.wsTab} ${activeTab === t.key ? s.wsTabActive : ''}`}
             onClick={() => setActiveTab(t.key)}
-          >{t.icon} {t.label}</button>
+          ><Glyph value={t.icon} size={15} /> {t.label}</button>
         ))}
         {emptyTabs.length > 0 && (
           <div className={s.addModuleWrap}>
@@ -985,7 +986,7 @@ function GenericHubView({ hubId }: { hubId: string }) {
                 className={s.addModuleItem}
                 onClick={() => { setActiveTab(t.key); setShowAddMenu(false) }}
               >
-                <span>{t.icon}</span>
+                <Glyph value={t.icon} size={15} />
                 <span>{t.label}</span>
               </button>
             ))}
@@ -1060,7 +1061,7 @@ function Modal({
 }
 
 /* ─── Chats (Discord-like) ─── */
-const CHAT_EMOJIS = ['💬','🔥','📌','🛠','📚','⚡','🎯','🧩','💡','🌐']
+const CHAT_EMOJIS = ['ph:chat-circle','ph:fire','ph:push-pin','ph:toolbox','ph:books','ph:lightning','ph:target','ph:puzzle-piece','ph:lightbulb','ph:globe']
 
 function ChatsView({ hubId }: { hubId: string }) {
   const {
@@ -1075,7 +1076,7 @@ function ChatsView({ hubId }: { hubId: string }) {
   const [ctxMenu, setCtxMenu] = useState<CtxMenuState | null>(null)
   const closeCtx = useCallback(() => setCtxMenu(null), [])
   const [newChatName, setNewChatName] = useState('')
-  const [newChatEmoji, setNewChatEmoji] = useState('💬')
+  const [newChatEmoji, setNewChatEmoji] = useState('ph:chat-circle')
   const [addChatOpen, setAddChatOpen] = useState(false)
   const [msgText, setMsgText] = useState('')
   const [msgUrl, setMsgUrl] = useState('')
@@ -1095,7 +1096,7 @@ function ChatsView({ hubId }: { hubId: string }) {
     const chat = { hubId, name: newChatName.trim(), emoji: newChatEmoji }
     setSelChat(addChat(chat).id)
     setNewChatName('')
-    setNewChatEmoji('💬')
+    setNewChatEmoji('ph:chat-circle')
     setAddChatOpen(false)
   }
 
@@ -1153,7 +1154,7 @@ function ChatsView({ hubId }: { hubId: string }) {
             onClick={() => setSelChat(ch.id)}
             onContextMenu={e => { e.preventDefault(); setCtxMenu({ x: e.clientX, y: e.clientY, label: ch.name, onDelete: () => removeChat(ch.id) }) }}
           >
-            <span className={s.channelHash}>{ch.emoji}</span>
+            <span className={s.channelHash}><Glyph value={ch.emoji} size={16} /></span>
             <span className={s.channelName}>{ch.name}</span>
           </div>
         ))}
@@ -1172,7 +1173,8 @@ function ChatsView({ hubId }: { hubId: string }) {
                     key={e}
                     className={`${s.chatEmojiBtn} ${newChatEmoji === e ? s.chatEmojiActive : ''}`}
                     onClick={() => setNewChatEmoji(e)}
-                  >{e}</button>
+                    aria-label={e.slice(3)}
+                  ><Glyph value={e} size={16} /></button>
                 ))}
               </div>
               <input
@@ -1204,7 +1206,7 @@ function ChatsView({ hubId }: { hubId: string }) {
         ) : (
           <>
             <div className={s.chatTopBar}>
-              <span className={s.chatTopEmoji}>{currentChat?.emoji}</span>
+              <span className={s.chatTopEmoji}><Glyph value={currentChat?.emoji} size={18} /></span>
               <span className={s.chatTopName}>{currentChat?.name}</span>
               <span className={s.chatTopCount}>{messages.length} msgs</span>
             </div>
@@ -1228,7 +1230,7 @@ function ChatsView({ hubId }: { hubId: string }) {
                         <span className={s.msgTime}>{formatDate(msg.createdAt)} · {formatTime(msg.createdAt)}</span>
                         {sub && (
                           <span className={s.msgTag} style={{ borderColor: sub.color, color: sub.color }}>
-                            {sub.emoji} {sub.name}
+                            <Glyph value={sub.emoji} size={14} /> {sub.name}
                           </span>
                         )}
                       </div>
@@ -1254,7 +1256,7 @@ function ChatsView({ hubId }: { hubId: string }) {
                 >
                   <option value="">Sem categoria</option>
                   {hubSubjects.map(sub => (
-                    <option key={sub.id} value={sub.id}>{sub.emoji} {sub.name}</option>
+                    <option key={sub.id} value={sub.id}>{sub.name}</option>
                   ))}
                 </select>
               )}
@@ -1315,7 +1317,7 @@ export default function HubView() {
         <div className={s.hubHeaderLeft}>
           <Link to="/hubs" className={s.breadcrumb}>Hubs</Link>
           <span className={s.breadcrumbSep}>›</span>
-          <span className={s.hubEmoji}>{hub.emoji}</span>
+          <span className={s.hubEmoji}><Glyph value={hub.emoji} size={22} /></span>
           <h1 className={s.hubTitle}>{hub.name}</h1>
           <div className={s.hubBar} style={{ background: hub.color }} />
         </div>

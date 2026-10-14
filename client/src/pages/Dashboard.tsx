@@ -9,6 +9,7 @@ import HomeSearch from '../components/home/HomeSearch'
 import Upcoming from '../components/home/Upcoming'
 import FirstSteps from '../components/home/FirstSteps'
 import s from './Dashboard.module.css'
+import Glyph from '../components/Glyph'
 
 interface OutletCtx { onOpenSaveLink: () => void; onOpenQuickNote: () => void }
 
@@ -29,7 +30,7 @@ function timeAgo(dateStr: string) {
   return `${Math.floor(d / 7)} semanas`
 }
 
-const EMOJI_LIST = ['🎨','💻','📚','🎵','💼','🌱','🚀','⚡','🔥','🌍','🎯','🧠','📊','🏆','🎮','✏️','📷','🎬','🔬','💡']
+const EMOJI_LIST = ['ph:palette','ph:laptop','ph:books','ph:music-notes','ph:briefcase','ph:plant','ph:rocket-launch','ph:lightning','ph:fire','ph:globe','ph:target','ph:brain','ph:chart-bar','ph:trophy','ph:game-controller','ph:pencil-simple','ph:camera','ph:film-strip','ph:flask','ph:lightbulb']
 
 function GitHubWidget() {
   const [repo,    setRepo]    = useState<GHRepo | null>(null)
@@ -96,7 +97,7 @@ export default function Dashboard() {
 
   const searching = query.trim().length > 0
   const [newAreaModal, setNewAreaModal] = useState(false)
-  const [newArea,      setNewArea]      = useState({ emoji: '📁', title: '', desc: '', color: '#7c6ef7' })
+  const [newArea,      setNewArea]      = useState({ emoji: 'ph:folder', title: '', desc: '', color: '#7c6ef7' })
   const [modalPos,     setModalPos]     = useState({ x: 0, y: 0 })
   const modalDragRef = useRef<{ mx: number; my: number; px: number; py: number } | null>(null)
 
@@ -121,7 +122,7 @@ export default function Dashboard() {
     if (!newArea.title.trim()) return
     addArea(newArea)
     setNewAreaModal(false)
-    setNewArea({ emoji: '📁', title: '', desc: '', color: '#7c6ef7' })
+    setNewArea({ emoji: 'ph:folder', title: '', desc: '', color: '#7c6ef7' })
   }
 
   return (
@@ -182,7 +183,7 @@ export default function Dashboard() {
                     className={s.hubGalleryCoverBg}
                     style={{ background: `linear-gradient(135deg, ${hub.color}ee 0%, ${hub.color}88 100%)` }}
                   />
-                  <span className={s.hubGalleryEmoji}>{hub.emoji}</span>
+                  <span className={s.hubGalleryEmoji}><Glyph value={hub.emoji} size={26} /></span>
                   <span className={s.hubGalleryTitle}>{hub.name}</span>
                 </div>
                 <div className={s.hubGalleryMeta}>
@@ -221,7 +222,7 @@ export default function Dashboard() {
             <div key={a.id} className={s.areaCardWrapper}>
               <Link to={`/area/${a.id}`} className={s.areaCard}>
                 <div className={s.areaCardBar} style={{ background: a.color }} />
-                <div className={s.areaCardEmoji}>{a.emoji}</div>
+                <div className={s.areaCardEmoji}><Glyph value={a.emoji} size={30} /></div>
                 <div className={s.areaCardTitle}>{a.title}</div>
                 <div className={s.areaCardDesc}>{a.desc}</div>
                 <div className={s.areaCardCount}>{a.count} itens</div>
@@ -283,7 +284,8 @@ export default function Dashboard() {
                   key={e}
                   className={`${s.emojiBtn} ${newArea.emoji === e ? s.emojiSelected : ''}`}
                   onClick={() => setNewArea(p => ({ ...p, emoji: e }))}
-                >{e}</button>
+                  aria-label={e.slice(3)}
+                ><Glyph value={e} size={18} /></button>
               ))}
             </div>
             <input

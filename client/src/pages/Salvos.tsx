@@ -3,6 +3,7 @@ import { useAreaItemsStore } from '../store/areaItemsStore'
 import { useAreasStore } from '../store/areasStore'
 import { NavLink } from 'react-router-dom'
 import s from './Salvos.module.css'
+import Glyph from '../components/Glyph'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -47,7 +48,7 @@ export default function Salvos() {
             return (
               <div key={chatId} className={s.group}>
                 <div className={s.groupHeader}>
-                  {area && <span className={s.groupEmoji}>{area.emoji}</span>}
+                  {area && <span className={s.groupEmoji}><Glyph value={area.emoji} size={16} /></span>}
                   <span className={s.groupName}># {chat?.title ?? 'Canal removido'}</span>
                   {chat && (
                     <NavLink

@@ -8,16 +8,18 @@ import { useHubToolsStore } from '../store/hubToolsStore'
 import { toolsForHub } from '../utils/hubTools'
 import EditBtn from '../modules/EditBtn'
 import DeleteBtn from '../modules/DeleteBtn'
+import Glyph from '../components/Glyph'
+import IconPicker from '../components/IconPicker'
 import s from './Hubs.module.css'
 
 const HUB_TYPES: { type: HubType; label: string; emoji: string; desc: string; color: string }[] = [
-  { type: 'faculdade', label: 'Faculdade', emoji: '🎓', desc: 'Semestres, matérias, aulas e materiais', color: '#7c6ef7' },
-  { type: 'personal',  label: 'Pessoal',   emoji: '🌱', desc: 'Links, notas e arquivos pessoais',       color: '#3ecf8e' },
-  { type: 'projects',  label: 'Projetos',  emoji: '🚀', desc: 'Organize projetos e referências',        color: '#f78c4f' },
-  { type: 'custom',    label: 'Livre',     emoji: '✦',  desc: 'Estrutura livre, você define',           color: '#e46ef7' },
+  { type: 'faculdade', label: 'Faculdade', emoji: 'ph:graduation-cap', desc: 'Semestres, matérias, aulas e materiais', color: '#7c6ef7' },
+  { type: 'personal',  label: 'Pessoal',   emoji: 'ph:plant', desc: 'Links, notas e arquivos pessoais',       color: '#3ecf8e' },
+  { type: 'projects',  label: 'Projetos',  emoji: 'ph:rocket-launch', desc: 'Organize projetos e referências',        color: '#f78c4f' },
+  { type: 'custom',    label: 'Livre',     emoji: 'ph:sparkle',  desc: 'Estrutura livre, você define',           color: '#e46ef7' },
 ]
 
-const EMOJIS = ['🎓','🌱','🚀','✦','💡','🔬','🎨','💼','🏆','📊','🎵','📷','🔥','⚡','🌍']
+const EMOJIS = ['graduation-cap','plant','rocket-launch','sparkle','lightbulb','flask','palette','briefcase','trophy','chart-bar','music-notes','camera','fire','lightning','globe'].map(k => `ph:${k}`)
 const COLORS  = ['#7c6ef7','#4f8ef7','#3ecf8e','#f78c4f','#e46ef7','#facc15','#f43f5e']
 
 const MODULE_LABELS: Record<string, string> = {
@@ -57,11 +59,12 @@ export default function Hubs() {
   const [modal,    setModal]    = useState(false)
   const [step,     setStep]     = useState<'type' | 'details'>('type')
   const [form,     setForm]     = useState<NewHubForm>({
-    type: 'faculdade', name: '', emoji: '🎓', color: '#7c6ef7',
+    type: 'faculdade', name: '', emoji: 'ph:graduation-cap', color: '#7c6ef7',
   })
   const [modalPos, setModalPos] = useState({ x: 0, y: 0 })
   const drag = useRef<{ mx: number; my: number; px: number; py: number } | null>(null)
 
+  const [pickerFor, setPickerFor] = useState<'new' | 'edit' | null>(null)
   const [editHub, setEditHub] = useState<{ id: string; name: string; emoji: string; color: string } | null>(null)
   const [editPos, setEditPos] = useState({ x: 0, y: 0 })
   const editDrag = useRef<{ mx: number; my: number; px: number; py: number } | null>(null)
@@ -110,7 +113,7 @@ export default function Hubs() {
     setParams({}, { replace: true })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params])
-  function closeModal() { setModal(false); setForm({ type: 'faculdade', name: '', emoji: '🎓', color: '#7c6ef7' }) }
+  function closeModal() { setModal(false); setForm({ type: 'faculdade', name: '', emoji: 'ph:graduation-cap', color: '#7c6ef7' }) }
 
   function selectType(t: typeof HUB_TYPES[0]) {
     setForm(f => ({ ...f, type: t.type, emoji: t.emoji, color: t.color }))
@@ -143,7 +146,7 @@ export default function Hubs() {
           <div className={s.typeCards}>
             {HUB_TYPES.map(t => (
               <button key={t.type} className={s.typeCard} onClick={() => { selectType(t); setModal(true) }}>
-                <span className={s.typeEmoji}>{t.emoji}</span>
+                <span className={s.typeEmoji}><Glyph value={t.emoji} size={28} /></span>
                 <span className={s.typeLabel}>{t.label}</span>
                 <span className={s.typeDesc}>{t.desc}</span>
               </button>
@@ -166,7 +169,7 @@ export default function Hubs() {
                 <Link to={`/hub/${hub.id}`} className={s.hubCard} style={{ ['--hub' as string]: hub.color }}>
                   <div className={s.cover}>
                     <span className={s.blobA} /><span className={s.blobB} /><span className={s.blobC} />
-                    <span className={s.sticker}>{hub.emoji}</span>
+                    <span className={s.sticker}><Glyph value={hub.emoji} size={30} /></span>
                     <span className={s.countPill}>{sum.total} {sum.total === 1 ? 'item' : 'itens'}</span>
                     <span className={s.coverName}>{hub.name}</span>
                   </div>
@@ -215,7 +218,7 @@ export default function Hubs() {
                   <div className={s.typeGrid}>
                     {HUB_TYPES.map(t => (
                       <button key={t.type} className={s.typeOption} onClick={() => selectType(t)}>
-                        <span className={s.typeOptionEmoji}>{t.emoji}</span>
+                        <span className={s.typeOptionEmoji}><Glyph value={t.emoji} size={26} /></span>
                         <span className={s.typeOptionLabel}>{t.label}</span>
                         <span className={s.typeOptionDesc}>{t.desc}</span>
                       </button>
@@ -226,7 +229,7 @@ export default function Hubs() {
                 <>
                   <div className={`${s.modalHeader} ${s.modalDrag}`} onMouseDown={onHeaderMouseDown}>
                     <button className={s.backBtn} onClick={() => setStep('type')}>← Voltar</button>
-                    <span>{typeInfo.emoji} Hub {typeInfo.label}</span>
+                    <span className={s.typeTitle}><Glyph value={typeInfo.emoji} size={16} /> Hub {typeInfo.label}</span>
                     <button className={s.modalClose} onClick={closeModal}>✕</button>
                   </div>
                   <div className={s.modalBody}>
@@ -236,8 +239,10 @@ export default function Hubs() {
                           key={e}
                           className={`${s.emojiBtn} ${form.emoji === e ? s.emojiActive : ''}`}
                           onClick={() => setForm(f => ({ ...f, emoji: e }))}
-                        >{e}</button>
+                          aria-label={e.slice(3)}
+                        ><Glyph value={e} size={18} /></button>
                       ))}
+                      <button type="button" className={s.emojiBtn} onClick={() => setPickerFor('new')} title="Mais ícones" aria-label="Mais ícones"><Glyph value="ph:plus" size={16} /></button>
                     </div>
                     <input
                       className={s.nameInput}
@@ -293,8 +298,10 @@ export default function Hubs() {
                       key={e}
                       className={`${s.emojiBtn} ${editHub.emoji === e ? s.emojiActive : ''}`}
                       onClick={() => setEditHub(h => h ? { ...h, emoji: e } : h)}
-                    >{e}</button>
+                      aria-label={e.slice(3)}
+                    ><Glyph value={e} size={18} /></button>
                   ))}
+                  <button type="button" className={s.emojiBtn} onClick={() => setPickerFor('edit')} title="Mais ícones" aria-label="Mais ícones"><Glyph value="ph:plus" size={16} /></button>
                 </div>
                 <input
                   className={s.nameInput}
@@ -322,6 +329,16 @@ export default function Hubs() {
               </div>
             </motion.div>
           </>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {pickerFor && (
+          <IconPicker
+            value={pickerFor === 'new' ? form.emoji : editHub?.emoji ?? ''}
+            onChange={v => pickerFor === 'new' ? setForm(f => ({ ...f, emoji: v })) : setEditHub(h => h ? { ...h, emoji: v } : h)}
+            onClose={() => setPickerFor(null)}
+          />
         )}
       </AnimatePresence>
     </div>

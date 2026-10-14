@@ -5,6 +5,7 @@ import { useAreasStore } from '../store/areasStore'
 import { useAreaItemsStore, type AreaItemType } from '../store/areaItemsStore'
 import DeleteBtn from '../modules/DeleteBtn'
 import s from './AreaView.module.css'
+import Glyph from '../components/Glyph'
 
 const TYPE_ICON: Record<AreaItemType, string> = { link: '🔗', note: '📝', file: '📄', chat: '💬' }
 const TYPE_LABEL: Record<AreaItemType, string> = { link: 'Link', note: 'Nota', file: 'Arquivo', chat: 'Chat' }
@@ -145,7 +146,7 @@ export default function AreaView() {
     <div className={s.page}>
       <div className={s.header}>
         <div className={s.headerLeft}>
-          <span className={s.emoji}>{area.emoji}</span>
+          <span className={s.emoji}><Glyph value={area.emoji} size={26} /></span>
           <div>
             <h1 className={s.title}>{area.title}</h1>
             {area.desc && <p className={s.desc}>{area.desc}</p>}

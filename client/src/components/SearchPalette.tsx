@@ -9,10 +9,11 @@ import { useContentItemsStore } from '../store/contentItemsStore'
 import { ALL_TOOLS } from '../data/tools'
 import { normalize, searchAll, searchTools, conceptHref, searchHubItems, searchFaculdade, tokenHit, wordsOf } from '../utils/globalSearch'
 import s from './SearchPalette.module.css'
+import Glyph from './Glyph'
 
 interface Props { onClose: () => void; initialQuery?: string }
 
-const TYPE_ICON: Record<string, string> = { link: '🔗', pdf: '📄', nota: '📝', imagem: '🖼️', prompt: '🤖' }
+const TYPE_ICON: Record<string, string> = { link: 'ph:link', pdf: 'ph:file-pdf', nota: 'ph:note-pencil', imagem: 'ph:image', prompt: 'ph:robot' }
 
 interface Row {
   key: string
@@ -48,7 +49,7 @@ export default function SearchPalette({ onClose, initialQuery = '' }: Props) {
     const openLink = (url: string) => { if (url && url !== '#') window.open(url, '_blank', 'noopener'); onClose() }
     const go = (path: string) => { navigate(path); onClose() }
     const linkRow = (l: typeof links[number], group: string): Row => ({
-      key: 'l' + l.id, group, icon: TYPE_ICON[l.type] ?? '🔗', label: l.title,
+      key: 'l' + l.id, group, icon: <Glyph value={TYPE_ICON[l.type] ?? 'ph:link'} size={16} />, label: l.title,
       sub: areaById[l.areaId]?.title ?? 'Inbox', tags: l.tags.slice(0, 3), run: () => openLink(l.url),
     })
 
@@ -60,7 +61,7 @@ export default function SearchPalette({ onClose, initialQuery = '' }: Props) {
     if (!q) {
       const recent = [...links].sort((a, b) => b.savedAt - a.savedAt).slice(0, 6).map(l => linkRow(l, 'Acessos recentes'))
       if (recent.length) return recent
-      return areas.slice(0, 5).map(a => ({ key: 'a' + a.id, group: 'Suas áreas', icon: a.emoji, label: a.title, sub: `${a.count} itens`, run: () => go(`/area/${a.id}`) }))
+      return areas.slice(0, 5).map(a => ({ key: 'a' + a.id, group: 'Suas áreas', icon: <Glyph value={a.emoji} size={16} />, label: a.title, sub: `${a.count} itens`, run: () => go(`/area/${a.id}`) }))
     }
 
     const tokens = q.split(/\s+/)
@@ -68,26 +69,26 @@ export default function SearchPalette({ onClose, initialQuery = '' }: Props) {
     const out: Row[] = []
 
     areas.filter(a => has(a.title, a.desc)).forEach(a =>
-      out.push({ key: 'a' + a.id, group: 'Áreas', icon: a.emoji, label: a.title, sub: a.desc, run: () => go(`/area/${a.id}`) }))
+      out.push({ key: 'a' + a.id, group: 'Áreas', icon: <Glyph value={a.emoji} size={16} />, label: a.title, sub: a.desc, run: () => go(`/area/${a.id}`) }))
     hubs.filter(h => has(h.name)).forEach(h =>
-      out.push({ key: 'h' + h.id, group: 'Hubs', icon: h.emoji, label: h.name, run: () => go(`/hub/${h.id}`) }))
+      out.push({ key: 'h' + h.id, group: 'Hubs', icon: <Glyph value={h.emoji} size={16} />, label: h.name, run: () => go(`/hub/${h.id}`) }))
     collections.filter(c => has(c.name, c.desc)).forEach(c =>
-      out.push({ key: 'c' + c.id, group: 'Coleções', icon: c.emoji, label: c.name, sub: `${c.itemIds.length} itens`, run: () => go('/colecoes') }))
+      out.push({ key: 'c' + c.id, group: 'Coleções', icon: <Glyph value={c.emoji} size={16} />, label: c.name, sub: `${c.itemIds.length} itens`, run: () => go('/colecoes') }))
 
     searchAll(query, { concepts, hubs, subjects, classes, patterns }).slice(0, 8).forEach(r => {
       if (r.kind === 'concept') {
         const c = r.item
-        out.push({ key: 'k' + c.id, group: 'Conceitos', icon: '💡', label: c.termo,
+        out.push({ key: 'k' + c.id, group: 'Conceitos', icon: <Glyph value="ph:lightbulb" size={16} />, label: c.termo,
           sub: c.classId ? [r.subject?.name, r.classItem?.title].filter(Boolean).join(' · ') : (c.contexto || 'Conceito avulso'),
           run: () => go(conceptHref(c)) })
       } else {
         const p = r.item
-        out.push({ key: 'p' + p.id, group: 'Biblioteca', icon: '✦', label: p.nomePrincipal, sub: p.categoria, run: () => go(`/biblioteca/${p.id}`) })
+        out.push({ key: 'p' + p.id, group: 'Biblioteca', icon: <Glyph value="ph:sparkle" size={16} />, label: p.nomePrincipal, sub: p.categoria, run: () => go(`/biblioteca/${p.id}`) })
       }
     })
 
     searchHubItems(query, contentItems, hubs).forEach(h => {
-      out.push({ key: 'ci' + h.item.id, group: 'Conteúdo dos hubs', icon: h.hub?.emoji ?? '📦', label: h.title,
+      out.push({ key: 'ci' + h.item.id, group: 'Conteúdo dos hubs', icon: <Glyph value={h.hub?.emoji ?? 'ph:package'} size={16} />, label: h.title,
         sub: [h.hub?.name, h.moduleLabel].filter(Boolean).join(' · ') + (h.excerpt ? ` — ${h.excerpt}` : ''),
         tags: h.item.tags.slice(0, 3),
         run: () => go(h.hub ? `/hub/${h.hub.id}?tab=${h.tabKey}` : '/hubs') })
@@ -134,7 +135,7 @@ export default function SearchPalette({ onClose, initialQuery = '' }: Props) {
 
       <div className={s.panel} role="dialog" aria-label="Buscar no Formcraft">
         <div className={s.inputRow}>
-          <span className={s.searchIcon}>{isTagSearch ? '#' : '🔎'}</span>
+          <span className={s.searchIcon}>{isTagSearch ? '#' : <Glyph value="ph:magnifying-glass" size={18} />}</span>
           <input
             ref={inputRef}
             className={s.input}
@@ -143,7 +144,7 @@ export default function SearchPalette({ onClose, initialQuery = '' }: Props) {
             onChange={e => setQuery(e.target.value)}
             aria-activedescendant={rows[focused] ? `sp-${focused}` : undefined}
           />
-          {query && <button className={s.clearBtn} onClick={() => setQuery('')} aria-label="Limpar">✕</button>}
+          {query && <button className={s.clearBtn} onClick={() => setQuery('')} aria-label="Limpar"><Glyph value="ph:x" size={14} /></button>}
           <kbd className={s.esc} onClick={onClose}>Esc</kbd>
         </div>
 

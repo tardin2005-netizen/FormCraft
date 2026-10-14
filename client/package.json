@@ -10,6 +10,7 @@
     "deploy": "npm run build && firebase deploy --only hosting"
   },
   "dependencies": {
+    "@phosphor-icons/react": "^2.1.10",
     "firebase": "^12.19.0",
     "framer-motion": "^13.2.0",
     "lucide-react": "^1.45.0",

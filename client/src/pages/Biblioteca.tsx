@@ -16,6 +16,7 @@ import { normalize } from '../utils/globalSearch'
 import { imageToDataUrl } from '../utils/imageData'
 import RichText, { plainText } from '../components/RichText'
 import s from './Biblioteca.module.css'
+import Glyph from '../components/Glyph'
 
 const splitList = (v: string) => v.split(',').map(x => x.trim()).filter(Boolean)
 
@@ -125,7 +126,7 @@ export default function Biblioteca() {
           </button>
           {hubsWithPatterns.map(h => (
             <button key={h.id} className={`${s.catChip} ${hubFilter === h.id ? s.catChipActive : ''}`} onClick={() => { setHubFilter(h.id); setCat('Todas') }}>
-              {h.emoji} {h.name} ({countOf(h)})
+              <Glyph value={h.emoji} size={13} /> {h.name} ({countOf(h)})
             </button>
           ))}
         </div>
@@ -183,7 +184,7 @@ export default function Biblioteca() {
                         <div className={s.cardDef}>{plainText(p.oQueE)}</div>
                       </div>
                       {hubById(hubIdOf(p)) && (
-                        <div className={s.cardFoot}>{hubById(hubIdOf(p))!.emoji} {hubById(hubIdOf(p))!.name}</div>
+                        <div className={s.cardFoot}><Glyph value={hubById(hubIdOf(p))!.emoji} size={12} /> {hubById(hubIdOf(p))!.name}</div>
                       )}
                     </button>
                   ))}
@@ -247,7 +248,7 @@ function PatternDetail({ p, hub, onClose, onEdit, onDelete }: {
       <article className={s.detail} onClick={e => e.stopPropagation()}>
         <div className={s.detailHead}>
           <div>
-            <span className={s.cardCat}>{p.categoria}{hub ? ` · ${hub.emoji} ${hub.name}` : ''}</span>
+            <span className={s.cardCat}>{p.categoria}{hub ? ` · ${hub.name}` : ''}</span>
             <h2 className={s.detailTitle}>{p.nomePrincipal}</h2>
           </div>
           <button className={s.iconBtn} onClick={onClose} aria-label="Fechar">✕</button>
@@ -342,7 +343,7 @@ function PatternForm({ initial, hubs, isNew, onClose, onSave }: {
           <span className={s.label}>Hub</span>
           <select className={s.input} value={f.hubId} onChange={e => set('hubId', e.target.value)}>
             <option value="">Sem hub</option>
-            {hubs.map(h => <option key={h.id} value={h.id}>{h.emoji} {h.name}</option>)}
+            {hubs.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
           </select>
         </label>
 

@@ -322,7 +322,7 @@ export default function SaveLinkModal({ onClose }: Props) {
                 <label className={s.label}>Área <span className={s.optional}>(opcional)</span></label>
                 <select className={s.select} value={areaId} onChange={e => setAreaId(e.target.value)}>
                   <option value="">— Sem área —</option>
-                  {areas.map(a => <option key={a.id} value={a.id}>{a.emoji} {a.title}</option>)}
+                  {areas.map(a => <option key={a.id} value={a.id}>{a.title}</option>)}
                 </select>
               </div>
             )}

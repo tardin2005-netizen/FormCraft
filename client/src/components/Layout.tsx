@@ -15,6 +15,7 @@ import type { Accent } from '../store/themeStore'
 import { useAuth } from '../contexts/AuthContext'
 import { ALL_TOOLS, TOOL_CATS, type ToolCategory } from '../data/tools'
 import SearchPalette from './SearchPalette'
+import Glyph from './Glyph'
 import ErrorBoundary from './ErrorBoundary'
 import RescueBanner from './RescueBanner'
 import { usePwaInstall, promptInstall } from '../hooks/usePwaInstall'
@@ -333,7 +334,7 @@ export default function Layout() {
                           className={`${s.areaItem} ${isActive ? s.navActive : ''}`}
                           onClick={() => { navigate(`/area/${a.id}`); setExpandedAreaIds(prev => new Set([...prev, a.id])) }}
                         >
-                          <span>{a.emoji}</span>
+                          <Glyph value={a.emoji} size={15} />
                           <span className={s.areaItemTitle}>{a.title}</span>
                           <span className={s.areaItemCount}>{areaItems.filter(item => item.areaId === a.id).length}</span>
                           <button
@@ -401,7 +402,7 @@ export default function Layout() {
                         className={({ isActive }) => `${s.areaIconItem} ${isActive ? s.navActive : ''}`}
                         title={a.title}
                         onClick={() => setExpandedAreaIds(prev => new Set([...prev, a.id]))}
-                      >{a.emoji}</NavLink>
+                      ><Glyph value={a.emoji} size={17} /></NavLink>
                       {isExpanded && chats.map(chat => (
                         <NavLink
                           key={chat.id}
