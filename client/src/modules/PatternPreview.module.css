@@ -136,6 +136,14 @@
 /* fallback */
 .fallbackBox { width: 56px; height: 56px; border-radius: 14px; background: var(--indigo); color: #fff; border: 2px solid var(--ink); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 20px; animation: floatY 3s ease-in-out infinite; }
 
+/* Cards: parados em repouso, animam só no card sob o mouse (ou com foco no teclado). O modal grande sempre anima. */
+.stage:not(.large) *, .stage:not(.large) *::before, .stage:not(.large) *::after { animation-play-state: paused; }
+button:hover .stage:not(.large) *, button:hover .stage:not(.large) *::before, button:hover .stage:not(.large) *::after,
+button:focus-visible .stage:not(.large) *, button:focus-visible .stage:not(.large) *::before, button:focus-visible .stage:not(.large) *::after { animation-play-state: running; }
+@media (hover: none) {
+  .stage *, .stage *::before, .stage *::after { animation-play-state: running !important; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .stage *, .stage *::before, .stage *::after { animation: none !important; }
   .typed { width: 78px; }
