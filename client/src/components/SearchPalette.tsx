@@ -7,7 +7,7 @@ import { useHubsStore } from '../store/hubsStore'
 import { useLibraryStore } from '../store/libraryStore'
 import { useContentItemsStore } from '../store/contentItemsStore'
 import { ALL_TOOLS } from '../data/tools'
-import { normalize, searchAll, searchTools, conceptHref, searchHubItems, searchFaculdade } from '../utils/globalSearch'
+import { normalize, searchAll, searchTools, conceptHref, searchHubItems, searchFaculdade, tokenHit, wordsOf } from '../utils/globalSearch'
 import s from './SearchPalette.module.css'
 
 interface Props { onClose: () => void; initialQuery?: string }
@@ -64,7 +64,7 @@ export default function SearchPalette({ onClose, initialQuery = '' }: Props) {
     }
 
     const tokens = q.split(/\s+/)
-    const has = (...fields: (string | undefined)[]) => { const hay = normalize(fields.filter(Boolean).join(' ')); return tokens.every(t => hay.includes(t)) }
+    const has = (...fields: (string | undefined)[]) => { const hay = normalize(fields.filter(Boolean).join(' ')); const w = wordsOf(hay); return tokens.every(t => tokenHit(hay, w, t)) }
     const out: Row[] = []
 
     areas.filter(a => has(a.title, a.desc)).forEach(a =>

@@ -69,7 +69,7 @@ export function searchAll(query: string, src: Sources): SearchResult[] {
   const q = normalize(query.trim())
   const tokens = q.split(/\s+/).filter(Boolean)
   if (tokens.length === 0) return []
-  const matches = (hay: string) => tokens.every(t => hay.includes(t))
+  const matches = (hay: string) => { const w = wordsOf(hay); return tokens.every(t => tokenHit(hay, w, t)) }
 
   const results: { r: SearchResult; title: string }[] = []
 
@@ -113,10 +113,10 @@ function flatten(v: unknown, out: string[], depth = 0) {
   else if (typeof v === 'object') Object.values(v as Record<string, unknown>).forEach(x => flatten(x, out, depth + 1))
 }
 
-const wordsOf = (s: string) => s.split(/[^a-z0-9]+/).filter(Boolean)
+export const wordsOf = (s: string) => s.split(/[^a-z0-9]+/).filter(Boolean)
 
 // Short tokens (ex: "ti") only match whole words, otherwise "ti" would match "tipografia".
-function tokenHit(hay: string, words: string[], t: string) {
+export function tokenHit(hay: string, words: string[], t: string) {
   return t.length <= 2 ? words.includes(t) : hay.includes(t)
 }
 
