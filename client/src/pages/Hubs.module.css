@@ -168,7 +168,7 @@
 .nameInput:focus { border-color: var(--accent); }
 .nameInput::placeholder { color: var(--text2); }
 
-.colorRow { display: flex; gap: 8px; align-items: center; }
+.colorRow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .colorDot {
   width: 24px; height: 24px; border-radius: 50%;
   border: 2px solid transparent; cursor: pointer;
@@ -193,3 +193,28 @@
 }
 .createBtn:disabled { opacity: .4; cursor: not-allowed; }
 .createBtn:not(:disabled):hover { opacity: .85; }
+
+/* Aparência do hub (criar / editar) */
+.preview {
+  display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 14px;
+  border: 2px solid var(--text); background: color-mix(in srgb, var(--hub) 62%, white); transition: background-color .2s;
+}
+.previewSticker {
+  display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; flex-shrink: 0; rotate: -6deg;
+  background: #fff; color: #1a1a2e; border: 2px solid #1a1a2e; border-radius: 12px; box-shadow: 3px 3px 0 #1a1a2e;
+}
+.previewName { font-size: 18px; font-weight: 700; color: #1a1a2e; line-height: 1.2; word-break: break-word; }
+.fieldBlock { display: flex; flex-direction: column; gap: 6px; }
+.fieldLabel { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text2); }
+.emojiMore {
+  display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 7px;
+  background: transparent; border: 1.5px dashed var(--border); color: var(--text2); font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.emojiMore:hover { border-color: var(--text); color: var(--text); }
+.colorCustom {
+  display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px 0 4px; border-radius: 20px;
+  border: 1.5px dashed var(--border); color: var(--text2); font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.colorCustom:hover { border-color: var(--text); color: var(--text); }
+.colorCustom input { width: 20px; height: 20px; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { .preview { transition: none; } }

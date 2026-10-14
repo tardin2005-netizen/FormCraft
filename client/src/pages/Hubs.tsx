@@ -18,14 +18,59 @@ const HUB_TYPES: { type: HubType; label: string; emoji: string; desc: string; co
   { type: 'custom',    label: 'Livre',     emoji: 'ph:sparkle',  desc: 'Estrutura livre, você define',           color: '#e46ef7' },
 ]
 
-const EMOJIS = ['graduation-cap','plant','rocket-launch','sparkle','lightbulb','flask','palette','briefcase','trophy','chart-bar','music-notes','camera','fire','lightning','globe'].map(k => `ph:${k}`)
-const COLORS  = ['#7c6ef7','#4f8ef7','#3ecf8e','#f78c4f','#e46ef7','#facc15','#f43f5e']
+const EMOJIS = ['graduation-cap','plant','rocket-launch','sparkle','lightbulb','flask','palette','briefcase','trophy','chart-bar','music-notes','camera','fire','lightning','globe','books','code','terminal-window','laptop','robot','target','brain','megaphone','storefront','wallet','heart','star','house','airplane','film-strip','video-camera','paint-brush','pen-nib','toolbox','shield-check','users','handshake','calendar-blank','chat-circle','folder'].map(k => `ph:${k}`)
+const COLORS  = ['#7c6ef7','#6366f1','#8b5cf6','#a855f7','#e46ef7','#ec4899','#f43f5e','#ef4444','#f78c4f','#f59e0b','#facc15','#84cc16','#3ecf8e','#14b8a6','#0ea5e9','#4f8ef7','#64748b','#78716c','#1f2937','#0f766e']
 
 const MODULE_LABELS: Record<string, string> = {
   snippets: 'Snippets', 'tools-db': 'Ferramentas', scripts: 'Scripts', troubleshooting: 'Troubleshooting',
   notes: 'Notas', references: 'Referências', links: 'Links',
 }
 const MAX_CHIPS = 3
+
+
+interface HubLookProps {
+  name: string; emoji: string; color: string; placeholder: string
+  onChange: (p: Partial<{ name: string; emoji: string; color: string }>) => void
+  onMore: () => void
+}
+
+function HubLook({ name, emoji, color, placeholder, onChange, onMore }: HubLookProps) {
+  return (
+    <>
+      <div className={s.preview} style={{ ['--hub' as string]: color }} aria-hidden="true">
+        <span className={s.previewSticker}><Glyph value={emoji} size={26} /></span>
+        <span className={s.previewName}>{name.trim() || 'Nome do hub'}</span>
+      </div>
+      <label className={s.fieldBlock}>
+        <span className={s.fieldLabel}>Nome</span>
+        <input className={s.nameInput} placeholder={placeholder} value={name} onChange={e => onChange({ name: e.target.value })} autoFocus />
+      </label>
+      <div className={s.fieldBlock}>
+        <span className={s.fieldLabel}>Ícone</span>
+        <div className={s.emojiRow}>
+          {EMOJIS.map(e => (
+            <button key={e} type="button" className={`${s.emojiBtn} ${emoji === e ? s.emojiActive : ''}`} onClick={() => onChange({ emoji: e })} aria-label={e.slice(3)} title={e.slice(3).replace(/-/g, ' ')}>
+              <Glyph value={e} size={18} />
+            </button>
+          ))}
+          <button type="button" className={s.emojiMore} onClick={onMore}><Glyph value="ph:magnifying-glass" size={15} /> Buscar mais ícones</button>
+        </div>
+      </div>
+      <div className={s.fieldBlock}>
+        <span className={s.fieldLabel}>Cor</span>
+        <div className={s.colorRow}>
+          {COLORS.map(c => (
+            <button key={c} type="button" className={`${s.colorDot} ${color.toLowerCase() === c ? s.colorActive : ''}`} style={{ background: c }} onClick={() => onChange({ color: c })} aria-label={`Cor ${c}`} />
+          ))}
+          <label className={s.colorCustom} title="Escolher qualquer cor">
+            <input type="color" value={color} onChange={e => onChange({ color: e.target.value })} aria-label="Escolher outra cor" />
+            <span>Outra cor</span>
+          </label>
+        </div>
+      </div>
+    </>
+  )
+}
 
 interface NewHubForm {
   type: HubType; name: string; emoji: string; color: string
@@ -232,34 +277,12 @@ export default function Hubs() {
                     <button className={s.modalClose} onClick={closeModal}>✕</button>
                   </div>
                   <div className={s.modalBody}>
-                    <div className={s.emojiRow}>
-                      {EMOJIS.map(e => (
-                        <button
-                          key={e}
-                          className={`${s.emojiBtn} ${form.emoji === e ? s.emojiActive : ''}`}
-                          onClick={() => setForm(f => ({ ...f, emoji: e }))}
-                          aria-label={e.slice(3)}
-                        ><Glyph value={e} size={18} /></button>
-                      ))}
-                      <button type="button" className={s.emojiBtn} onClick={() => setPickerFor('new')} title="Mais ícones" aria-label="Mais ícones"><Glyph value="ph:plus" size={16} /></button>
-                    </div>
-                    <input
-                      className={s.nameInput}
+                    <HubLook
+                      name={form.name} emoji={form.emoji} color={form.color}
                       placeholder={`Nome do hub (ex: ${typeInfo.label})`}
-                      value={form.name}
-                      onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                      autoFocus
+                      onChange={p => setForm(f => ({ ...f, ...p }))}
+                      onMore={() => setPickerFor('new')}
                     />
-                    <div className={s.colorRow}>
-                      {COLORS.map(c => (
-                        <button
-                          key={c}
-                          className={`${s.colorDot} ${form.color === c ? s.colorActive : ''}`}
-                          style={{ background: c }}
-                          onClick={() => setForm(f => ({ ...f, color: c }))}
-                        />
-                      ))}
-                    </div>
                   </div>
                   <div className={s.modalFooter}>
                     <button className={s.cancelBtn} onClick={closeModal}>Cancelar</button>
@@ -291,34 +314,12 @@ export default function Hubs() {
                 <button className={s.modalClose} onClick={() => setEditHub(null)}>✕</button>
               </div>
               <div className={s.modalBody}>
-                <div className={s.emojiRow}>
-                  {EMOJIS.map(e => (
-                    <button
-                      key={e}
-                      className={`${s.emojiBtn} ${editHub.emoji === e ? s.emojiActive : ''}`}
-                      onClick={() => setEditHub(h => h ? { ...h, emoji: e } : h)}
-                      aria-label={e.slice(3)}
-                    ><Glyph value={e} size={18} /></button>
-                  ))}
-                  <button type="button" className={s.emojiBtn} onClick={() => setPickerFor('edit')} title="Mais ícones" aria-label="Mais ícones"><Glyph value="ph:plus" size={16} /></button>
-                </div>
-                <input
-                  className={s.nameInput}
+                <HubLook
+                  name={editHub.name} emoji={editHub.emoji} color={editHub.color}
                   placeholder="Nome do hub"
-                  value={editHub.name}
-                  onChange={e => setEditHub(h => h ? { ...h, name: e.target.value } : h)}
-                  autoFocus
+                  onChange={p => setEditHub(h => h ? { ...h, ...p } : h)}
+                  onMore={() => setPickerFor('edit')}
                 />
-                <div className={s.colorRow}>
-                  {COLORS.map(c => (
-                    <button
-                      key={c}
-                      className={`${s.colorDot} ${editHub.color === c ? s.colorActive : ''}`}
-                      style={{ background: c }}
-                      onClick={() => setEditHub(h => h ? { ...h, color: c } : h)}
-                    />
-                  ))}
-                </div>
               </div>
               <div className={s.modalFooter}>
                 <button className={s.cancelBtn} onClick={() => setEditHub(null)}>Cancelar</button>
