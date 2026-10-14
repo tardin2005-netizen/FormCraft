@@ -3,6 +3,7 @@ import type { ModuleProps } from './moduleProps'
 import s from './modules.module.css'
 import vs from './SnippetsModule.module.css'
 import DeleteBtn from './DeleteBtn'
+import EditBtn from './EditBtn'
 
 type SnippetCategory = 'Mensagem' | 'Endereço' | 'Preço' | 'Procedimento' | 'Outro'
 
@@ -159,7 +160,7 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
                     >
                       {item.starred ? '★' : '☆'}
                     </button>
-                    <button className={s.editBtn} onClick={e => openEdit(item.id, e)} title="Editar">✎</button>
+                    <EditBtn onClick={e => openEdit(item.id, e)} />
                     <span onClick={e => e.stopPropagation()}>
                       <DeleteBtn onConfirm={() => removeItem(item.id)} />
                     </span>

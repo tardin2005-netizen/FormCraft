@@ -3,6 +3,7 @@ import type { ModuleProps } from './moduleProps'
 import s from './modules.module.css'
 import d from './TroubleshootingModule.module.css'
 import DeleteBtn from './DeleteBtn'
+import EditBtn from './EditBtn'
 
 type Severidade = 'critico' | 'alto' | 'medio' | 'baixo'
 type Status = 'aberto' | 'investigando' | 'resolvido'
@@ -148,7 +149,7 @@ export default function TroubleshootingModule({ module, workspaceId, items, addI
                   </div>
                   <div className={d.cardActions}>
                     <button className={`${s.starBtn} ${item.starred?s.starActive:''}`} onClick={e=>{e.stopPropagation();toggleStar(item.id)}}>{item.starred?'★':'☆'}</button>
-                    <button className={s.starBtn} title="Editar" aria-label="Editar" onClick={e => { e.stopPropagation(); openEdit(item) }}>✎</button>
+                    <EditBtn onClick={() => openEdit(item)} />
                     <DeleteBtn onConfirm={()=>removeItem(item.id)}/>
                     <span className={d.chevron}>{isOpen?'↑':'↓'}</span>
                   </div>

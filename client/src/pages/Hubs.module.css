@@ -79,7 +79,7 @@
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 
-.inside { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px 14px; min-height: 92px; }
+.inside { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px 62px; min-height: 140px; }
 .insideLabel { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text2); }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip {
@@ -89,17 +89,11 @@
 .chipEmpty { font-size: 12px; color: var(--text2); }
 .typeLine { font-size: 11px; color: var(--text2); }
 
-.deleteBtn, .editBtn {
-  position: absolute; bottom: 12px; z-index: 10;
-  background: var(--surface2); border: 1px solid var(--border); opacity: 0;
-  border-radius: 6px; color: var(--text2); font-size: 10px; cursor: pointer;
-  padding: 3px 7px; transition: color .12s, background .12s; line-height: 1.4;
+.hubActions {
+  position: absolute; left: 16px; right: 16px; bottom: 12px; z-index: 10;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  padding-top: 8px; background: var(--surface);
 }
-.deleteBtn { right: 14px; }
-.editBtn { right: 46px; }
-.hubCardWrap:hover .deleteBtn, .hubCardWrap:hover .editBtn, .deleteBtn:focus-visible, .editBtn:focus-visible { opacity: 1; }
-.deleteBtn:hover { color: #fff !important; background: rgba(220,38,38,.85) !important; }
-.editBtn:hover { color: #fff !important; background: rgba(79,142,247,.85) !important; }
 
 @media (prefers-reduced-motion: reduce) { .hubCard { transition: none; } .hubCard:hover { transform: none; } }
 

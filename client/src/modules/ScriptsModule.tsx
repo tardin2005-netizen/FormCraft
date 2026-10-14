@@ -3,6 +3,7 @@ import type { ModuleProps } from './moduleProps'
 import s from './modules.module.css'
 import d from './ScriptsModule.module.css'
 import DeleteBtn from './DeleteBtn'
+import EditBtn from './EditBtn'
 
 type Lang = 'bash' | 'python' | 'javascript' | 'typescript' | 'sql' | 'powershell' | 'php' | 'go' | 'rust' | 'outro'
 type Cat = 'automacao' | 'deploy' | 'backup' | 'monitoramento' | 'dados' | 'infra' | 'util' | 'outro'
@@ -141,7 +142,7 @@ export default function ScriptsModule({ module, workspaceId, items, addItem, upd
                   </div>
                   <div className={d.cardActions}>
                     <button className={`${s.starBtn} ${item.starred?s.starActive:''}`} onClick={e=>{e.stopPropagation();toggleStar(item.id)}}>{item.starred?'★':'☆'}</button>
-                    <button className={s.starBtn} title="Editar" aria-label="Editar" onClick={e => { e.stopPropagation(); openEdit(item) }}>✎</button>
+                    <EditBtn onClick={() => openEdit(item)} />
                     <DeleteBtn onConfirm={()=>removeItem(item.id)}/>
                     <span className={d.chevron}>{isOpen?'↑':'↓'}</span>
                   </div>

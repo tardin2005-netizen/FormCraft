@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { ModuleProps } from './moduleProps'
 import s from './GenericModule.module.css'
 import DeleteBtn from './DeleteBtn'
+import EditBtn from './EditBtn'
 
 interface NoteData {
   title: string
@@ -207,7 +208,7 @@ function LinkCard({
         <button className={s.pinBtn} onClick={onToggleStar} title={item.starred ? 'Desafixar' : 'Fixar'}>
           {item.starred ? '📌' : '☆'}
         </button>
-        <button className={s.pinBtn} onClick={onEdit} title="Editar">✎</button>
+        <EditBtn onClick={() => onEdit()} />
         <DeleteBtn onConfirm={onDelete} />
       </div>
     </div>

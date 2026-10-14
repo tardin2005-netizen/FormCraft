@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useHubsStore, type HubType, type Hub } from '../store/hubsStore'
 import { useContentItemsStore } from '../store/contentItemsStore'
 import { useLibraryStore, isDesignHubName } from '../store/libraryStore'
+import EditBtn from '../modules/EditBtn'
+import DeleteBtn from '../modules/DeleteBtn'
 import s from './Hubs.module.css'
 
 const HUB_TYPES: { type: HubType; label: string; emoji: string; desc: string; color: string }[] = [
@@ -175,19 +177,10 @@ export default function Hubs() {
                     <span className={s.typeLine}>Hub {info?.label.toLowerCase()}</span>
                   </div>
                 </Link>
-                <button
-                  className={s.editBtn}
-                  onClick={e => openEdit(hub, e)}
-                  title="Editar"
-                >✎</button>
-                <button
-                  className={s.deleteBtn}
-                  onClick={e => {
-                    e.preventDefault()
-                    if (confirm(`Apagar hub "${hub.name}"?`)) removeHub(hub.id)
-                  }}
-                  title="Apagar"
-                >✕</button>
+                <div className={s.hubActions}>
+                  <EditBtn onClick={e => openEdit(hub, e)} />
+                  <DeleteBtn name={hub.name} onConfirm={() => removeHub(hub.id)} />
+                </div>
               </motion.div>
             )
           })}

@@ -1233,7 +1233,7 @@ function ChatsView({ hubId }: { hubId: string }) {
                           🔗 {msg.url}
                         </a>
                       )}
-                      <DeleteBtn onConfirm={() => removeChatMessage(msg.id)} />
+                      <DeleteBtn variant="icon" onConfirm={() => removeChatMessage(msg.id)} />
                     </motion.div>
                   )
                 })}

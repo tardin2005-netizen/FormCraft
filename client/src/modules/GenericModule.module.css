@@ -71,7 +71,7 @@
 }
 .cardActions {
   display: flex; align-items: center; justify-content: flex-end; gap: 4px;
-  margin-top: 8px; opacity: 0; transition: opacity .15s;
+  margin-top: 8px; flex-wrap: wrap;
 }
 .pinBtn {
   background: transparent; border: none; cursor: pointer;

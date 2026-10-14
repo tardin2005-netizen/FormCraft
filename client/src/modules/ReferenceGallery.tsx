@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import type { ModuleProps } from './moduleProps'
 import s from './modules.module.css'
 import DeleteBtn from './DeleteBtn'
+import EditBtn from './EditBtn'
 
 interface ReferenceData {
   title: string
@@ -142,7 +143,7 @@ export default function ReferenceGallery({ module, workspaceId, items, addItem, 
                     <div style={{ display: 'flex', gap: 4 }}>
                       <button className={`${s.starBtn} ${item.starred ? s.starActive : ''}`} onClick={() => toggleStar(item.id)}>{item.starred ? '★' : '☆'}</button>
                       {d.url && <a href={d.url} target="_blank" rel="noreferrer" className={s.linkBtn}>↗</a>}
-                      <button className={s.starBtn} title="Editar" aria-label="Editar" onClick={e => { e.stopPropagation(); openEdit(item) }}>✎</button>
+                      <EditBtn onClick={() => openEdit(item)} />
                     <DeleteBtn onConfirm={() => removeItem(item.id)} />
                     </div>
                   </div>
@@ -178,7 +179,7 @@ export default function ReferenceGallery({ module, workspaceId, items, addItem, 
                 <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
                   <button className={`${s.starBtn} ${item.starred ? s.starActive : ''}`} onClick={() => toggleStar(item.id)}>{item.starred ? '★' : '☆'}</button>
                   {d.url && <a href={d.url} target="_blank" rel="noreferrer" className={s.linkBtn}>↗</a>}
-                  <button className={s.starBtn} title="Editar" aria-label="Editar" onClick={e => { e.stopPropagation(); openEdit(item) }}>✎</button>
+                  <EditBtn onClick={() => openEdit(item)} />
                     <DeleteBtn onConfirm={() => removeItem(item.id)} />
                 </div>
               </div>
