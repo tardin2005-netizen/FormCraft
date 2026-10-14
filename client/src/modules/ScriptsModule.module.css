@@ -20,6 +20,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   cursor: pointer;
   gap: 8px;
 }
@@ -52,7 +53,7 @@
   font-weight: 600;
 }
 
-.cardActions { display: flex; gap: 2px; align-items: center; flex-shrink: 0; }
+.cardActions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: flex-end; margin-left: auto; }
 
 .chevron { font-size: 11px; color: var(--text2); }
 

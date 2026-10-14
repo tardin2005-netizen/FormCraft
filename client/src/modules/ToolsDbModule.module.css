@@ -33,6 +33,7 @@
 .cardHeader {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -51,7 +52,9 @@
 .cardActions {
   margin-left: auto;
   display: flex;
-  gap: 2px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
   align-items: center;
 }
 
