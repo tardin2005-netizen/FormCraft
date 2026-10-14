@@ -1,4 +1,5 @@
-import type { Concept, Hub, Subject, ClassItem } from '../store/hubsStore'
+import type { Concept, Hub, Subject, ClassItem, HubContent } from '../store/hubsStore'
+import type { ContentItem } from '../store/contentItemsStore'
 import type { DesignPattern } from '../store/libraryStore'
 
 export function normalize(str: string) {
@@ -94,4 +95,93 @@ export function conceptHref(c: Pick<Concept, 'id' | 'hubId' | 'semesterId' | 'su
   return c.classId && c.hubId
     ? `/hub/${c.hubId}?sem=${c.semesterId ?? ''}&subj=${c.subjectId ?? ''}&cls=${c.classId}`
     : `/conceitos/${c.id}`
+}
+
+
+export const MODULE_TAB_LABELS: Record<string, string> = {
+  snippets: 'Snippets', 'tools-db': 'Ferramentas', scripts: 'Scripts', troubleshooting: 'Troubleshooting',
+  notes: 'Notas', references: 'Referências', links: 'Links', biblioteca: 'Biblioteca',
+}
+
+const TITLE_KEYS = ['title', 'titulo', 'name', 'nome', 'label', 'termo', 'tool', 'url']
+
+function flatten(v: unknown, out: string[], depth = 0) {
+  if (depth > 4 || v == null) return
+  if (typeof v === 'string') { if (!v.startsWith('data:') && v.length < 8000) out.push(v) }
+  else if (typeof v === 'number') out.push(String(v))
+  else if (Array.isArray(v)) v.forEach(x => flatten(x, out, depth + 1))
+  else if (typeof v === 'object') Object.values(v as Record<string, unknown>).forEach(x => flatten(x, out, depth + 1))
+}
+
+const wordsOf = (s: string) => s.split(/[^a-z0-9]+/).filter(Boolean)
+
+// Short tokens (ex: "ti") only match whole words, otherwise "ti" would match "tipografia".
+function tokenHit(hay: string, words: string[], t: string) {
+  return t.length <= 2 ? words.includes(t) : hay.includes(t)
+}
+
+function excerptOf(text: string, tokens: string[]) {
+  const norm = normalize(text)
+  for (const t of tokens.filter(x => x.length >= 3)) {
+    const i = norm.indexOf(t)
+    if (i >= 0) {
+      const from = Math.max(0, i - 28), to = Math.min(text.length, i + t.length + 48)
+      return (from > 0 ? '…' : '') + text.slice(from, to).replace(/\s+/g, ' ').trim() + (to < text.length ? '…' : '')
+    }
+  }
+  return undefined
+}
+
+export interface HubItemHit { item: ContentItem; hub?: Hub; tabKey: string; moduleLabel: string; title: string; excerpt?: string }
+
+/** Full-text search across every hub module item (snippets, notas, scripts, links…). The hub name and module name also count, so "TI" lists what is inside the TI hub. */
+export function searchHubItems(query: string, items: ContentItem[], hubs: Hub[], limit = 12): HubItemHit[] {
+  const tokens = normalize(query.trim()).split(/\s+/).filter(Boolean)
+  if (tokens.length === 0) return []
+  const q = tokens.join(' ')
+  const hits: (HubItemHit & { rank: number })[] = []
+  for (const item of items) {
+    const parts: string[] = []
+    flatten(item.data, parts)
+    const text = parts.join(' \n ')
+    const hub = hubs.find(h => h.id === item.workspaceId)
+    const tabKey = item.moduleId.replace(`hub-${item.workspaceId}-`, '')
+    const moduleLabel = MODULE_TAB_LABELS[tabKey] ?? tabKey
+    const title = String(TITLE_KEYS.map(k => item.data[k]).find(v => typeof v === 'string' && v) ?? parts[0] ?? moduleLabel)
+    const textNorm = normalize([text, item.tags.join(' ')].join(' '))
+    const metaNorm = normalize([hub?.name, moduleLabel].filter(Boolean).join(' '))
+    const hay = textNorm + ' ' + metaNorm
+    const words = wordsOf(hay)
+    if (!tokens.every(t => tokenHit(hay, words, t))) continue
+    const inText = tokens.every(t => tokenHit(textNorm, wordsOf(textNorm), t))
+    const rank = normalize(title).includes(q) ? 0 : inText ? 1 : 2
+    hits.push({ item, hub, tabKey, moduleLabel, title, excerpt: inText ? excerptOf(text, tokens) : undefined, rank })
+  }
+  return hits
+    .sort((a, b) => a.rank - b.rank || Number(b.item.starred) - Number(a.item.starred) || b.item.updatedAt.localeCompare(a.item.updatedAt))
+    .slice(0, limit)
+}
+
+export interface FacHit { kind: 'subject' | 'class' | 'content'; id: string; hub?: Hub; title: string; sub: string; href: string }
+
+/** Disciplinas, aulas e materiais dos hubs de faculdade. */
+export function searchFaculdade(query: string, src: { hubs: Hub[]; subjects: Subject[]; classes: ClassItem[]; contents: HubContent[] }, limit = 8): FacHit[] {
+  const tokens = normalize(query.trim()).split(/\s+/).filter(Boolean)
+  if (tokens.length === 0) return []
+  const match = (...f: (string | undefined)[]) => { const hay = normalize(f.filter(Boolean).join(' ')); const w = wordsOf(hay); return tokens.every(t => tokenHit(hay, w, t)) }
+  const hubOf = (id: string) => src.hubs.find(h => h.id === id)
+  const out: FacHit[] = []
+  for (const s of src.subjects) {
+    const hub = hubOf(s.hubId)
+    if (match(s.name, s.professor, hub?.name)) out.push({ kind: 'subject', id: s.id, hub, title: s.name, sub: `${hub?.name ?? ''} · Disciplina`, href: `/hub/${s.hubId}?sem=${s.semesterId}&subj=${s.id}` })
+  }
+  for (const c of src.classes) {
+    const hub = hubOf(c.hubId); const subj = src.subjects.find(x => x.id === c.subjectId)
+    if (match(c.title, c.notes, subj?.name, hub?.name)) out.push({ kind: 'class', id: c.id, hub, title: c.title, sub: `${hub?.name ?? ''} · ${subj?.name ?? 'Aula'}`, href: `/hub/${c.hubId}?sem=${c.semesterId}&subj=${c.subjectId}&cls=${c.id}` })
+  }
+  for (const c of src.contents) {
+    const hub = hubOf(c.hubId); const subj = src.subjects.find(x => x.id === c.subjectId)
+    if (match(c.title, c.content, c.url, subj?.name, hub?.name)) out.push({ kind: 'content', id: c.id, hub, title: c.title, sub: `${hub?.name ?? ''} · ${subj?.name ?? 'Material'}`, href: `/hub/${c.hubId}?sem=${c.semesterId ?? ''}&subj=${c.subjectId ?? ''}&cls=${c.classId ?? ''}` })
+  }
+  return out.slice(0, limit)
 }

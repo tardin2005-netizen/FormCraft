@@ -5,8 +5,9 @@ import { useLinksStore } from '../store/linksStore'
 import { useCollectionsStore } from '../store/collectionsStore'
 import { useHubsStore } from '../store/hubsStore'
 import { useLibraryStore } from '../store/libraryStore'
+import { useContentItemsStore } from '../store/contentItemsStore'
 import { ALL_TOOLS } from '../data/tools'
-import { normalize, searchAll, searchTools, conceptHref } from '../utils/globalSearch'
+import { normalize, searchAll, searchTools, conceptHref, searchHubItems, searchFaculdade } from '../utils/globalSearch'
 import s from './SearchPalette.module.css'
 
 interface Props { onClose: () => void; initialQuery?: string }
@@ -28,7 +29,8 @@ export default function SearchPalette({ onClose, initialQuery = '' }: Props) {
   const { areas } = useAreasStore()
   const { links } = useLinksStore()
   const { collections } = useCollectionsStore()
-  const { hubs, subjects, classes, concepts } = useHubsStore()
+  const { hubs, subjects, classes, concepts, contents } = useHubsStore()
+  const contentItems = useContentItemsStore(st => st.items)
   const { patterns } = useLibraryStore()
   const [query, setQuery] = useState(initialQuery)
   const [focused, setFocused] = useState(0)
@@ -84,6 +86,15 @@ export default function SearchPalette({ onClose, initialQuery = '' }: Props) {
       }
     })
 
+    searchHubItems(query, contentItems, hubs).forEach(h => {
+      out.push({ key: 'ci' + h.item.id, group: 'Conteúdo dos hubs', icon: h.hub?.emoji ?? '📦', label: h.title,
+        sub: [h.hub?.name, h.moduleLabel].filter(Boolean).join(' · ') + (h.excerpt ? ` — ${h.excerpt}` : ''),
+        tags: h.item.tags.slice(0, 3),
+        run: () => go(h.hub ? `/hub/${h.hub.id}?tab=${h.tabKey}` : '/hubs') })
+    })
+    searchFaculdade(query, { hubs, subjects, classes, contents }).forEach(f =>
+      out.push({ key: 'f' + f.kind + f.id, group: 'Faculdade', icon: f.kind === 'subject' ? '📚' : f.kind === 'class' ? '🎓' : '📄', label: f.title, sub: f.sub, run: () => go(f.href) }))
+
     links.filter(l => has(l.title, l.desc, ...l.tags)).slice(0, 8).forEach(l => out.push(linkRow(l, 'Conteúdos')))
 
     searchTools(query, ALL_TOOLS).forEach(t =>
@@ -91,7 +102,7 @@ export default function SearchPalette({ onClose, initialQuery = '' }: Props) {
         label: t.name, sub: t.desc, run: () => openLink(t.url) }))
 
     return out
-  }, [q, isTagSearch, tagQ, query, areas, links, collections, hubs, subjects, classes, concepts, patterns, navigate, onClose])
+  }, [q, isTagSearch, tagQ, query, areas, links, collections, hubs, subjects, classes, concepts, contents, contentItems, patterns, navigate, onClose])
 
   useEffect(() => { setFocused(0) }, [query])
 
@@ -127,7 +138,7 @@ export default function SearchPalette({ onClose, initialQuery = '' }: Props) {
           <input
             ref={inputRef}
             className={s.input}
-            placeholder="Buscar tudo: áreas, aulas, conceitos, ferramentas… ou #tag"
+            placeholder="Buscar em todos os hubs: notas, snippets, aulas, links… ou #tag"
             value={query}
             onChange={e => setQuery(e.target.value)}
             aria-activedescendant={rows[focused] ? `sp-${focused}` : undefined}

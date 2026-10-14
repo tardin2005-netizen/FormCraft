@@ -910,7 +910,12 @@ function GenericHubView({ hubId }: { hubId: string }) {
   const { items } = useContentItemsStore()
   const hubName = useHubsStore(st => st.hubs.find(h => h.id === hubId)?.name ?? '')
   const patternCount = useLibraryStore(st => st.patterns.filter(p => p.hubId === hubId || (!p.hubId && isDesignHubName(hubName))).length)
-  const [activeTab, setActiveTab] = useState(WORKSPACE_TABS[0].key)
+  const [searchParams] = useSearchParams()
+  const tabParam = searchParams.get('tab')
+  const [activeTab, setActiveTab] = useState(WORKSPACE_TABS.some(t => t.key === tabParam) ? tabParam! : WORKSPACE_TABS[0].key)
+  useEffect(() => {
+    if (tabParam && WORKSPACE_TABS.some(t => t.key === tabParam)) setActiveTab(tabParam)
+  }, [tabParam])
   const [showAddMenu, setShowAddMenu] = useState(false)
   const [menuPos, setMenuPos] = useState({ top: 0, right: 0 })
   const addModuleBtnRef = useRef<HTMLButtonElement>(null)
