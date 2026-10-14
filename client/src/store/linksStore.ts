@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import { normList, normLink } from './normalize'
 import { auth, db } from '../firebase'
 import { doc, setDoc, deleteDoc } from 'firebase/firestore'
+import { safeStorage } from '../utils/safeStorage'
 
 export interface SavedLink {
   id: string
@@ -53,7 +54,7 @@ export const useLinksStore = create<LinksStore>()(
       },
       hydrate: (links) => set({ links: normList(links, normLink) as any }),
     }),
-    { name: 'formcraft-links', merge: (p: any, c) => ({ ...c, ...p, links: normList(p?.links, normLink) as any }) }
+    { name: 'formcraft-links', storage: safeStorage, merge: (p: any, c) => ({ ...c, ...p, links: normList(p?.links, normLink) as any }) }
   )
 )
 

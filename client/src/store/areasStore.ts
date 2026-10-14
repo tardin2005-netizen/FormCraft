@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import { normList, normArea } from './normalize'
 import { auth, db } from '../firebase'
 import { doc, setDoc, deleteDoc } from 'firebase/firestore'
+import { safeStorage } from '../utils/safeStorage'
 
 export interface Area {
   id: string
@@ -46,6 +47,6 @@ export const useAreasStore = create<AreasStore>()(
       },
       hydrate: (areas) => set({ areas: normList(areas, normArea) as any }),
     }),
-    { name: 'formcraft-areas', merge: (p: any, c) => ({ ...c, ...p, areas: normList(p?.areas, normArea) as any }) }
+    { name: 'formcraft-areas', storage: safeStorage, merge: (p: any, c) => ({ ...c, ...p, areas: normList(p?.areas, normArea) as any }) }
   )
 )

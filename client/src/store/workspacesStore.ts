@@ -4,6 +4,7 @@ import { normList, normWorkspace } from './normalize'
 import { auth, db } from '../firebase'
 import { doc, setDoc, deleteDoc, collection, writeBatch } from 'firebase/firestore'
 import { type WorkspaceContext, type ModuleType, type ModuleLayout } from '../data/contextTemplates'
+import { safeStorage } from '../utils/safeStorage'
 
 export interface WorkspaceModule {
   id: string
@@ -79,6 +80,6 @@ export const useWorkspacesStore = create<WorkspacesStore>()(
 
       hydrate: (workspaces) => set({ workspaces: normList(workspaces, normWorkspace) as any }),
     }),
-    { name: 'formcraft-workspaces', merge: (p: any, c) => ({ ...c, ...p, workspaces: normList(p?.workspaces, normWorkspace) as any }) }
+    { name: 'formcraft-workspaces', storage: safeStorage, merge: (p: any, c) => ({ ...c, ...p, workspaces: normList(p?.workspaces, normWorkspace) as any }) }
   )
 )

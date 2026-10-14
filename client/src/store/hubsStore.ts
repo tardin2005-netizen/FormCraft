@@ -4,6 +4,7 @@ import { normList, normHub, normSemester, normSubject, normClass, normHubContent
 import { deleteUserFile } from '../utils/fileUpload'
 import { auth, db } from '../firebase'
 import { doc, setDoc, deleteDoc, collection } from 'firebase/firestore'
+import { safeStorage } from '../utils/safeStorage'
 
 export type HubType = 'faculdade' | 'personal' | 'projects' | 'custom'
 
@@ -299,7 +300,7 @@ export const useHubsStore = create<HubsStore>()(
       hydrateConcepts: (concepts) => set({ concepts: normList(concepts, normConcept) as any }),
     }),
     {
-      name: 'formcraft-hubs',
+      name: 'formcraft-hubs', storage: safeStorage,
       merge: (p: any, c) => ({
         ...c, ...p,
         hubs: normList(p?.hubs, normHub) as any, semesters: normList(p?.semesters, normSemester) as any,

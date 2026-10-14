@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { auth, db } from '../firebase'
 import { doc, setDoc, deleteDoc } from 'firebase/firestore'
+import { safeStorage } from '../utils/safeStorage'
 
 interface SavedToolsStore {
   saved: string[]
@@ -34,6 +35,6 @@ export const useSavedToolsStore = create<SavedToolsStore>()(
       isSaved: (name) => get().saved.includes(name),
       hydrate: (saved) => set({ saved }),
     }),
-    { name: 'formcraft-saved-tools' }
+    { name: 'formcraft-saved-tools', storage: safeStorage }
   )
 )

@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import { normList, normCollection } from './normalize'
 import { auth, db } from '../firebase'
 import { doc, setDoc, deleteDoc } from 'firebase/firestore'
+import { safeStorage } from '../utils/safeStorage'
 
 export interface Collection {
   id: string
@@ -64,6 +65,6 @@ export const useCollectionsStore = create<CollectionsStore>()(
       },
       hydrate: (collections) => set({ collections: normList(collections, normCollection) as any }),
     }),
-    { name: 'formcraft-collections', merge: (p: any, c) => ({ ...c, ...p, collections: normList(p?.collections, normCollection) as any }) }
+    { name: 'formcraft-collections', storage: safeStorage, merge: (p: any, c) => ({ ...c, ...p, collections: normList(p?.collections, normCollection) as any }) }
   )
 )

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { safeStorage } from '../utils/safeStorage'
 
 export type SidebarState = 'expanded' | 'compact' | 'hidden'
 
@@ -48,6 +49,6 @@ export const useSidebarStore = create<SidebarStore>()(
       setLeftCustomWidth:  (w) => set({ leftCustomWidth:  Math.max(LEFT_MIN_WIDTH,  Math.min(LEFT_MAX_WIDTH,  w)) }),
       setRightCustomWidth: (w) => set({ rightCustomWidth: Math.max(RIGHT_MIN_WIDTH, Math.min(RIGHT_MAX_WIDTH, w)) }),
     }),
-    { name: 'formcraft-sidebar' }
+    { name: 'formcraft-sidebar', storage: safeStorage }
   )
 )

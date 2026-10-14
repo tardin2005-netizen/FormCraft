@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import { normList, normAreaItem } from './normalize'
 import { auth, db } from '../firebase'
 import { doc, setDoc, deleteDoc } from 'firebase/firestore'
+import { safeStorage } from '../utils/safeStorage'
 
 export type AreaItemType = 'link' | 'note' | 'file' | 'chat'
 
@@ -44,6 +45,6 @@ export const useAreaItemsStore = create<AreaItemsStore>()(
       getByArea: (areaId) => get().items.filter(i => i.areaId === areaId),
       hydrate: (items) => set({ items: normList(items, normAreaItem) as any }),
     }),
-    { name: 'formcraft-area-items', merge: (p: any, c) => ({ ...c, ...p, items: normList(p?.items, normAreaItem) as any }) }
+    { name: 'formcraft-area-items', storage: safeStorage, merge: (p: any, c) => ({ ...c, ...p, items: normList(p?.items, normAreaItem) as any }) }
   )
 )

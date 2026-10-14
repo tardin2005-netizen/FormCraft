@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { auth, db } from '../firebase'
 import { doc, setDoc, deleteDoc } from 'firebase/firestore'
+import { safeStorage } from '../utils/safeStorage'
 
 export interface ChatMessage {
   id: string
@@ -65,6 +66,6 @@ export const useChatMessagesStore = create<ChatMessagesStore>()(
       },
       getByChat: (chatId) => get().messages.filter(m => m.chatId === chatId),
     }),
-    { name: 'formcraft-chat-messages' }
+    { name: 'formcraft-chat-messages', storage: safeStorage, partialize: s => ({ messages: s.messages.map(({ fileData: _f, ...m }) => m) }) as unknown as ChatMessagesStore }
   )
 )

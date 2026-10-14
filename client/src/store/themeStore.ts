@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { safeStorage } from '../utils/safeStorage'
 
 type Theme = 'dark' | 'bw'
 type ThemeMode = Theme | 'system'
@@ -54,7 +55,7 @@ export const useThemeStore = create<ThemeStore>()(
       },
     }),
     {
-      name: 'formcraft-prefs',
+      name: 'formcraft-prefs', storage: safeStorage,
       onRehydrateStorage: () => (state) => {
         if (!state) return
         if (!state.mode) state.mode = state.theme

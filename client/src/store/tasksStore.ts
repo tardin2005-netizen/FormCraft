@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import { normList, normTask } from './normalize'
 import { auth, db } from '../firebase'
 import { doc, setDoc, deleteDoc, collection } from 'firebase/firestore'
+import { safeStorage } from '../utils/safeStorage'
 
 export type TaskStatus    = 'todo' | 'doing' | 'done'
 export type TaskUrgency   = 'low' | 'medium' | 'high' | 'urgent'
@@ -90,6 +91,6 @@ export const useTasksStore = create<TasksStore>()(
         deleteFromFirestore(id)
       },
     }),
-    { name: 'formcraft-tasks', merge: (p: any, c) => ({ ...c, ...p, tasks: normList(p?.tasks, normTask) as any }) }
+    { name: 'formcraft-tasks', storage: safeStorage, merge: (p: any, c) => ({ ...c, ...p, tasks: normList(p?.tasks, normTask) as any }) }
   )
 )

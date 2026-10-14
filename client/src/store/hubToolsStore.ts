@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { auth, db } from '../firebase'
 import { doc, setDoc } from 'firebase/firestore'
+import { safeStorage } from '../utils/safeStorage'
 
 export type HubToolOverrides = Record<string, { add: string[]; remove: string[] }>
 
@@ -41,6 +42,6 @@ export const useHubToolsStore = create<HubToolsStore>()(
       },
       hydrate: (overrides) => set({ overrides }),
     }),
-    { name: 'formcraft-hub-tools' }
+    { name: 'formcraft-hub-tools', storage: safeStorage }
   )
 )

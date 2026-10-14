@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import { normList, normPattern } from './normalize'
 import { auth, db } from '../firebase'
 import { doc, setDoc, deleteDoc, getDoc, arrayUnion } from 'firebase/firestore'
+import { safeStorage } from '../utils/safeStorage'
 
 export const PATTERN_CATEGORIES = ['Hover', 'Motion', 'Texto', 'Card', 'Fundo', 'Layout', 'Navegação', 'Vídeo', 'PWA', 'Design System', 'Outro'] as const
 export type PatternCategory = typeof PATTERN_CATEGORIES[number]
@@ -292,6 +293,6 @@ export const useLibraryStore = create<LibraryStore>()(
       },
       hydrate: (patterns) => set({ patterns: normList(patterns, normPattern) as any, seeded: true }),
     }),
-    { name: 'formcraft-library', merge: (p: any, c) => ({ ...c, ...p, patterns: normList(p?.patterns, normPattern) as any }) }
+    { name: 'formcraft-library', storage: safeStorage, merge: (p: any, c) => ({ ...c, ...p, patterns: normList(p?.patterns, normPattern) as any }) }
   )
 )
