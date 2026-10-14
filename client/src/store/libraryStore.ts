@@ -18,6 +18,7 @@ export interface DesignPattern {
   tags: string[]
   exemploImagem?: string
   exemploCodigo?: string
+  hubId?: string
   criadoEm: string
 }
 

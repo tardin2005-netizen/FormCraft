@@ -871,6 +871,8 @@ function FaculdadeView({ hubId }: { hubId: string }) {
 }
 
 /* ─── Workspace tabs for generic hubs ─── */
+const isDesignHubName = (name: string) => /design|ux|ui/i.test(name)
+
 const WORKSPACE_TABS: { key: string; label: string; icon: string; type: ModuleType; layout: ModuleLayout }[] = [
   { key: 'snippets',         label: 'Snippets',        icon: '📋',  type: 'snippets',         layout: 'grid'    },
   { key: 'tools-db',         label: 'Ferramentas',     icon: '🛠',  type: 'tools-db',         layout: 'grid'    },
@@ -883,6 +885,7 @@ const WORKSPACE_TABS: { key: string; label: string; icon: string; type: ModuleTy
 ]
 
 function HubModuleTab({ hubId, tabKey, type, layout }: { hubId: string; tabKey: string; type: ModuleType; layout: ModuleLayout }) {
+  const hubName = useHubsStore(st => st.hubs.find(h => h.id === hubId)?.name ?? '')
   const { items, addItem, updateItem, removeItem, toggleStar } = useContentItemsStore()
   const moduleId = `hub-${hubId}-${tabKey}`
   const moduleItems = items.filter(i => i.moduleId === moduleId)
@@ -899,7 +902,7 @@ function HubModuleTab({ hubId, tabKey, type, layout }: { hubId: string; tabKey: 
     case 'troubleshooting':  return <TroubleshootingModule {...props} />
     case 'references':       return <ReferenceGallery {...props} />
     case 'notes':            return <KeepNotes {...props} />
-    case 'biblioteca':       return <BibliotecaModule />
+    case 'biblioteca':       return <BibliotecaModule hubId={hubId} isDesignHub={isDesignHubName(hubName)} />
     default:                 return <HubGenericModule {...props} />
   }
 }
@@ -907,7 +910,8 @@ function HubModuleTab({ hubId, tabKey, type, layout }: { hubId: string; tabKey: 
 /* ─── Generic Hub ─── */
 function GenericHubView({ hubId }: { hubId: string }) {
   const { items } = useContentItemsStore()
-  const patternCount = useLibraryStore(s => s.patterns.length)
+  const hubName = useHubsStore(st => st.hubs.find(h => h.id === hubId)?.name ?? '')
+  const patternCount = useLibraryStore(st => st.patterns.filter(p => p.hubId === hubId || (!p.hubId && isDesignHubName(hubName))).length)
   const [activeTab, setActiveTab] = useState(WORKSPACE_TABS[0].key)
   const [showAddMenu, setShowAddMenu] = useState(false)
   const [menuPos, setMenuPos] = useState({ top: 0, right: 0 })

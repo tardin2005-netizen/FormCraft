@@ -1,0 +1,143 @@
+.stage {
+  --ink: #1a1a2e; --indigo: #5b3df0; --green: #2ee59d; --red: #ff4d6d; --orange: #ffb347;
+  position: relative; width: 100%; aspect-ratio: 4 / 3; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.large { aspect-ratio: 16 / 9; border: 2px solid var(--border); border-radius: 12px; }
+.userImg { width: 100%; height: 100%; object-fit: contain; display: block; }
+
+/* shared mini bits */
+.stage i { display: block; height: 5px; border-radius: 3px; background: rgba(26,26,46,.22); }
+
+/* phone frame (hamburger, pwa) */
+.phone {
+  position: relative; width: 44%; height: 82%; background: #fff; border: 2px solid var(--ink);
+  border-radius: 10px; overflow: hidden;
+}
+.burger { position: absolute; top: 9px; left: 8px; width: 16px; height: 12px; z-index: 2; }
+.burger b { position: absolute; left: 0; width: 100%; height: 2px; border-radius: 2px; background: var(--ink); animation-duration: 3s; animation-iteration-count: infinite; }
+.burger b:nth-child(1) { top: 0; animation-name: bTop; }
+.burger b:nth-child(2) { top: 5px; animation-name: bMid; }
+.burger b:nth-child(3) { top: 10px; animation-name: bBot; }
+.drawer {
+  position: absolute; inset: 0 30% 0 0; background: var(--orange); border-right: 2px solid var(--ink);
+  padding: 30px 8px 0; display: flex; flex-direction: column; gap: 8px; z-index: 1;
+  animation: drawerSlide 3s ease-in-out infinite;
+}
+@keyframes bTop { 0%,25% { transform: none } 40%,80% { transform: translateY(5px) rotate(45deg) } 95%,100% { transform: none } }
+@keyframes bMid { 0%,25% { opacity: 1 } 40%,80% { opacity: 0 } 95%,100% { opacity: 1 } }
+@keyframes bBot { 0%,25% { transform: none } 40%,80% { transform: translateY(-5px) rotate(-45deg) } 95%,100% { transform: none } }
+@keyframes drawerSlide { 0%,25% { transform: translateX(-105%) } 40%,80% { transform: none } 95%,100% { transform: translateX(-105%) } }
+
+/* split layouts (resize, sidebar) */
+.split { display: flex; width: 78%; height: 66%; background: #fff; border: 2px solid var(--ink); border-radius: 8px; overflow: hidden; }
+.splitMain { flex: 1; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.resizeSide { position: relative; background: var(--orange); padding: 12px 8px; display: flex; flex-direction: column; gap: 8px; width: 30%; animation: resizeW 3.2s ease-in-out infinite; }
+.grip { position: absolute; right: -3px; top: 50%; width: 6px; height: 26px; margin-top: -13px; border-radius: 3px; background: var(--indigo); border: 1.5px solid var(--ink); }
+@keyframes resizeW { 0%,15% { width: 26% } 50%,65% { width: 54% } 100% { width: 26% } }
+.collapseSide { background: var(--orange); padding: 10px 7px; display: flex; flex-direction: column; gap: 9px; overflow: hidden; animation: collapseW 3.2s ease-in-out infinite; }
+.navRow { display: flex; align-items: center; gap: 6px; }
+.navRow u { flex: none; width: 10px; height: 10px; border-radius: 3px; background: var(--ink); }
+.navRow em { display: block; height: 5px; width: 34px; border-radius: 3px; background: rgba(26,26,46,.45); animation: fadeLabel 3.2s ease-in-out infinite; }
+@keyframes collapseW { 0%,15% { width: 44% } 50%,65% { width: 17% } 100% { width: 44% } }
+@keyframes fadeLabel { 0%,15% { opacity: 1 } 40%,70% { opacity: 0 } 100% { opacity: 1 } }
+
+/* hover */
+.hoverWrap { position: relative; width: 52%; height: 62%; }
+.hoverCard { width: 100%; height: 100%; background: #fff; border: 2px solid var(--ink); border-radius: 10px; padding: 14px 12px; display: flex; flex-direction: column; gap: 9px; animation: hoverLift 3s ease-in-out infinite; }
+.cursor { position: absolute; right: -8px; bottom: -8px; animation: cursorMove 3s ease-in-out infinite; }
+@keyframes hoverLift { 0%,30% { transform: none; background: #fff; box-shadow: 0 0 0 var(--ink) } 45%,80% { transform: translateY(-8px); background: var(--orange); box-shadow: 5px 8px 0 var(--ink) } 100% { transform: none; background: #fff } }
+@keyframes cursorMove { 0%,10% { transform: translate(40px, 40px); opacity: 0 } 30%,80% { transform: translate(-30px, -34px); opacity: 1 } 100% { transform: translate(40px, 40px); opacity: 0 } }
+
+/* motion */
+.track { position: relative; width: 70%; height: 40px; }
+.ball { position: absolute; top: 4px; left: 0; width: 32px; height: 32px; border-radius: 50%; background: var(--indigo); border: 2px solid var(--ink); animation: ballRun 2.4s cubic-bezier(.6,0,.3,1) infinite; }
+.trail { position: absolute; left: 0; right: 0; top: 19px; height: 2px; background: rgba(26,26,46,.25); }
+@keyframes ballRun { 0% { left: 0; transform: scale(1) } 45% { transform: scale(1.25, .85) } 50% { left: calc(100% - 32px); transform: scale(1) } 55% { transform: scale(.85, 1.25) } 100% { left: 0; transform: scale(1) } }
+
+/* gradient text */
+.gradText {
+  font-size: 30px; font-weight: 900; letter-spacing: -.02em; white-space: nowrap;
+  background: linear-gradient(90deg, #5b3df0, #ff4d6d, #ffb347, #2ee59d, #5b3df0); background-size: 300% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+  animation: gradMove 3s linear infinite;
+}
+@keyframes gradMove { to { background-position: 300% 0 } }
+
+/* floating card / element */
+.floatCardWrap { position: relative; width: 44%; height: 70%; display: flex; flex-direction: column; align-items: center; }
+.floatCard { width: 100%; height: 82%; background: #fff; border: 2px solid var(--ink); border-radius: 10px; padding: 8px; display: flex; flex-direction: column; gap: 8px; animation: floatY 3s ease-in-out infinite; }
+.floatCardImg { flex: 1; border-radius: 6px; background: var(--orange); position: relative; }
+.floatCardImg::after { content: ''; position: absolute; inset: 0; margin: auto; width: 18px; height: 18px; border-radius: 50%; background: var(--red); }
+.floatShadow { position: absolute; bottom: 0; width: 70%; height: 8px; border-radius: 50%; background: rgba(26,26,46,.25); animation: shadowPulse 3s ease-in-out infinite; }
+.blob { width: 64px; height: 64px; background: var(--red); border: 2px solid var(--ink); border-radius: 58% 42% 55% 45% / 48% 56% 44% 52%; animation: floatY 3.2s ease-in-out infinite, blobSpin 6s linear infinite; }
+@keyframes floatY { 0%,100% { transform: translateY(6px) } 50% { transform: translateY(-9px) } }
+@keyframes shadowPulse { 0%,100% { transform: scaleX(1); opacity: .35 } 50% { transform: scaleX(.65); opacity: .15 } }
+@keyframes blobSpin { to { rotate: 360deg } }
+
+/* pwa */
+.appIcon { position: absolute; left: 50%; top: 50%; width: 38px; height: 38px; margin: -19px 0 0 -19px; border-radius: 10px; background: var(--indigo); color: #fff; font-weight: 800; font-size: 18px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--ink); animation: iconPop 3s ease-in-out infinite; }
+.installBanner { position: absolute; left: 6px; right: 6px; top: 6px; padding: 5px 0; text-align: center; border-radius: 6px; background: var(--green); border: 1.5px solid var(--ink); color: var(--ink); font-size: 9px; font-weight: 700; animation: bannerDown 3s ease-in-out infinite; }
+@keyframes iconPop { 0%,30% { transform: scale(.8); opacity: .5 } 50% { transform: scale(1.2); opacity: 1 } 65%,100% { transform: scale(1); opacity: 1 } }
+@keyframes bannerDown { 0%,10% { transform: translateY(-40px) } 25%,70% { transform: none } 90%,100% { transform: translateY(-40px) } }
+
+/* typography */
+.typeStack { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; color: var(--ink); }
+.typeStack > div { opacity: .35; animation: typeHi 4s ease-in-out infinite; line-height: 1.1; }
+.t1 { font-size: 30px; font-weight: 900; animation-delay: 0s !important; }
+.t2 { font-size: 20px; font-weight: 700; animation-delay: 1s !important; }
+.t3 { font-size: 14px; font-weight: 400; animation-delay: 2s !important; }
+.t4 { font-size: 10px; font-weight: 500; animation-delay: 3s !important; }
+@keyframes typeHi { 0%,5% { opacity: .3 } 10%,22% { opacity: 1; transform: translateX(4px) } 30%,100% { opacity: .3; transform: none } }
+
+/* colors */
+.swatches { display: grid; grid-template-columns: repeat(3, 34px); gap: 10px; }
+.swatches span { height: 34px; border-radius: 50%; border: 2px solid var(--ink); animation: swatchPop 2.4s ease-in-out infinite; }
+@keyframes swatchPop { 0%,60%,100% { transform: scale(1) } 25% { transform: scale(1.22) } }
+
+/* components */
+.compGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; width: 58%; }
+.compGrid > div { height: 30px; border-radius: 7px; border: 2px solid var(--ink); animation: compBounce 2.4s ease-in-out infinite; }
+.cBtn { background: var(--green); }
+.cInput { background: #fff; animation-delay: .3s !important; }
+.cBadge { background: var(--orange); animation-delay: .6s !important; }
+.cCard { background: var(--indigo); animation-delay: .9s !important; }
+@keyframes compBounce { 0%,50%,100% { transform: none } 25% { transform: translateY(-6px) } }
+
+/* button */
+.btnWrap { display: flex; gap: 10px; align-items: center; }
+.btnDemo { padding: 9px 18px; border-radius: 8px; border: 2px solid var(--ink); font-weight: 700; font-size: 13px; color: var(--ink); background: var(--green); animation: btnPress 2.6s ease-in-out infinite; }
+.btnGhost { padding: 9px 14px; border-radius: 8px; border: 2px solid var(--ink); font-weight: 600; font-size: 12px; color: var(--ink); background: transparent; opacity: .7; }
+@keyframes btnPress { 0%,25% { transform: none; filter: none; box-shadow: 0 0 0 var(--ink) } 40% { filter: brightness(.9); box-shadow: 0 0 0 4px rgba(91,61,240,.45) } 55% { transform: scale(.93) } 70%,100% { transform: none; filter: none; box-shadow: 0 0 0 var(--ink) } }
+
+/* input */
+.inputWrap { width: 62%; display: flex; flex-direction: column; gap: 4px; color: var(--ink); }
+.inputWrap small { font-size: 10px; font-weight: 700; }
+.inputDemo { height: 30px; border-radius: 7px; background: #fff; border: 2px solid #9aa0b4; padding: 0 8px; display: flex; align-items: center; animation: inputBorder 4s ease-in-out infinite; }
+.typed { font-size: 11px; white-space: nowrap; overflow: hidden; width: 0; border-right: 1.5px solid var(--ink); animation: typeIn 4s steps(13) infinite; }
+.inputMsg { color: var(--red); opacity: 0; animation: msgIn 4s ease-in-out infinite; }
+@keyframes inputBorder { 0%,10% { border-color: #9aa0b4 } 20%,60% { border-color: var(--indigo) } 75%,92% { border-color: var(--red) } 100% { border-color: #9aa0b4 } }
+@keyframes typeIn { 0%,15% { width: 0 } 55%,100% { width: 78px } }
+@keyframes msgIn { 0%,70% { opacity: 0 } 78%,92% { opacity: 1 } 100% { opacity: 0 } }
+
+/* badges */
+.pills { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; width: 70%; }
+.pills span { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; border: 1.5px solid var(--ink); animation: pillPop 2.4s ease-in-out infinite; }
+.tagPill { background: transparent; color: var(--ink); }
+@keyframes pillPop { 0%,60%,100% { transform: scale(1) } 20% { transform: scale(1.18) } }
+
+/* tooltip */
+.tipWrap { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; padding-top: 18px; }
+.tip { padding: 5px 9px; border-radius: 6px; background: var(--ink); color: #fff; font-size: 10px; white-space: nowrap; position: relative; animation: tipShow 3s ease-in-out infinite; }
+.tip::after { content: ''; position: absolute; left: 50%; bottom: -4px; margin-left: -4px; width: 8px; height: 8px; background: var(--ink); transform: rotate(45deg); }
+.tipBtn { width: 30px; height: 30px; border-radius: 50%; background: var(--indigo); border: 2px solid var(--ink); color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+@keyframes tipShow { 0%,25% { opacity: 0; transform: translateY(4px) } 40%,75% { opacity: 1; transform: none } 90%,100% { opacity: 0; transform: translateY(4px) } }
+
+/* fallback */
+.fallbackBox { width: 56px; height: 56px; border-radius: 14px; background: var(--indigo); color: #fff; border: 2px solid var(--ink); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 20px; animation: floatY 3s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .stage *, .stage *::before, .stage *::after { animation: none !important; }
+  .typed { width: 78px; }
+  .drawer { transform: none; }
+}

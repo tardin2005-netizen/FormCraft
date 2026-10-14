@@ -1,11 +1,12 @@
 import { useMemo, useRef, useState } from 'react'
 import {
-  useLibraryStore, PATTERN_CATEGORIES,
+  useLibraryStore, PATTERN_CATEGORIES, DEFAULT_PATTERNS,
   type DesignPattern, type DesignPatternInput, type PatternCategory,
 } from '../store/libraryStore'
 import { normalize } from '../utils/globalSearch'
 import { imageToDataUrl } from '../utils/imageData'
 import RichText, { plainText } from '../components/RichText'
+import PatternPreview from './PatternPreview'
 import s from './BibliotecaModule.module.css'
 
 const splitList = (v: string) => v.split(',').map(x => x.trim()).filter(Boolean)
@@ -33,8 +34,12 @@ function toInput(f: FormState): DesignPatternInput {
   }
 }
 
-export default function BibliotecaModule() {
-  const { patterns, addPattern, updatePattern, removePattern } = useLibraryStore()
+export default function BibliotecaModule({ hubId, isDesignHub }: { hubId: string; isDesignHub: boolean }) {
+  const { patterns: allPatterns, addPattern, updatePattern, removePattern } = useLibraryStore()
+  const patterns = useMemo(
+    () => allPatterns.filter(p => p.hubId === hubId || (!p.hubId && isDesignHub)),
+    [allPatterns, hubId, isDesignHub],
+  )
   const [filter, setFilter] = useState('')
   const [cat, setCat] = useState<PatternCategory | 'Todas'>('Todas')
   const [detail, setDetail] = useState<DesignPattern | null>(null)
@@ -56,8 +61,8 @@ export default function BibliotecaModule() {
 
   function handleSave(f: FormState) {
     const input = toInput(f)
-    if (editing && editing !== 'new') updatePattern(editing.id, input)
-    else addPattern(input)
+    if (editing && editing !== 'new') updatePattern(editing.id, { ...input, hubId: editing.hubId })
+    else addPattern({ ...input, hubId })
     setEditing(null)
   }
 
@@ -88,7 +93,10 @@ export default function BibliotecaModule() {
         <div className={s.empty}>
           <div className={s.emptyIcon}>📚</div>
           <div className={s.emptyTitle}>Nenhum padrão cadastrado</div>
-          <div className={s.emptyDesc}>Cadastre padrões de design (hover, motion, gradientes…) e eles aparecerão aqui.</div>
+          <div className={s.emptyDesc}>Esta biblioteca é só deste hub. Cadastre seus padrões ou comece com os padrões iniciais de design.</div>
+          <button className={s.secondaryBtn} onClick={() => DEFAULT_PATTERNS.forEach(d => addPattern({ ...d, hubId }))}>
+            Adicionar padrões iniciais
+          </button>
         </div>
       ) : visible.length === 0 ? (
         <div className={s.empty}>
@@ -100,17 +108,12 @@ export default function BibliotecaModule() {
         <div className={s.grid}>
           {visible.map(p => (
             <button key={p.id} className={s.card} onClick={() => setDetail(p)}>
-              {p.exemploImagem && (
-                <div className={s.cardImg}><img src={p.exemploImagem} alt={p.nomePrincipal} /></div>
-              )}
+              <PatternPreview pattern={p} />
               <div className={s.cardBody}>
                 <span className={s.cardCat}>{p.categoria}</span>
                 <div className={s.cardTitle}>{p.nomePrincipal}</div>
                 <div className={s.cardDef}>{plainText(p.oQueE)}</div>
               </div>
-              {p.sinonimos.length > 0 && (
-                <div className={s.cardFoot}>também: {p.sinonimos.slice(0, 2).join(', ')}{p.sinonimos.length > 2 ? ` +${p.sinonimos.length - 2}` : ''}</div>
-              )}
             </button>
           ))}
         </div>
@@ -132,7 +135,7 @@ export default function BibliotecaModule() {
                 {detail.sinonimos.map(x => <span key={x} className={s.chip}>{x}</span>)}
               </div>
             )}
-            {detail.exemploImagem && <div className={s.detailImg}><img src={detail.exemploImagem} alt="" /></div>}
+            <PatternPreview pattern={detail} large />
             <section className={s.detailSection}><h3>O que é</h3><RichText text={detail.oQueE} /></section>
             {detail.comoFunciona && <section className={s.detailSection}><h3>Como funciona</h3><RichText text={detail.comoFunciona} /></section>}
             {detail.ondeUsar && <section className={s.detailSection}><h3>Onde usar</h3><RichText text={detail.ondeUsar} /></section>}
