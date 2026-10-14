@@ -61,18 +61,27 @@ function PdfViewer({ url, title, onFixUrl, onReplace }: {
 }) {
   const [expanded, setExpanded] = useState(true)
   const path = storagePathFromUrl(url)
-  // A Storage link without its access token only works while the bucket allows public reads.
-  const needsToken = !!path && !/[?&]token=/.test(url)
-  const [src, setSrc] = useState(needsToken ? '' : url)
+  const [src, setSrc] = useState(url)
   const [failed, setFailed] = useState(false)
 
+  // Old links can die (access token revoked) and the iframe would just show a 403 page.
+  // Probe the link first; if it is dead, ask Storage for a fresh one, otherwise offer to re-upload.
   useEffect(() => {
-    if (!needsToken || !path) { setSrc(url); setFailed(false); return }
     let alive = true
-    getDownloadURL(storageRef(storage, path))
-      .then(fresh => { if (!alive) return; setSrc(fresh); onFixUrl(fresh) })
-      .catch(() => { if (alive) setFailed(true) })
-    return () => { alive = false }
+    const ctl = new AbortController()
+    setSrc(url); setFailed(false)
+    const recover = async () => {
+      if (!path) { if (alive) setFailed(true); return }
+      try {
+        const fresh = await getDownloadURL(storageRef(storage, path))
+        if (!alive) return
+        setSrc(fresh); onFixUrl(fresh)
+      } catch { if (alive) setFailed(true) }
+    }
+    fetch(url, { signal: ctl.signal })
+      .then(r => { ctl.abort(); if (alive && [401, 403, 404].includes(r.status)) recover() })
+      .catch(() => { /* offline or blocked: keep showing the saved link */ })
+    return () => { alive = false; ctl.abort() }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url])
 
@@ -92,9 +101,8 @@ function PdfViewer({ url, title, onFixUrl, onReplace }: {
         <div className={s.pdfError} role="alert">
           <b>Este PDF não abre mais pelo link salvo.</b>
           <span>
-            Ele está no Firebase Storage, mas o link foi salvo sem a chave de acesso e as regras atuais do
-            Storage não liberam a leitura dele. O arquivo continua lá. Envie o PDF de novo pelo computador
-            para gerar um link que funciona.
+            A chave de acesso do link antigo foi invalidada e o Storage não libera a leitura direta desse arquivo.
+            Envie o PDF de novo pelo computador: ele passa a ficar na sua pasta segura e abre normalmente.
           </span>
           <button className={s.pdfErrorBtn} onClick={onReplace}>Enviar o PDF de novo</button>
         </div>
@@ -499,8 +507,8 @@ function FaculdadeView({ hubId }: { hubId: string }) {
     addSemester, removeSemester,
     addSubject, removeSubject,
     addClassItem, removeClassItem,
-    addContent, removeContent,
-    addConcept, removeConcept,
+    addContent, updateContent, removeContent,
+    addConcept, updateConcept, removeConcept,
   } = useHubsStore()
 
   const hubSemesters = semesters.filter(s => s.hubId === hubId)
@@ -742,7 +750,12 @@ function FaculdadeView({ hubId }: { hubId: string }) {
               onAddContent={() => setContentModal(true)}
               onAddConcept={() => setConceptModal(true)}
               onPdf={() => setPdfModal(true)}
-              onRemoveClass={id => { removeClassItem(id); if (selClass === id) setSelClass(null) }}
+              onRemoveClass={id => {
+                contents.filter(c => c.classId === id).forEach(c => updateContent(c.id, { classId: undefined }))
+                concepts.filter(c => c.classId === id).forEach(c => updateConcept(c.id, { classId: undefined }))
+                removeClassItem(id)
+                if (selClass === id) setSelClass(null)
+              }}
               onRemoveContent={removeContent}
               onRemoveConcept={removeConcept}
               onCtx={(e, cl) => { e.preventDefault(); setCtxMenu({ x: e.clientX, y: e.clientY, label: cl.title, onDelete: () => removeClassItem(cl.id) }) }}
