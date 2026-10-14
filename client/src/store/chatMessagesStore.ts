@@ -69,3 +69,6 @@ export const useChatMessagesStore = create<ChatMessagesStore>()(
     { name: 'formcraft-chat-messages', storage: safeStorage, partialize: s => ({ messages: s.messages.map(({ fileData: _f, ...m }) => m) }) as unknown as ChatMessagesStore }
   )
 )
+
+// Rewrite the cache once so an old oversized copy (with attachment data) shrinks to the slim version.
+useChatMessagesStore.setState(s => ({ messages: s.messages }))
