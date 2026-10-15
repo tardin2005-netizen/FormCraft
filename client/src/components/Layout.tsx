@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Hexagon, Inbox, BookMarked, Wrench, Settings,
   LogOut, Search, Link2, Sun, Moon, PanelLeft, Grid2X2, CheckSquare, Bookmark, Library, MoreHorizontal,
-  UserRound, ChevronRight, Palette, Monitor, Keyboard, Download, X, Lightbulb,
+  UserRound, ChevronRight, Palette, Monitor, Keyboard, Download, X, Lightbulb, NotebookPen,
 } from 'lucide-react'
 import { useThemeStore, ACCENT_COLORS } from '../store/themeStore'
 import { useAreasStore } from '../store/areasStore'
@@ -33,6 +33,7 @@ const NAV_ITEMS = [
   { to: '/',            Icon: LayoutDashboard, label: 'Início' },
   { to: '/hubs',        Icon: Hexagon,         label: 'Hubs' },
   { to: '/conceitos',   Icon: Lightbulb,       label: 'Conceitos' },
+  { to: '/notas',       Icon: NotebookPen,     label: 'Bloco de notas' },
   { to: '/biblioteca',  Icon: Library,         label: 'Biblioteca' },
   { to: '/tarefas',     Icon: CheckSquare,     label: 'Tarefas' },
   { to: '/inbox',       Icon: Inbox,           label: 'Inbox' },

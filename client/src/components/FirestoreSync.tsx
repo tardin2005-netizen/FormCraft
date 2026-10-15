@@ -11,6 +11,7 @@ import { useSavedToolsStore } from '../store/savedToolsStore'
 import { useHubToolsStore } from '../store/hubToolsStore'
 import { useContentItemsStore } from '../store/contentItemsStore'
 import { useTasksStore } from '../store/tasksStore'
+import { useNotesStore } from '../store/notesStore'
 import { useLibraryStore } from '../store/libraryStore'
 import { useRescueStore } from '../store/rescueStore'
 
@@ -29,6 +30,7 @@ const LOCAL: Record<string, () => unknown[]> = {
   hubConcepts: () => useHubsStore.getState().concepts,
   contentItems: () => useContentItemsStore.getState().items,
   tasks: () => useTasksStore.getState().tasks,
+  notes: () => useNotesStore.getState().notes,
   designPatterns: () => useLibraryStore.getState().patterns,
 }
 
@@ -153,6 +155,10 @@ export default function FirestoreSync() {
       onSnapshot(
         collection(db, 'users', uid, 'tasks'),
         snap => safe('tasks', snap, d => useTasksStore.getState().hydrate(d))
+      ),
+      onSnapshot(
+        collection(db, 'users', uid, 'notes'),
+        snap => safe('notes', snap, d => useNotesStore.getState().hydrate(d))
       ),
     ]
 

@@ -14,6 +14,7 @@ import Settings from './pages/Settings'
 import Hubs from './pages/Hubs'
 import HubView from './pages/HubView'
 import Tarefas from './pages/Tarefas'
+import Notas from './pages/Notas'
 import ToolLibrary from './pages/ToolLibrary'
 import Salvos from './pages/Salvos'
 import Biblioteca from './pages/Biblioteca'
@@ -55,6 +56,7 @@ function AppRoutes() {
           <Route path="/biblioteca"     element={<Biblioteca />} />
           <Route path="/biblioteca/:id" element={<Biblioteca />} />
           <Route path="/tarefas"       element={<Tarefas />} />
+          <Route path="/notas"         element={<Notas />} />
           <Route path="/ferramentas"        element={<ToolLibrary />} />
           <Route path="/salvos"             element={<Salvos />} />
           <Route path="/settings"           element={<Settings />} />
