@@ -2,8 +2,8 @@ import { useState } from 'react'
 import type { ModuleProps } from './moduleProps'
 import s from './GenericModule.module.css'
 import DeleteBtn from './DeleteBtn'
-import EditBtn from './EditBtn'
 import Glyph from '../components/Glyph'
+import ItemActions from './ItemActions'
 
 interface NoteData {
   title: string
@@ -209,8 +209,7 @@ function LinkCard({
         <button className={s.pinBtn} onClick={onToggleStar} title={item.starred ? 'Desafixar' : 'Fixar'}>
           <Glyph value="ph:push-pin" size={15} weight={item.starred ? 'fill' : 'bold'} />
         </button>
-        <EditBtn onClick={() => onEdit()} />
-        <DeleteBtn onConfirm={onDelete} />
+        <ItemActions onEdit={() => onEdit()} onDelete={onDelete} />
       </div>
     </div>
   )

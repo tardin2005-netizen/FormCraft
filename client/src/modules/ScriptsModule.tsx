@@ -3,8 +3,8 @@ import type { ModuleProps } from './moduleProps'
 import s from './modules.module.css'
 import d from './ScriptsModule.module.css'
 import DeleteBtn from './DeleteBtn'
-import EditBtn from './EditBtn'
 import Glyph from '../components/Glyph'
+import ItemActions from './ItemActions'
 
 type Lang = 'bash' | 'python' | 'javascript' | 'typescript' | 'sql' | 'powershell' | 'php' | 'go' | 'rust' | 'outro'
 type Cat = 'automacao' | 'deploy' | 'backup' | 'monitoramento' | 'dados' | 'infra' | 'util' | 'outro'
@@ -143,8 +143,7 @@ export default function ScriptsModule({ module, workspaceId, items, addItem, upd
                   </div>
                   <div className={d.cardActions}>
                     <button className={`${s.starBtn} ${item.starred?s.starActive:''}`} onClick={e=>{e.stopPropagation();toggleStar(item.id)}}><Glyph value="ph:star" size={15} weight={item.starred ? 'fill' : 'bold'} /></button>
-                    <EditBtn onClick={() => openEdit(item)} />
-                    <DeleteBtn onConfirm={()=>removeItem(item.id)}/>
+                    <ItemActions onEdit={() => openEdit(item)} onDelete={() => removeItem(item.id)} />
                     <span className={d.chevron}>{isOpen?'↑':'↓'}</span>
                   </div>
                 </div>

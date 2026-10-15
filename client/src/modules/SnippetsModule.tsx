@@ -3,8 +3,8 @@ import type { ModuleProps } from './moduleProps'
 import s from './modules.module.css'
 import vs from './SnippetsModule.module.css'
 import DeleteBtn from './DeleteBtn'
-import EditBtn from './EditBtn'
 import Glyph from '../components/Glyph'
+import ItemActions from './ItemActions'
 
 type SnippetCategory = 'Mensagem' | 'Endereço' | 'Preço' | 'Procedimento' | 'Outro'
 
@@ -161,10 +161,7 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
                     >
                       <Glyph value="ph:star" size={15} weight={item.starred ? 'fill' : 'bold'} />
                     </button>
-                    <EditBtn onClick={e => openEdit(item.id, e)} />
-                    <span onClick={e => e.stopPropagation()}>
-                      <DeleteBtn onConfirm={() => removeItem(item.id)} />
-                    </span>
+                    <ItemActions onEdit={e => openEdit(item.id, e)} onDelete={() => removeItem(item.id)} />
                   </div>
                 </div>
 

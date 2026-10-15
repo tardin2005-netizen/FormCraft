@@ -3,8 +3,8 @@ import type { ModuleProps } from './moduleProps'
 import s from './modules.module.css'
 import d from './ToolsDbModule.module.css'
 import DeleteBtn from './DeleteBtn'
-import EditBtn from './EditBtn'
 import Glyph from '../components/Glyph'
+import ItemActions from './ItemActions'
 
 type Categoria = 'devops' | 'monitoramento' | 'seguranca' | 'banco-de-dados' | 'cloud' | 'ci-cd' | 'comunicacao' | 'produtividade' | 'dev' | 'design' | 'analytics' | 'outro'
 type Plano = 'gratuito' | 'freemium' | 'pago' | 'open-source'
@@ -149,8 +149,7 @@ export default function ToolsDbModule({ module, workspaceId, items, addItem, upd
                       ))}</div>
                     )}
                     <button className={`${s.starBtn} ${item.starred?s.starActive:''}`} onClick={()=>toggleStar(item.id)}><Glyph value="ph:star" size={15} weight={item.starred ? 'fill' : 'bold'} /></button>
-                    <EditBtn onClick={() => openEdit(item)} />
-                    <DeleteBtn onConfirm={()=>removeItem(item.id)}/>
+                    <ItemActions onEdit={() => openEdit(item)} onDelete={() => removeItem(item.id)} />
                   </div>
                 </div>
 

@@ -5,8 +5,7 @@ import { useHubsStore, type HubType, type Hub } from '../store/hubsStore'
 import { useContentItemsStore } from '../store/contentItemsStore'
 import { useLibraryStore, isDesignHubName } from '../store/libraryStore'
 import { useHubToolsStore } from '../store/hubToolsStore'
-import EditBtn from '../modules/EditBtn'
-import DeleteBtn from '../modules/DeleteBtn'
+import ItemActions from '../modules/ItemActions'
 import Glyph from '../components/Glyph'
 import IconPicker from '../components/IconPicker'
 import s from './Hubs.module.css'
@@ -228,8 +227,7 @@ export default function Hubs() {
                   </div>
                 </Link>
                 <div className={s.hubActions}>
-                  <EditBtn onClick={e => openEdit(hub, e)} />
-                  <DeleteBtn name={hub.name} onConfirm={() => removeHub(hub.id)} />
+                  <ItemActions name={hub.name} onEdit={e => openEdit(hub, e)} onDelete={() => removeHub(hub.id)} />
                 </div>
               </motion.div>
             )
