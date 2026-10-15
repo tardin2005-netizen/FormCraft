@@ -20,6 +20,18 @@ const parseKey = (k: string) => { const [y, m, d] = k.split('-').map(Number); re
 const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate())
 const dayDiff = (a: Date, b: Date) => Math.round((startOfDay(a).getTime() - startOfDay(b).getTime()) / 86400000)
 
+const WD_SHORT = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB']
+type Tone = 'red' | 'orange' | 'blue' | 'purple' | 'slate'
+
+function urgencyOf(diff: number, kind: string, eow: number): { tone: Tone; label: string } {
+  if (diff < 0) return { tone: 'red', label: 'ATRASADO' }
+  if (diff === 0) return { tone: 'red', label: 'URGENTE · HOJE' }
+  if (kind === 'aula' || kind === 'extra') return { tone: 'slate', label: diff <= eow ? 'ESSA SEMANA' : 'PRÓXIMA SEMANA' }
+  if (diff <= eow) return { tone: 'orange', label: 'ESSA SEMANA' }
+  if (diff <= eow + 7) return { tone: 'blue', label: 'PRÓXIMA SEMANA' }
+  return { tone: 'blue', label: 'MAIS ADIANTE' }
+}
+
 function countdown(days: number) {
   if (days === 0) return 'hoje'
   if (days === 1) return 'amanhã'
@@ -97,7 +109,7 @@ export default function Upcoming() {
   const list = useMemo(() => {
     if (picked) return byDay.get(picked) ?? []
     return allDated
-      .filter(c => { const d = dayDiff(parseKey(c.date), today); return d >= 0 && d <= WINDOW_DAYS })
+      .filter(c => { const d = dayDiff(parseKey(c.date), today); return (d >= 0 && d <= WINDOW_DAYS) || (c.type === 'task' && d < 0 && d >= -30) })
       .sort((a, b) => a.date.localeCompare(b.date) || (a.type === 'prova' ? -1 : 1))
   }, [picked, byDay, allDated, today])
 
@@ -134,9 +146,16 @@ export default function Upcoming() {
       <div className={s.upList}>
         <div className={s.upHead}>
           <div>
-            <h2 id="upcoming-title" className={s.upTitle}>
-              {picked ? parseKey(picked).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }) : 'Próximos 14 dias'}
+            <span className={s.pzKicker}>Pendências</span>
+            <h2 id="upcoming-title" className={s.pzTitle}>
+              {picked ? parseKey(picked).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }) : 'Próximos prazos'}
             </h2>
+            <p className={s.pzSub}>
+              {picked
+                ? `${list.length} ${list.length === 1 ? 'compromisso' : 'compromissos'} neste dia`
+                : `${list.length} ${list.length === 1 ? 'compromisso' : 'compromissos'} nos próximos ${WINDOW_DAYS} dias`}
+              {' · '}hoje é {WD_SHORT[today.getDay()].toLowerCase()}, {pad(today.getDate())}/{pad(today.getMonth() + 1)}
+            </p>
             {!picked && nextExam && (
               <p className={s.upNext}>
                 Próxima {nextExam.type === 'prova' ? 'prova' : 'entrega'}: <b>{nextExam.title}</b> · {countdown(dayDiff(parseKey(nextExam.date), today))}
@@ -155,7 +174,7 @@ export default function Upcoming() {
                 {connectingGcal ? 'Conectando…' : tokenExpired ? 'Reconectar Google Agenda' : 'Conectar Google Agenda'}
               </button>
             )}
-            {picked && <button className={s.linkBtn} onClick={() => setPicked(null)}>Ver próximos 14 dias</button>}
+            {picked && <button className={s.linkBtn} onClick={() => setPicked(null)}>Ver próximos {WINDOW_DAYS} dias</button>}
           </div>
         </div>
 
@@ -175,26 +194,32 @@ export default function Upcoming() {
               const diff = dayDiff(d, today)
               const isGcal = c.type === 'gcal'
               const isTask = c.type === 'task'
+              const eow = 6 - today.getDay()
+              const { tone, label } = urgencyOf(diff, c.type, eow)
+              const sub = isGcal
+                ? 'GOOGLE AGENDA'
+                : isTask
+                  ? `TAREFA · URGÊNCIA ${(c as TaskItem).urgency === 'urgent' ? 'URGENTE' : (c as TaskItem).urgency === 'high' ? 'ALTA' : (c as TaskItem).urgency === 'medium' ? 'MÉDIA' : 'BAIXA'}`
+                  : subjectName((c as ClassItem).subjectId).toUpperCase()
+              const when = isGcal && (c as GCalItem).startTime ? ` · ${(c as GCalItem).startTime}` : ''
+              const big = diff < 0 ? 'Atrasado' : diff === 0 ? 'Hoje' : diff === 1 ? 'Amanhã' : `${diff} dias`
+              const small = diff < 0 ? `há ${-diff} ${-diff === 1 ? 'dia' : 'dias'}` : diff === 0 ? 'último dia' : diff === 1 ? 'prazo' : 'restantes'
               return (
                 <li key={c.id}>
-                  <button className={s.upItem} onClick={() => openItem(c)}>
-                    <span className={s.upDate}>
+                  <button className={s.pz} data-tone={tone} onClick={() => openItem(c)}>
+                    <span className={s.pzDate} aria-hidden="true">
+                      <i>{WD_SHORT[d.getDay()]}</i>
                       <b>{pad(d.getDate())}</b>
-                      <span>{MONTHS[d.getMonth()].slice(0, 3)}</span>
                     </span>
-                    <span className={s.upInfo}>
-                      <span className={s.upItemTitle}>{c.title}</span>
-                      <span className={s.upItemSub}>
-                        {isGcal
-                          ? ((c as GCalItem).startTime ? `${(c as GCalItem).startTime} · Google Agenda` : 'Google Agenda')
-                          : isTask
-                            ? `Urgência: ${(c as TaskItem).urgency === 'urgent' ? 'Urgente' : (c as TaskItem).urgency === 'high' ? 'Alta' : (c as TaskItem).urgency === 'medium' ? 'Média' : 'Baixa'}`
-                            : subjectName((c as ClassItem).subjectId)}
-                      </span>
+                    <span className={s.pzMain}>
+                      <span className={s.pzLabel}>{label}{c.type !== 'task' && c.type !== 'gcal' ? ` · ${TYPE_LABEL[c.type].toUpperCase()}` : ''}</span>
+                      <span className={s.pzName}>{c.title}</span>
+                      <span className={s.pzSubject}>{sub}</span>
+                      <span className={s.pzWhen}>{pad(d.getDate())}/{pad(d.getMonth() + 1)}{when}</span>
                     </span>
-                    <span className={s.upRight}>
-                      <span className={s.typeTag} data-kind={c.type}>{TYPE_LABEL[c.type]}</span>
-                      <span className={`${s.upWhen} ${diff <= 3 && c.type !== 'aula' && c.type !== 'gcal' ? s.upSoon : ''}`}>{countdown(diff)}</span>
+                    <span className={s.pzCount}>
+                      <b>{big}</b>
+                      <span>{small}</span>
                     </span>
                   </button>
                 </li>
