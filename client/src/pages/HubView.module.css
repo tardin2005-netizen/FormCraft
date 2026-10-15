@@ -63,7 +63,7 @@
 
 /* Subjects panel */
 .subjPanel {
-  width: 200px; flex-shrink: 0; border-right: 1px solid var(--border);
+  width: 300px; flex-shrink: 0; border-right: 1px solid var(--border);
   display: flex; flex-direction: column; overflow: hidden;
 }
 .panelHeader {
@@ -749,3 +749,32 @@
   .spItem { min-width: 220px; }
 }
 @media (prefers-reduced-motion: reduce) { .spBtn, .spTab, .spTile, .spItem { transition: none; } .spBtn:hover, .spTab:hover, .spTile:hover { transform: none; } }
+
+/* Matérias: cartões com selo e prazo */
+.subjPanel { overflow-y: auto; }
+.sjCard {
+  display: flex; align-items: flex-start; gap: 12px; width: calc(100% - 20px); margin: 10px 10px 0; padding: 12px; text-align: left;
+  font: inherit; color: inherit; cursor: pointer; background: var(--surface); border: 1.5px solid var(--text); border-radius: 14px;
+  transition: transform .12s, box-shadow .12s, background-color .15s;
+}
+.sjCard:last-child { margin-bottom: 10px; }
+.sjCard:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--border); }
+.sjCard:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sjCardOn, .sjCardOn:hover { background: var(--accent-muted); border-width: 2px; box-shadow: 4px 4px 0 var(--accent); }
+.sjSticker {
+  display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; flex-shrink: 0; border-radius: 12px;
+  background: color-mix(in srgb, var(--subj, #7c6ef7) 40%, white); border: 2px solid #1a1a2e; color: #1a1a2e;
+}
+.sjBody { display: flex; flex-direction: column; gap: 8px; min-width: 0; flex: 1; }
+.sjName { font-size: 13px; font-weight: 600; line-height: 1.3; color: var(--text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.sjChips { display: flex; flex-wrap: wrap; gap: 6px; }
+.sjChip { padding: 2px 9px; border-radius: 20px; font-size: 10.5px; font-weight: 600; color: #1a1a2e; background: #fff; border: 1.5px solid #1a1a2e; }
+.sjChip[data-tone='none'] { background: #eef0f7; border-color: transparent; color: #52526a; }
+.sjChip[data-tone='hot'] { background: #fecdd3; border-color: transparent; }
+.sjChip[data-tone='warm'] { background: #ffe3b0; border-color: transparent; }
+.sjChip[data-tone='cool'] { background: #d8d2ff; border-color: transparent; }
+@media (max-width: 768px) {
+  .subjPanel { width: 100%; }
+  .sjCard { flex: 0 0 250px; width: 250px; margin: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .sjCard { transition: none; } .sjCard:hover { transform: none; } }

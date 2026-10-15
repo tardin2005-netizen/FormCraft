@@ -573,6 +573,7 @@ function FaculdadeView({ hubId }: { hubId: string }) {
     }
   }, [novo, selSem, selSubj, subjects, setParams])
 
+  const todayKey = new Date().toISOString().slice(0, 10)
   const curSubjects  = subjects.filter(x => x.semesterId === selSem)
   const curClasses   = classes.filter(x => x.subjectId === selSubj).sort((a, b) => a.date.localeCompare(b.date))
 
@@ -710,16 +711,34 @@ function FaculdadeView({ hubId }: { hubId: string }) {
             </div>
             {curSubjects.length === 0
               ? <button className={s.panelEmptyAdd} onClick={() => setSubjModal(true)}>+ Adicionar matéria</button>
-              : curSubjects.map(subj => (
-                <div key={subj.id} className={`${s.subjItem} ${selSubj === subj.id ? s.subjActive : ''}`}
-                  onClick={() => { setSelSubj(subj.id); setSelClass(null) }}
-                  onContextMenu={e => { e.preventDefault(); setCtxMenu({ x: e.clientX, y: e.clientY, label: subj.name, onDelete: () => removeSubject(subj.id) }) }}
-                >
-                  <div className={s.subjDot} style={{ background: subj.color }} />
-                  <span className={s.subjEmoji}><Glyph value={subj.emoji} size={18} /></span>
-                  <span className={s.subjName}>{subj.name}</span>
-                </div>
-              ))
+              : curSubjects.map(subj => {
+                  const subjClasses = classes.filter(c => c.subjectId === subj.id)
+                  const nextDue = subjClasses
+                    .filter(c => (c.type === 'prova' || c.type === 'trabalho') && c.date >= todayKey)
+                    .sort((x, y) => x.date.localeCompare(y.date))[0]
+                  const days = nextDue ? Math.round((new Date(nextDue.date + 'T00:00:00').getTime() - new Date(todayKey + 'T00:00:00').getTime()) / 86400000) : null
+                  const tone = days === null ? 'none' : days <= 3 ? 'hot' : days <= 7 ? 'warm' : 'cool'
+                  return (
+                    <button
+                      key={subj.id}
+                      type="button"
+                      className={`${s.sjCard} ${selSubj === subj.id ? s.sjCardOn : ''}`}
+                      onClick={() => { setSelSubj(subj.id); setSelClass(null) }}
+                      onContextMenu={e => { e.preventDefault(); setCtxMenu({ x: e.clientX, y: e.clientY, label: subj.name, onDelete: () => removeSubject(subj.id) }) }}
+                    >
+                      <span className={s.sjSticker} style={{ ['--subj' as string]: subj.color }}><Glyph value={subj.emoji} size={22} /></span>
+                      <span className={s.sjBody}>
+                        <span className={s.sjName}>{subj.name}</span>
+                        <span className={s.sjChips}>
+                          <span className={s.sjChip}>{subjClasses.length} {subjClasses.length === 1 ? 'aula' : 'aulas'}</span>
+                          <span className={s.sjChip} data-tone={tone}>
+                            {nextDue ? `${nextDue.type === 'prova' ? 'Prova' : 'Trabalho'} ${nextDue.date.slice(8, 10)}/${nextDue.date.slice(5, 7)}` : 'Sem prazo'}
+                          </span>
+                        </span>
+                      </span>
+                    </button>
+                  )
+                })
             }
           </div>
 
