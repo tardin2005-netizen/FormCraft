@@ -320,19 +320,21 @@ function SubjectPanel(p: SubjectPanelProps) {
   const today = new Date().toISOString().slice(0, 10)
   const next = classes.find(c => c.date >= today)
 
-  const classTile = (cl: ClassItem) => {
+  const classRow = (cl: ClassItem) => {
     const { d, m } = dayOf(cl.date)
+    const nm = countMat(cl.id), nc = countCpt(cl.id)
     return (
-      <button key={cl.id} className={s.spTile} onClick={() => p.setSelClass(cl.id)} onContextMenu={e => p.onCtx(e, cl)}>
-        <span className={s.spTileCover} style={{ background: TYPE_TINT[cl.type] }}>
-          <span className={s.spDay}><i>{m}</i><b>{d}</b></span>
-          <span className={s.spTypeChip}>{CLASS_TYPE_LABEL[cl.type]}</span>
-        </span>
-        <span className={s.spTileBody}>
-          <span className={s.spTileTitle}>{cl.title}</span>
-          <span className={s.spTileMeta}>{countMat(cl.id)} {countMat(cl.id) === 1 ? 'material' : 'materiais'} · {countCpt(cl.id)} {countCpt(cl.id) === 1 ? 'conceito' : 'conceitos'}</span>
-        </span>
-      </button>
+      <li key={cl.id} className={s.spRow}>
+        <span className={s.spRowDate}><i>{m}</i><b>{d}</b></span>
+        <button className={s.spRowCard} onClick={() => p.setSelClass(cl.id)} onContextMenu={e => p.onCtx(e, cl)}>
+          <span className={s.spTypeChip} style={{ background: TYPE_TINT[cl.type] }}>{CLASS_TYPE_LABEL[cl.type]}</span>
+          <span className={s.spRowText}>
+            <span className={s.spRowTitle}>{cl.title}</span>
+            <span className={s.spTileMeta}>{nm} {nm === 1 ? 'material' : 'materiais'} · {nc} {nc === 1 ? 'conceito' : 'conceitos'}</span>
+          </span>
+          <span className={s.spRowGo}>Abrir →</span>
+        </button>
+      </li>
     )
   }
 
@@ -343,27 +345,34 @@ function SubjectPanel(p: SubjectPanelProps) {
         <div className={s.spHeroText}>
           <h2>{subj.name}</h2>
           <p>
-            {classes.length} {classes.length === 1 ? 'aula' : 'aulas'}
-            {provas > 0 && <> · {provas} {provas === 1 ? 'prova' : 'provas'}</>}
-            {' '}· {contents.length} {contents.length === 1 ? 'material' : 'materiais'} · {concepts.length} {concepts.length === 1 ? 'conceito' : 'conceitos'}
-            {next && <> · próxima: {next.date.slice(8, 10)}/{next.date.slice(5, 7)}</>}
-            {subj.professor && <> · {subj.professor}</>}
+            {subj.professor && <>{subj.professor} · </>}
+            {next ? <>próxima: {next.date.slice(8, 10)}/{next.date.slice(5, 7)}</> : <>sem datas à frente</>}
           </p>
-        </div>
-        <div className={s.spHeroActions}>
-          <button className={s.spBtn} onClick={p.onAddClass}>+ Aula</button>
-          <button className={s.spBtn} onClick={p.onAddContent}>+ Material</button>
-          <button className={s.spBtn} onClick={p.onAddConcept} disabled={!selClass} title={selClass ? 'Adicionar conceito a esta aula' : 'Abra uma aula primeiro'}>+ Conceito</button>
-          <button className={`${s.spBtn} ${s.spBtnMain}`} onClick={p.onPdf}><Glyph value="ph:file-pdf" size={14} /> PDF</button>
         </div>
       </header>
 
-      <div className={s.spTabs} role="tablist">
-        {([['aulas', 'Aulas', classes.length], ['materiais', 'Materiais', contents.length], ['conceitos', 'Conceitos', concepts.length]] as const).map(([k, label, n]) => (
-          <button key={k} role="tab" aria-selected={tab === k} className={`${s.spTab} ${tab === k ? s.spTabOn : ''}`} onClick={() => setTab(k)}>
-            {label} <span>{n}</span>
-          </button>
-        ))}
+      <div className={s.spStats} role="tablist">
+        {([
+          ['aulas', 'Aulas', classes.length, '#d8d2ff'],
+          ['provas', 'Provas', provas, '#fecdd3'],
+          ['materiais', 'Materiais', contents.length, '#fde68a'],
+          ['conceitos', 'Conceitos', concepts.length, '#a7f3d0'],
+        ] as const).map(([k, label, n, tint]) => {
+          const target = k === 'provas' ? 'aulas' : k
+          return (
+            <button key={k} role="tab" aria-selected={tab === target && k !== 'provas'} className={`${s.spStat} ${tab === target && k !== 'provas' ? s.spStatOn : ''}`} style={{ background: tint }}
+              onClick={() => { setTab(target); if (k !== 'provas') p.setSelClass(null) }}>
+              <b>{n}</b><span>{label}</span>
+            </button>
+          )
+        })}
+      </div>
+
+      <div className={s.spActions}>
+        <button className={s.spBtn} onClick={p.onAddClass}>+ Aula</button>
+        <button className={s.spBtn} onClick={p.onAddContent}>+ Material</button>
+        <button className={s.spBtn} onClick={p.onAddConcept} disabled={!selClass} title={selClass ? 'Adicionar conceito a esta aula' : 'Abra uma aula primeiro'}>+ Conceito</button>
+        <button className={`${s.spBtn} ${s.spBtnMain}`} onClick={p.onPdf}><Glyph value="ph:file-pdf" size={14} /> PDF</button>
       </div>
 
       <div className={s.spBody}>
@@ -373,7 +382,7 @@ function SubjectPanel(p: SubjectPanelProps) {
               Cadastre aulas, provas e trabalhos com data. Eles aparecem no calendário da tela inicial, e cada aula guarda seus materiais e conceitos.
             </EmptyState>
           ) : !cls ? (
-            <div className={s.spTiles}>{classes.map(classTile)}</div>
+            <ol className={s.spRows}>{classes.map(classRow)}</ol>
           ) : (
             <div className={s.spSplit}>
               <ol className={s.spTimeline}>
