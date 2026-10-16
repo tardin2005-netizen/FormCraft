@@ -9,9 +9,10 @@ interface Props {
   hubs?: Hub[]
   reason?: string
   onRemoveFromHub?: () => void
+  onTag?: (tag: string) => void
 }
 
-export default function ToolTile({ tool, hubs, reason, onRemoveFromHub }: Props) {
+export default function ToolTile({ tool, hubs, reason, onRemoveFromHub, onTag }: Props) {
   const { isSaved, saveTool, unsaveTool } = useSavedToolsStore()
   const saved = isSaved(tool.name)
   return (
@@ -24,7 +25,7 @@ export default function ToolTile({ tool, hubs, reason, onRemoveFromHub }: Props)
         </div>
       </div>
       <div className={s.desc}>{reason ?? tool.desc}</div>
-      {tool.tags.length > 0 && <div className={s.tags}>{tool.tags.slice(0, 4).map(g => <span key={g}>#{g}</span>)}</div>}
+      {tool.tags.length > 0 && <div className={s.tags}>{tool.tags.slice(0, 4).map(g => onTag ? <button key={g} type="button" className={s.tagBtn} onClick={() => onTag(g)}>#{g}</button> : <span key={g}>#{g}</span>)}</div>}
       <div className={s.chips}>
         <span className={s.chip} style={{ color: PRICING_COLOR[tool.pricing] }}>{PRICING_LABEL[tool.pricing]}</span>
         {hubs?.map(h => <span key={h.id} className={`${s.chip} ${s.hubChip}`}><Glyph value={h.emoji} size={12} /> {h.name}</span>)}

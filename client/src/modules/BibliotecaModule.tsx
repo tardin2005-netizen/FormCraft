@@ -57,6 +57,8 @@ export default function BibliotecaModule({ hubId, isDesignHub }: { hubId: string
   const [pickerQ, setPickerQ] = useState('')
   const hubTools = useMemo(() => (hub ? toolsForHub(hub, overrides) : []), [hub, overrides])
   const [filter, setFilter] = useState('')
+  const [tag, setTag] = useState<string | null>(null)
+  const [allTags, setAllTags] = useState(false)
   const [cat, setCat] = useState<PatternCategory | 'Todas'>('Todas')
   const [detail, setDetail] = useState<DesignPattern | null>(null)
   const [editing, setEditing] = useState<DesignPattern | 'new' | null>(null)
@@ -77,7 +79,14 @@ export default function BibliotecaModule({ hubId, isDesignHub }: { hubId: string
 
   const hasQuery = filter.trim().length > 0
   const toolPool = allCatalog ? ALL_TOOLS : hubTools
-  const toolHits: Tool[] = useMemo(() => (hasQuery ? findTools(filter, toolPool) : toolPool), [filter, toolPool, hasQuery])
+  const searched: Tool[] = useMemo(() => (hasQuery ? findTools(filter, toolPool) : toolPool), [filter, toolPool, hasQuery])
+  const tagCounts = useMemo(() => {
+    const m = new Map<string, number>()
+    searched.forEach(tl => tl.tags.forEach(g => m.set(g, (m.get(g) ?? 0) + 1)))
+    return [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'pt-BR'))
+  }, [searched])
+  const activeTag = tag && tagCounts.some(([g]) => g === tag) ? tag : null
+  const toolHits: Tool[] = useMemo(() => (activeTag ? searched.filter(tl => tl.tags.includes(activeTag)) : searched), [searched, activeTag])
   const pickerList = useMemo(() => {
     const inHub = new Set(hubTools.map(x => x.name))
     return findTools(pickerQ, ALL_TOOLS.filter(x => !inHub.has(x.name)), 30)
@@ -128,7 +137,7 @@ export default function BibliotecaModule({ hubId, isDesignHub }: { hubId: string
   ) : (
     <div className={s.toolGrid}>
       {(tab === 'tudo' ? toolHits.slice(0, 3) : toolHits).map(tl => (
-        <ToolTile key={tl.name} tool={tl} onRemoveFromHub={allCatalog ? undefined : () => removeTool(hubId, tl.name)} />
+        <ToolTile key={tl.name} tool={tl} onTag={g => { setTag(g); setTab('ferramentas') }} onRemoveFromHub={allCatalog ? undefined : () => removeTool(hubId, tl.name)} />
       ))}
     </div>
   )
@@ -156,6 +165,15 @@ export default function BibliotecaModule({ hubId, isDesignHub }: { hubId: string
           value={filter}
           onChange={e => { setFilter(e.target.value); setAllCatalog(false) }}
         />
+        {tab === 'ferramentas' && tagCounts.length > 0 && (
+          <div className={s.catRow} aria-label="Filtrar por tag">
+            <button className={`${s.catChip} ${!activeTag ? s.catChipActive : ''}`} onClick={() => setTag(null)}>Todas as tags</button>
+            {(allTags ? tagCounts : tagCounts.slice(0, 14)).map(([g, n]) => (
+              <button key={g} className={`${s.catChip} ${activeTag === g ? s.catChipActive : ''}`} onClick={() => setTag(activeTag === g ? null : g)}>#{g} <span className={s.tagN}>{n}</span></button>
+            ))}
+            {tagCounts.length > 14 && <button className={s.seeAll} onClick={() => setAllTags(v => !v)}>{allTags ? 'Menos tags' : `Ver todas (${tagCounts.length})`}</button>}
+          </div>
+        )}
         {tab !== 'ferramentas' && !recommend && (
           <div className={s.catRow}>
             {(['Todas', ...usedCats] as const).map(c => (
