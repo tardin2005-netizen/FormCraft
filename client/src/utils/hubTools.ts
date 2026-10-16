@@ -34,7 +34,7 @@ export function findTools(query: string, pool: Tool[], limit = 8): Tool[] {
   const tokens = normalize(query.trim()).split(/\s+/).filter(Boolean)
   if (tokens.length === 0) return pool
   const direct = pool.filter(t => {
-    const hay = normalize(`${t.name} ${t.cat} ${t.desc}`)
+    const hay = normalize(`${t.name} ${t.cat} ${t.desc} ${(t.tags ?? []).join(' ')}`)
     const w = wordsOf(hay)
     return tokens.every(tk => tokenHit(hay, w, tk))
   })

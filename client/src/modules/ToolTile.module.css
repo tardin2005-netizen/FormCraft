@@ -29,3 +29,5 @@
 .saved { color: #f59e0b; border-color: #f59e0b; }
 .open:focus-visible, .ghost:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .tile, .open, .ghost { transition: none; } .tile:hover, .open:hover { transform: none; } }
+
+.tags { display: flex; flex-wrap: wrap; gap: 4px 8px; font-size: 11px; color: var(--text2); }

@@ -27,7 +27,7 @@ const INTENT_SYNONYMS: Record<string, string[]> = {
 }
 const GENERIC = new Set(['gera', 'cria', 'crie', 'faze', 'usar', 'ferr', 'melh', 'app', 'apps', 'onli', 'grat'])
 
-export function searchTools<T extends { name: string; cat: string; desc: string }>(query: string, tools: T[], limit = 6): T[] {
+export function searchTools<T extends { name: string; cat: string; desc: string; tags?: string[] }>(query: string, tools: T[], limit = 6): T[] {
   const tokens = normalize(query).split(/[^a-z0-9]+/).filter(t => t.length >= 3 && !STOPWORDS.has(t)).map(stem)
   if (tokens.length === 0) return []
   const groups = tokens.map(tk => {
@@ -39,7 +39,7 @@ export function searchTools<T extends { name: string; cat: string; desc: string 
 
   return tools
     .map(t => {
-      const words = normalize(`${t.name} ${t.cat} ${t.desc}`).split(/[^a-z0-9]+/)
+      const words = normalize(`${t.name} ${t.cat} ${t.desc} ${(t.tags ?? []).join(' ')}`).split(/[^a-z0-9]+/)
       const nameWords = normalize(t.name).split(/[^a-z0-9]+/)
       const hit = (alts: string[], ws: string[]) => alts.some(a => ws.some(w => w.startsWith(a)))
       let score = 0, distinctHits = 0, genericHits = 0
