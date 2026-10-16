@@ -182,3 +182,28 @@
 .seeAll { background: none; border: 0; padding: 4px 2px; font: inherit; font-size: 12.5px; font-weight: 600; color: var(--accent); cursor: pointer; }
 .seeAll:hover { text-decoration: underline; }
 .seeAll:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+/* Cabeçalho, busca e atalhos de hub */
+.titleRow { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.scopePill { padding: 3px 12px; border-radius: 20px; border: 2px solid var(--text); background: var(--accent-muted); color: var(--text); font-size: 12px; font-weight: 700; }
+.searchBar {
+  display: flex; align-items: center; gap: 10px; padding: 0 16px; height: 46px; color: var(--text2);
+  background: var(--accent-muted); border: 1.5px solid var(--border); border-radius: 12px; transition: border-color .15s;
+}
+.searchBar:focus-within { border-color: var(--accent); }
+.searchInput { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text); font: inherit; font-size: 14px; }
+.searchInput::placeholder { color: var(--text2); }
+.hubRow { display: flex; flex-wrap: wrap; gap: 10px; }
+.hubChip {
+  --hub: var(--accent);
+  display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 14px; border-radius: 12px;
+  background: color-mix(in srgb, var(--hub) 24%, var(--surface)); color: var(--text);
+  border: 2px solid var(--text); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+  transition: transform .12s, box-shadow .12s;
+}
+.hubChip span { font-size: 11.5px; font-weight: 500; color: var(--text2); }
+.hubChipAll { --hub: var(--accent); }
+.hubChip:hover { transform: translateY(-1px); }
+.hubChipOn, .hubChipOn:hover { box-shadow: 3px 3px 0 var(--text); transform: translate(-1px, -1px); }
+.hubChip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .hubChip { transition: none; } .hubChip:hover, .hubChipOn, .hubChipOn:hover { transform: none; } }

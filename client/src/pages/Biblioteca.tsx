@@ -112,21 +112,31 @@ export default function Biblioteca() {
   return (
     <div className={s.page}>
       <header className={s.topBar}>
-        <div className={s.topLeft}>
+        <div className={s.titleRow}>
           <h1 className={s.pageTitle}>Biblioteca</h1>
-          <p className={s.pageSub}>Seu acervo de padrões de design: efeitos, técnicas e referências de UI que servem para qualquer projeto. Tudo aqui entra na busca da tela inicial.</p>
+          <span className={s.scopePill}>{hubFilter === 'todos' ? 'Todos os hubs' : hubById(hubFilter)?.name}</span>
         </div>
         <button className={s.primaryBtn} onClick={() => setEditing('new')}>+ Padrão de Design</button>
       </header>
 
+      <label className={s.searchBar}>
+        <Glyph value="ph:magnifying-glass" size={16} />
+        <input
+          className={s.searchInput}
+          placeholder="Buscar padrões e ferramentas… ou descreva: “preciso editar um vídeo”"
+          value={filter}
+          onChange={e => setFilter(e.target.value)}
+        />
+      </label>
+
       <div className={s.toolbar}>
-        <div className={s.catRow}>
-          <button className={`${s.catChip} ${hubFilter === 'todos' ? s.catChipActive : ''}`} onClick={() => { setHubFilter('todos'); setCat('Todas') }}>
-            Todos os hubs ({patterns.length + ALL_TOOLS.length})
+        <div className={s.hubRow}>
+          <button className={`${s.hubChip} ${s.hubChipAll} ${hubFilter === 'todos' ? s.hubChipOn : ''}`} onClick={() => { setHubFilter('todos'); setCat('Todas') }}>
+            Todos os hubs <span>{patterns.length + ALL_TOOLS.length} itens</span>
           </button>
           {hubsWithPatterns.map(h => (
-            <button key={h.id} className={`${s.catChip} ${hubFilter === h.id ? s.catChipActive : ''}`} onClick={() => { setHubFilter(h.id); setCat('Todas') }}>
-              <Glyph value={h.emoji} size={13} /> {h.name} ({countOf(h)})
+            <button key={h.id} className={`${s.hubChip} ${hubFilter === h.id ? s.hubChipOn : ''}`} style={{ ['--hub' as string]: h.color }} onClick={() => { setHubFilter(h.id); setCat('Todas') }}>
+              <Glyph value={h.emoji} size={14} /> {h.name} <span>{countOf(h)} itens</span>
             </button>
           ))}
         </div>
@@ -135,12 +145,6 @@ export default function Biblioteca() {
             <button key={k} role="tab" aria-selected={tab === k} className={`${s.tab} ${tab === k ? s.tabActive : ''}`} onClick={() => setTab(k)}>{label}</button>
           ))}
         </div>
-        <input
-          className={s.filterInput}
-          placeholder="Busque ou descreva o que precisa: “preciso editar um vídeo”…"
-          value={filter}
-          onChange={e => setFilter(e.target.value)}
-        />
         {tab !== 'ferramentas' && !recommend && (
           <div className={s.catRow}>
             {(['Todas', ...usedCats] as const).map(c => (
