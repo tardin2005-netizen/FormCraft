@@ -6,7 +6,7 @@ import DeleteBtn from './DeleteBtn'
 import Glyph from '../components/Glyph'
 import ItemActions from './ItemActions'
 
-type SnippetCategory = 'Mensagem' | 'Endereço' | 'Preço' | 'Procedimento' | 'Outro'
+type SnippetCategory = 'Mensagem' | 'Endereço' | 'Preço' | 'Procedimento' | 'Servidor' | 'Outro'
 
 interface SnippetData {
   title: string
@@ -20,10 +20,13 @@ const CATEGORY_COLOR: Record<SnippetCategory, { bg: string; text: string }> = {
   'Endereço':    { bg: '#3ecf8e22', text: '#3ecf8e' },
   'Preço':       { bg: '#f59e0b22', text: '#f59e0b' },
   'Procedimento':{ bg: '#4f8ef722', text: '#4f8ef7' },
+  'Servidor':    { bg: '#06b6d422', text: '#0891b2' },
   'Outro':       { bg: '#6b728022', text: '#6b7280' },
 }
 
-const CATEGORIES: SnippetCategory[] = ['Mensagem', 'Endereço', 'Preço', 'Procedimento', 'Outro']
+const CATEGORIES: SnippetCategory[] = ['Mensagem', 'Endereço', 'Preço', 'Procedimento', 'Servidor', 'Outro']
+
+const SERVER_TEMPLATE = 'Endereço: \nUsuário: \nGateway: \nPara que serve: \nSenha: guardada no gerenciador de senhas'
 
 const EMPTY_FORM: SnippetData = { title: '', body: '', category: 'Outro', tags: '' }
 
@@ -237,17 +240,19 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
                 <select
                   className={s.input}
                   value={form.category}
-                  onChange={e => setForm(p => ({ ...p, category: e.target.value as SnippetCategory }))}
+                  onChange={e => setForm(p => ({ ...p, category: e.target.value as SnippetCategory, body: !p.body.trim() && e.target.value === 'Servidor' ? SERVER_TEMPLATE : p.body }))}
                 >
                   <option>Mensagem</option>
                   <option>Endereço</option>
                   <option>Preço</option>
                   <option>Procedimento</option>
+                  <option>Servidor</option>
                   <option>Outro</option>
                 </select>
               </div>
               <div className={`${s.formGroup} ${s.fullWidth}`}>
                 <label className={s.label}>Conteúdo *</label>
+                {form.category === 'Servidor' && <span className={s.hint}>Não guarde senhas aqui: escreva só onde ela está (gerenciador de senhas).</span>}
                 <textarea
                   className={s.textarea}
                   placeholder="Cole o texto, endereço, tabela ou mensagem aqui…"

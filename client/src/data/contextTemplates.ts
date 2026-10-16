@@ -121,6 +121,7 @@ export const CONTEXT_TEMPLATES: ContextTemplate[] = [
       { type: 'overview',        name: 'Visão geral',    icon: '⊞', description: 'Resumo do workspace',           layout: 'grid',  suggested: true },
       { type: 'tools-db',        name: 'Ferramentas',    icon: '◉', description: 'Ferramentas e softwares',       layout: 'grid',  suggested: true },
       { type: 'scripts',         name: 'Scripts',        icon: '◈', description: 'Scripts e automações',          layout: 'list',  suggested: true },
+      { type: 'snippets',        name: 'Snippets de servidores', icon: '◧', description: 'Servidores, acessos remotos e comandos', layout: 'list', suggested: true },
       { type: 'troubleshooting', name: 'Troubleshooting',icon: '◆', description: 'Problemas e soluções',          layout: 'table', suggested: true },
       { type: 'documentation',   name: 'Documentação',   icon: '◻', description: 'Docs e referências técnicas',   layout: 'list',  suggested: true },
       { type: 'notes',           name: 'Notas',          icon: '◎', description: 'Notas técnicas',                layout: 'list',  suggested: false },
