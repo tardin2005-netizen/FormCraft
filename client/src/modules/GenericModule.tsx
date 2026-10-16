@@ -4,6 +4,10 @@ import s from './GenericModule.module.css'
 import DeleteBtn from './DeleteBtn'
 import Glyph from '../components/Glyph'
 import ItemActions from './ItemActions'
+import { GridCard } from '../components/LinkCard'
+import ib from '../pages/Inbox.module.css'
+import { hubLinkToSaved, savedPatchToHubLink } from '../utils/hubLinks'
+import type { ContentItem } from '../store/contentItemsStore'
 
 interface NoteData {
   title: string
@@ -291,14 +295,15 @@ export default function GenericModule({ module, workspaceId, items, addItem, upd
           {pinnedItems.length > 0 && (
             <>
               <div className={s.sectionLabel}><Glyph value="ph:push-pin" size={13} /> Fixados</div>
-              <div className={s.linkGrid}>
+              <div className={ib.gridView}>
                 {pinnedItems.map(item => (
-                  <LinkCard
+                  <GridCard
                     key={item.id}
-                    item={item}
-                    onEdit={() => openEdit(item.id)}
+                    item={hubLinkToSaved(item as unknown as ContentItem)}
                     onDelete={() => removeItem(item.id)}
-                    onToggleStar={() => toggleStar(item.id)}
+                    onUpdate={patch => updateItem(item.id, savedPatchToHubLink(item as unknown as ContentItem, patch))}
+                    pinned={item.starred}
+                    onTogglePin={() => toggleStar(item.id)}
                   />
                 ))}
               </div>
@@ -307,14 +312,15 @@ export default function GenericModule({ module, workspaceId, items, addItem, upd
           {otherItems.length > 0 && (
             <>
               {pinnedItems.length > 0 && <div className={s.sectionLabel}>Outros</div>}
-              <div className={s.linkGrid}>
+              <div className={ib.gridView}>
                 {otherItems.map(item => (
-                  <LinkCard
+                  <GridCard
                     key={item.id}
-                    item={item}
-                    onEdit={() => openEdit(item.id)}
+                    item={hubLinkToSaved(item as unknown as ContentItem)}
                     onDelete={() => removeItem(item.id)}
-                    onToggleStar={() => toggleStar(item.id)}
+                    onUpdate={patch => updateItem(item.id, savedPatchToHubLink(item as unknown as ContentItem, patch))}
+                    pinned={item.starred}
+                    onTogglePin={() => toggleStar(item.id)}
                   />
                 ))}
               </div>

@@ -264,13 +264,16 @@ export function useDeleteConfirm(onDelete: () => void) {
 }
 
 /* ── Grid card ── */
-export function GridCard({ item, onDelete, onUpdate, onTagSearch, origin }: {
+export function GridCard({ item, onDelete, onUpdate, onTagSearch, origin, pinned, onTogglePin }: {
   item: SavedLink
   onDelete: () => void
   onUpdate?: (patch: Partial<Omit<SavedLink, 'id' | 'savedAt'>>) => void
   onTagSearch?: (t: string) => void
   /** Where the link lives when shown outside its own page, e.g. "Área · Design". */
   origin?: string
+  /** Só nos hubs: mostra o botão de fixar. */
+  pinned?: boolean
+  onTogglePin?: () => void
 }) {
   const [hovered,   setHovered]   = useState(false)
   const [lightbox,  setLightbox]  = useState(false)
@@ -338,6 +341,13 @@ export function GridCard({ item, onDelete, onUpdate, onTagSearch, origin }: {
           <div className={s.cardActions}>
             <span className={s.cardTime}>{origin ? <span className={s.cardOrigin} title={origin}>{origin}</span> : timeAgo(item.savedAt)}</span>
             <div className={s.cardBtns}>
+              {onTogglePin && (
+                <button
+                  className={s.cardActionBtn}
+                  title={pinned ? 'Desafixar' : 'Fixar'}
+                  onClick={e => { e.preventDefault(); e.stopPropagation(); onTogglePin() }}
+                ><Glyph value="ph:push-pin" size={13} weight={pinned ? 'fill' : 'bold'} /></button>
+              )}
               {isExpandable && item.desc && (
                 <button
                   className={s.cardActionBtn}

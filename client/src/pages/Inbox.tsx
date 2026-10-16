@@ -4,6 +4,9 @@ import { Inbox as InboxIcon, Search } from 'lucide-react'
 import { useOutletContext } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useLinksStore } from '../store/linksStore'
+import { useContentItemsStore } from '../store/contentItemsStore'
+import { useWorkspacesStore } from '../store/workspacesStore'
+import { isHubLink, hubLinkToSaved, savedPatchToHubLink } from '../utils/hubLinks'
 import type { SavedLink } from '../store/linksStore'
 import s from './Inbox.module.css'
 import { GridCard, FaviconImg, TypeBadge, TagChip, FullContentModal, useDeleteConfirm, timeAgo, TYPE_COLOR } from '../components/LinkCard'
@@ -132,7 +135,22 @@ function CompactRow({ item, onDelete }: { item: SavedLink; onDelete: () => void 
 export default function Inbox() {
   const { onOpenSaveLink, onOpenSearch } = useOutletContext<OutletCtx>()
 
-  const { links, removeLink, updateLink } = useLinksStore()
+  const { links: inboxLinks, removeLink, updateLink } = useLinksStore()
+  const contentItems = useContentItemsStore(st => st.items)
+  const { updateItem, removeItem } = useContentItemsStore.getState()
+  const workspaces = useWorkspacesStore(st => st.workspaces)
+
+  // Links guardados em cada hub aparecem aqui também; editar ou apagar age no item do hub.
+  const hubItems = contentItems.filter(isHubLink)
+  const hubIds = new Set(hubItems.map(i => i.id))
+  const origins = new Map(hubItems.map(i => [i.id, workspaces.find(w => w.id === i.workspaceId)?.name ?? 'Hub']))
+  const links = [...inboxLinks, ...hubItems.map(hubLinkToSaved)].sort((a, b) => b.savedAt - a.savedAt)
+  const remove = (id: string) => (hubIds.has(id) ? removeItem(id) : removeLink(id))
+  const update = (id: string, patch: Parameters<typeof updateLink>[1]) => {
+    const hubItem = hubItems.find(i => i.id === id)
+    if (hubItem) updateItem(id, savedPatchToHubLink(hubItem, patch))
+    else updateLink(id, patch)
+  }
   const [view,   setView]   = useState<View>('grid')
   const [filter, setFilter] = useState<Filter>('todos')
   const [search, setSearch] = useState('')
@@ -232,7 +250,7 @@ export default function Inbox() {
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               {filtered.map((item, i) => (
                 <motion.div key={item.id} transition={{ delay: i * .04 }} style={{ height: '100%' }}>
-                  <GridCard item={item} onDelete={() => removeLink(item.id)} onUpdate={patch => updateLink(item.id, patch)} onTagSearch={onOpenSearch} />
+                  <GridCard item={item} onDelete={() => remove(item.id)} onUpdate={patch => update(item.id, patch)} onTagSearch={onOpenSearch} origin={origins.has(item.id) ? `Hub · ${origins.get(item.id)}` : undefined} />
                 </motion.div>
               ))}
             </motion.div>
@@ -242,7 +260,7 @@ export default function Inbox() {
             <motion.div className={s.listView} key="list"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               {filtered.map(item => (
-                <ListRow key={item.id} item={item} onDelete={() => removeLink(item.id)} onTagSearch={onOpenSearch} />
+                <ListRow key={item.id} item={item} onDelete={() => remove(item.id)} onTagSearch={onOpenSearch} />
               ))}
             </motion.div>
           )}
@@ -254,7 +272,7 @@ export default function Inbox() {
                 <span>tipo</span><span>título</span><span>tags</span><span>quando</span>
               </div>
               {filtered.map(item => (
-                <CompactRow key={item.id} item={item} onDelete={() => removeLink(item.id)} />
+                <CompactRow key={item.id} item={item} onDelete={() => remove(item.id)} />
               ))}
             </motion.div>
           )}
