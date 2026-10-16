@@ -27,6 +27,8 @@ const WD_SHORT = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB']
 type Tone = 'red' | 'orange' | 'blue' | 'purple' | 'slate'
 
 function urgencyOf(diff: number, kind: string, eow: number): { tone: Tone; label: string } {
+  // Aula que já passou não é pendência: o app não tem como marcar presença, então não fica 'atrasada'.
+  if (diff < 0 && (kind === 'aula' || kind === 'extra')) return { tone: 'slate', label: 'JÁ PASSOU' }
   if (diff < 0) return { tone: 'red', label: 'ATRASADO' }
   if (diff === 0) return { tone: 'red', label: 'URGENTE · HOJE' }
   if (kind === 'aula' || kind === 'extra') return { tone: 'slate', label: diff <= eow ? 'ESSA SEMANA' : 'PRÓXIMA SEMANA' }
@@ -211,7 +213,8 @@ export default function Upcoming() {
                   ? `TAREFA · URGÊNCIA ${(c as TaskItem).urgency === 'urgent' ? 'URGENTE' : (c as TaskItem).urgency === 'high' ? 'ALTA' : (c as TaskItem).urgency === 'medium' ? 'MÉDIA' : 'BAIXA'}`
                   : subjectName((c as ClassItem).subjectId).toUpperCase()
               const when = isGcal && (c as GCalItem).startTime ? ` · ${(c as GCalItem).startTime}` : ''
-              const big = diff < 0 ? 'Atrasado' : diff === 0 ? 'Hoje' : diff === 1 ? 'Amanhã' : `${diff} dias`
+              const past = diff < 0 && (c.type === 'aula' || c.type === 'extra')
+              const big = past ? 'Passou' : diff < 0 ? 'Atrasado' : diff === 0 ? 'Hoje' : diff === 1 ? 'Amanhã' : `${diff} dias`
               const small = diff < 0 ? `há ${-diff} ${-diff === 1 ? 'dia' : 'dias'}` : diff === 0 ? 'último dia' : diff === 1 ? 'prazo' : 'restantes'
               return (
                 <li key={c.id}>
