@@ -13,6 +13,9 @@ const TYPE_LABEL: Record<ClassItem['type'] | 'gcal' | 'task', string> = {
 const WEEKDAYS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
 const MONTHS = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro']
 const WINDOW_DAYS = 14
+/** Entregas (ADOs, apresentações, provas) aparecem com mais antecedência que o resto. */
+const DELIVERY_DAYS = 60
+const isDelivery = (c: { type: string }) => c.type === 'trabalho' || c.type === 'prova'
 
 const pad = (n: number) => String(n).padStart(2, '0')
 const keyOf = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
@@ -109,7 +112,13 @@ export default function Upcoming() {
   const list = useMemo(() => {
     if (picked) return byDay.get(picked) ?? []
     return allDated
-      .filter(c => { const d = dayDiff(parseKey(c.date), today); return (d >= 0 && d <= WINDOW_DAYS) || (c.type === 'task' && d < 0 && d >= -30) })
+      .filter(c => {
+        const d = dayDiff(parseKey(c.date), today)
+        if (isDelivery(c)) return d >= 0 && d <= DELIVERY_DAYS
+        if (c.type === 'task') return (d >= 0 && d <= WINDOW_DAYS) || (d < 0 && d >= -30)
+        if (c.type === 'gcal') return d >= 0 && d <= WINDOW_DAYS
+        return false // aulas e extras ficam no calendário, não nas pendências
+      })
       .sort((a, b) => a.date.localeCompare(b.date) || (a.type === 'prova' ? -1 : 1))
   }, [picked, byDay, allDated, today])
 
@@ -153,7 +162,7 @@ export default function Upcoming() {
             <p className={s.pzSub}>
               {picked
                 ? `${list.length} ${list.length === 1 ? 'compromisso' : 'compromissos'} neste dia`
-                : `${list.length} ${list.length === 1 ? 'compromisso' : 'compromissos'} nos próximos ${WINDOW_DAYS} dias`}
+                : `${list.length} ${list.length === 1 ? 'pendência' : 'pendências'} · ADOs, apresentações, provas e tarefas`}
               {' · '}hoje é {WD_SHORT[today.getDay()].toLowerCase()}, {pad(today.getDate())}/{pad(today.getMonth() + 1)}
             </p>
             {!picked && nextExam && (
@@ -174,7 +183,7 @@ export default function Upcoming() {
                 {connectingGcal ? 'Conectando…' : tokenExpired ? 'Reconectar Google Agenda' : 'Conectar Google Agenda'}
               </button>
             )}
-            {picked && <button className={s.linkBtn} onClick={() => setPicked(null)}>Ver próximos {WINDOW_DAYS} dias</button>}
+            {picked && <button className={s.linkBtn} onClick={() => setPicked(null)}>Ver pendências</button>}
           </div>
         </div>
 
@@ -182,8 +191,8 @@ export default function Upcoming() {
           <div className={s.upEmpty}>
             <CalendarDays size={20} aria-hidden="true" />
             <div>
-              <p><b>{picked ? 'Nada marcado neste dia.' : 'Nenhuma aula, prova, entrega ou tarefa nos próximos 14 dias.'}</b></p>
-              <p>As datas vêm das aulas cadastradas no hub e das tarefas com prazo definido.</p>
+              <p><b>{picked ? 'Nada marcado neste dia.' : 'Nenhuma entrega, prova ou tarefa pendente.'}</b></p>
+              <p>Cadastre ADOs, apresentações e provas como Trabalho ou Prova na matéria. As aulas continuam no calendário ao lado.</p>
               {facHub && !picked && <button className={s.ghostBtn} onClick={() => navigate(`/hub/${facHub.id}`)}>Abrir {facHub.name}</button>}
             </div>
           </div>
