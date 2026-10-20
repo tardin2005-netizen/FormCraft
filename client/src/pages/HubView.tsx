@@ -1462,13 +1462,15 @@ function ChatsView({ hubId }: { hubId: string }) {
   )
 }
 
+import { GRUPO_LIVE_TAB } from '../hooks/useSeedGrupoLive'
+
 /* ─── Main HubView ─── */
 export default function HubView() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { hubs, removeHub } = useHubsStore()
   const hub = hubs.find(h => h.id === id)
-  const [activeTab, setActiveTab] = useState<'content' | 'chats'>('content')
+  const [activeTab, setActiveTab] = useState<'content' | 'live' | 'chats'>('content')
 
   if (!hub) {
     return (
@@ -1495,6 +1497,12 @@ export default function HubView() {
               className={`${s.hubTab} ${activeTab === 'content' ? s.hubTabActive : ''}`}
               onClick={() => setActiveTab('content')}
             ><Glyph value="ph:folder" size={14} /> Conteúdo</button>
+            {hub.type === 'faculdade' && (
+              <button
+                className={`${s.hubTab} ${activeTab === 'live' ? s.hubTabActive : ''}`}
+                onClick={() => setActiveTab('live')}
+              ><Glyph value="ph:clipboard" size={14} /> Grupo Live</button>
+            )}
             <button
               className={`${s.hubTab} ${activeTab === 'chats' ? s.hubTabActive : ''}`}
               onClick={() => setActiveTab('chats')}
@@ -1514,6 +1522,8 @@ export default function HubView() {
 
       {activeTab === 'chats' ? (
         <ChatsView hubId={hub.id} />
+      ) : activeTab === 'live' && hub.type === 'faculdade' ? (
+        <HubModuleTab hubId={hub.id} tabKey={GRUPO_LIVE_TAB} type="snippets" layout="grid" />
       ) : hub.type === 'faculdade' ? (
         <FaculdadeView hubId={hub.id} />
       ) : (

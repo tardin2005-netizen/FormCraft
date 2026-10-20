@@ -6,7 +6,7 @@ import DeleteBtn from './DeleteBtn'
 import Glyph from '../components/Glyph'
 import ItemActions from './ItemActions'
 
-type SnippetCategory = 'Mensagem' | 'Endereço' | 'Preço' | 'Procedimento' | 'Servidor' | 'Outro'
+type SnippetCategory = 'Mensagem' | 'Endereço' | 'Preço' | 'Procedimento' | 'Servidor' | 'Acesso' | 'Outro'
 
 interface SnippetData {
   title: string
@@ -21,10 +21,11 @@ const CATEGORY_COLOR: Record<SnippetCategory, { bg: string; text: string }> = {
   'Preço':       { bg: '#f59e0b22', text: '#f59e0b' },
   'Procedimento':{ bg: '#4f8ef722', text: '#4f8ef7' },
   'Servidor':    { bg: '#06b6d422', text: '#0891b2' },
+  'Acesso':      { bg: '#ec489922', text: '#db2777' },
   'Outro':       { bg: '#6b728022', text: '#6b7280' },
 }
 
-const CATEGORIES: SnippetCategory[] = ['Mensagem', 'Endereço', 'Preço', 'Procedimento', 'Servidor', 'Outro']
+const CATEGORIES: SnippetCategory[] = ['Mensagem', 'Endereço', 'Preço', 'Procedimento', 'Servidor', 'Acesso', 'Outro']
 
 const SERVER_TEMPLATE = 'Endereço: \nUsuário: \nGateway: \nPara que serve: \nSenha: guardada no gerenciador de senhas'
 
@@ -247,6 +248,7 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
                   <option>Preço</option>
                   <option>Procedimento</option>
                   <option>Servidor</option>
+                  <option>Acesso</option>
                   <option>Outro</option>
                 </select>
               </div>
