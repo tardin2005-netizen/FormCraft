@@ -1470,7 +1470,7 @@ function GrupoLiveView({ hubId }: { hubId: string }) {
   const [sub, setSub] = useState<'snippets' | 'logo' | 'perfil'>('snippets')
   const subs = [['snippets', 'Snippets'], ['logo', 'Logo Live Star'], ['perfil', 'Fotos de perfil']] as const
   return (
-    <div>
+    <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '16px 20px 40px' }}>
       <div style={{ display: 'flex', gap: 8, marginBottom: 18, flexWrap: 'wrap' }}>
         {subs.map(([k, label]) => (
           <button key={k} onClick={() => setSub(k)} style={{
