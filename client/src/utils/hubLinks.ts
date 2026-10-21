@@ -1,7 +1,7 @@
 import type { SavedLink } from '../store/linksStore'
 import type { ContentItem } from '../store/contentItemsStore'
 
-type LinkData = { title?: string; content?: string; color?: string; tags?: string }
+export type LinkData = { title?: string; content?: string; color?: string; tags?: string; desc?: string; ogImage?: string; metaTried?: boolean }
 
 const normalizeUrl = (url: string) => (!url ? '' : url.startsWith('http') ? url : `https://${url}`)
 const domainOf = (url: string) => {
@@ -21,7 +21,8 @@ export function hubLinkToSaved(item: ContentItem): SavedLink {
     id: item.id,
     url: url || '#',
     title: d.title || domain,
-    desc: '',
+    desc: d.desc || '',
+    ogImage: d.ogImage || undefined,
     favicon: domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=64` : '',
     areaId: '',
     tags: item.tags,
@@ -36,7 +37,7 @@ export function savedPatchToHubLink(item: ContentItem, patch: Partial<Omit<Saved
   const d = item.data as LinkData
   const tags = (patch.tags ?? item.tags).map(t => t.replace(/^#+/, ''))
   return {
-    data: { ...d, title: patch.title ?? d.title ?? '', content: patch.url ?? d.content ?? '' },
+    data: { ...d, title: patch.title ?? d.title ?? '', content: patch.url ?? d.content ?? '', desc: patch.desc ?? d.desc ?? '' },
     tags,
   }
 }

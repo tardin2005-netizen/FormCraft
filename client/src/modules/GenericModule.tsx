@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { ModuleProps } from './moduleProps'
 import s from './GenericModule.module.css'
 import DeleteBtn from './DeleteBtn'
@@ -6,7 +6,8 @@ import Glyph from '../components/Glyph'
 import ItemActions from './ItemActions'
 import { GridCard } from '../components/LinkCard'
 import ib from '../pages/Inbox.module.css'
-import { hubLinkToSaved, savedPatchToHubLink } from '../utils/hubLinks'
+import { hubLinkToSaved, savedPatchToHubLink, type LinkData } from '../utils/hubLinks'
+import { analyzeLink } from '../utils/analyzeLink'
 import type { ContentItem } from '../store/contentItemsStore'
 
 interface NoteData {
@@ -237,15 +238,34 @@ export default function GenericModule({ module, workspaceId, items, addItem, upd
     })
   }
 
+  const looksLikeUrl = (v: string) => !v || /^https?:\/\//i.test(v) || /^[\w-]+(\.[\w-]+)+\/?$/.test(v)
+
+  /** Busca título, descrição e imagem da página (como o Inbox) e completa o link. */
+  async function enrichLink(id: string, current: LinkData) {
+    const url = normalizeUrl(current.content || current.title || '')
+    const meta = await analyzeLink(url)
+    updateItem(id, {
+      data: {
+        ...current,
+        title: meta?.title && looksLikeUrl(current.title || '') ? meta.title : current.title || '',
+        desc: current.desc || meta?.desc || '',
+        ogImage: meta?.image || current.ogImage || '',
+        metaTried: !!meta,
+      } as unknown as Record<string, unknown>,
+    })
+  }
+
   function handleAddLink(url: string, title: string) {
-    addItem({
+    const data: LinkData = { title, content: url, color: '', tags: '' }
+    const created = addItem({
       workspaceId,
       moduleId: module.id,
       contentType: 'links' as 'notes',
-      data: { title, content: url, color: '', tags: '' } as unknown as Record<string, unknown>,
+      data: data as unknown as Record<string, unknown>,
       tags: [],
       starred: false,
     })
+    if (created?.id) void enrichLink(created.id, data)
   }
 
   function handleEdit(id: string, data: NoteData) {
@@ -256,11 +276,27 @@ export default function GenericModule({ module, workspaceId, items, addItem, upd
   }
 
   function handleEditLink(id: string, url: string, title: string) {
-    updateItem(id, {
-      data: { title, content: url, color: '', tags: '' } as unknown as Record<string, unknown>,
-      tags: [],
-    })
+    const prev = (items.find(i => i.id === id)?.data ?? {}) as LinkData
+    const urlChanged = normalizeUrl(prev.content || '') !== normalizeUrl(url)
+    const data: LinkData = urlChanged
+      ? { title, content: url, color: '', tags: '' }
+      : { ...prev, title, content: url }
+    updateItem(id, { data: data as unknown as Record<string, unknown>, tags: [] })
+    if (urlChanged) void enrichLink(id, data)
   }
+
+  // Links antigos (só URL + título): completa uma vez com descrição e imagem, em segundo plano.
+  const triedRef = useRef(new Set<string>())
+  useEffect(() => {
+    if (!isLinks) return
+    const pending = items.filter(i => !(i.data as LinkData).metaTried && !triedRef.current.has(i.id))
+    if (pending.length === 0) return
+    pending.forEach(i => triedRef.current.add(i.id))
+    ;(async () => {
+      for (const i of pending) await enrichLink(i.id, i.data as LinkData)
+    })()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, isLinks])
 
   function openEdit(id: string) { setEditItem(id) }
 
