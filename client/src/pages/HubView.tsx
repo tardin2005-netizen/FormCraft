@@ -21,6 +21,7 @@ import HubGenericModule from '../modules/GenericModule'
 import ReferenceGallery from '../modules/ReferenceGallery'
 import KeepNotes from '../modules/KeepNotes'
 import SnippetsModule from '../modules/SnippetsModule'
+import { LiveStarLogos, LiveStarAvatars } from '../modules/LiveStarLogos'
 import BibliotecaModule from '../modules/BibliotecaModule'
 import { useLibraryStore, isDesignHubName } from '../store/libraryStore'
 import { useHubToolsStore } from '../store/hubToolsStore'
@@ -1464,6 +1465,28 @@ function ChatsView({ hubId }: { hubId: string }) {
 
 import { GRUPO_LIVE_TAB } from '../hooks/useSeedGrupoLive'
 
+/* ─── Grupo Live (snippets + logo Live Star) ─── */
+function GrupoLiveView({ hubId }: { hubId: string }) {
+  const [sub, setSub] = useState<'snippets' | 'logo' | 'perfil'>('snippets')
+  const subs = [['snippets', 'Snippets'], ['logo', 'Logo Live Star'], ['perfil', 'Fotos de perfil']] as const
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 18, flexWrap: 'wrap' }}>
+        {subs.map(([k, label]) => (
+          <button key={k} onClick={() => setSub(k)} style={{
+            padding: '7px 16px', borderRadius: 99, fontSize: 13, fontWeight: 500, cursor: 'pointer',
+            border: '1px solid ' + (sub === k ? 'var(--accent)' : 'var(--border)'),
+            background: sub === k ? 'var(--accent)' : 'transparent', color: sub === k ? '#fff' : 'var(--text2)',
+          }}>{label}</button>
+        ))}
+      </div>
+      {sub === 'snippets' && <HubModuleTab hubId={hubId} tabKey={GRUPO_LIVE_TAB} type="snippets" layout="grid" />}
+      {sub === 'logo' && <LiveStarLogos />}
+      {sub === 'perfil' && <LiveStarAvatars />}
+    </div>
+  )
+}
+
 /* ─── Main HubView ─── */
 export default function HubView() {
   const { id } = useParams<{ id: string }>()
@@ -1523,7 +1546,7 @@ export default function HubView() {
       {activeTab === 'chats' ? (
         <ChatsView hubId={hub.id} />
       ) : activeTab === 'live' && hub.type === 'faculdade' ? (
-        <HubModuleTab hubId={hub.id} tabKey={GRUPO_LIVE_TAB} type="snippets" layout="grid" />
+        <GrupoLiveView hubId={hub.id} />
       ) : hub.type === 'faculdade' ? (
         <FaculdadeView hubId={hub.id} />
       ) : (
