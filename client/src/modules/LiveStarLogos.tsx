@@ -5,13 +5,14 @@ import Glyph from '../components/Glyph'
 const BASE = `${import.meta.env.BASE_URL}livstar/`
 const file = (n: string) => `${BASE}livstar-${n}.png`
 
-type Bg = 'creme' | 'branco' | 'checker' | 'escuro'
+type Bg = 'creme' | 'branco' | 'checker' | 'checkerDark' | 'escuro'
 interface Asset { name: string; tag: string; slug: string; bg: Bg; square?: boolean }
 
 const BG_STYLE: Record<Bg, React.CSSProperties> = {
   creme: { background: '#f8f4ef' },
   branco: { background: '#fff' },
   checker: {},
+  checkerDark: {},
   escuro: { background: '#7a4a00' },
 }
 
@@ -21,12 +22,14 @@ const LOGO_SECTIONS: { title: string; items: Asset[] }[] = [
     { name: 'Fundo branco', tag: 'PNG', slug: 'logo-estrela-fundo-branco', bg: 'branco' },
     { name: 'Fundo transparente', tag: 'PNG', slug: 'logo-estrela-transparente', bg: 'checker' },
     { name: 'Versão clara (fundo marrom)', tag: 'PNG', slug: 'logo-estrela-clara-para-fundo-escuro', bg: 'escuro' },
+    { name: 'Branca · fundo transparente', tag: 'PNG', slug: 'logo-estrela-branca-transparente', bg: 'checkerDark' },
   ] },
   { title: 'Logotipo (nome com a estrela e as faixas)', items: [
     { name: 'Fundo original', tag: 'PNG', slug: 'logotipo-fundo-creme', bg: 'creme' },
     { name: 'Fundo branco', tag: 'PNG', slug: 'logotipo-fundo-branco', bg: 'branco' },
     { name: 'Fundo transparente', tag: 'PNG', slug: 'logotipo-transparente', bg: 'checker' },
     { name: 'Versão clara (fundo marrom)', tag: 'PNG', slug: 'logotipo-claro-para-fundo-escuro', bg: 'escuro' },
+    { name: 'Branca · fundo transparente', tag: 'PNG', slug: 'logotipo-branco-transparente', bg: 'checkerDark' },
   ] },
   { title: 'Outros elementos', items: [
     { name: 'Só o nome', tag: 'PNG · fundo original', slug: 'so-nome-fundo-creme', bg: 'creme' },
@@ -51,7 +54,7 @@ function AssetCard({ a }: { a: Asset }) {
   const url = file(a.slug)
   return (
     <div className={s.card}>
-      <div className={`${s.preview} ${a.square ? s.square : ''} ${a.bg === 'checker' ? s.checker : ''}`} style={BG_STYLE[a.bg]}>
+      <div className={`${s.preview} ${a.square ? s.square : ''} ${a.bg === 'checker' ? s.checker : a.bg === 'checkerDark' ? s.checkerDark : ''}`} style={BG_STYLE[a.bg]}>
         <img src={url} alt={a.name} loading="lazy" />
         {a.square && <span className={s.ring} />}
       </div>
