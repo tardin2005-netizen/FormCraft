@@ -43,7 +43,14 @@ export function useSeedProcedimentosTI() {
     if (!user || localStorage.getItem(SEED_KEY)) return
     // Espera o Firestore carregar (mesmo critério do hub da faculdade)
     if (subjects.filter(x => x.hubId === FACULDADE_HUB_ID).length < 15) return
-    const ti = hubs.find(h => /(^|[^a-zà-ú])ti([^a-zà-ú]|$)/i.test(h.name))
+    // O hub de TI é o que já tem snippets de Servidor/Procedimento; se não achar, tenta pelo nome.
+    const hasItServers = (hubId: string) => items.some(i => {
+      if (i.moduleId !== `hub-${hubId}-snippets`) return false
+      const c = (i.data as { category?: string }).category
+      return c === 'Servidor' || c === 'Procedimento'
+    })
+    const ti = hubs.find(h => hasItServers(h.id))
+      ?? hubs.find(h => /(^|[^a-zà-ú])ti([^a-zà-ú]|$)|tecnologia|suporte|infra|inform[aá]tica|sistemas/i.test(h.name))
     if (!ti) return
     const moduleId = `hub-${ti.id}-snippets`
     const already = items.some(i => i.moduleId === moduleId && (i.data as { title?: string }).title === 'Backup de usuário Google')
