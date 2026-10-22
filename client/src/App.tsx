@@ -5,6 +5,7 @@ import FirestoreSync from './components/FirestoreSync'
 import ErrorBoundary from './components/ErrorBoundary'
 import { useMigrateFaculdadeHub } from './hooks/useMigrateFaculdadeHub'
 import { useSeedGrupoLive } from './hooks/useSeedGrupoLive'
+import { useSeedProcedimentosTI } from './hooks/useSeedProcedimentosTI'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Inbox from './pages/Inbox'
@@ -37,6 +38,7 @@ function AppRoutes() {
   const { user, loading } = useAuth()
   useMigrateFaculdadeHub()
   useSeedGrupoLive()
+  useSeedProcedimentosTI()
 
   if (loading) return <LoadingScreen />
 

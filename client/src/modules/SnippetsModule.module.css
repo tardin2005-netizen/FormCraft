@@ -188,3 +188,26 @@
   padding: 16px 20px;
   border-top: 1px solid var(--border);
 }
+
+.fileBtn {
+  display: flex; align-items: center; gap: 6px; justify-content: center;
+  padding: 8px 0; margin-top: auto; width: 100%;
+  background: var(--surface2); color: var(--text);
+  border: 1px solid var(--border); border-radius: 9px;
+  font-size: 12.5px; font-weight: 600; text-decoration: none; cursor: pointer;
+}
+.fileBtn:hover { border-color: var(--accent); color: var(--accent); }
+.fileBtn + .copyBtn { margin-top: 0; }
+.fileRow { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text); margin-bottom: 6px; }
+.fileRow a { color: var(--accent); }
+.fileRow button { background: none; border: none; color: var(--text2); cursor: pointer; font-size: 12px; text-decoration: underline; }
+
+.fileActions { display: flex; gap: 8px; margin-top: auto; }
+.fileActions .fileBtn { margin-top: 0; flex: 1; font-family: inherit; }
+.fileActions + .copyBtn { margin-top: 0; }
+.viewer { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; width: min(1100px, 94vw); height: 90vh; display: flex; flex-direction: column; overflow: hidden; }
+.viewerBar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+.viewerTitle { flex: 1; font-weight: 700; font-size: 14px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.viewerBtn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 12.5px; font-weight: 600; text-decoration: none; background: var(--surface2); }
+.viewerBtn:hover { border-color: var(--accent); color: var(--accent); }
+.viewerFrame { flex: 1; width: 100%; border: none; background: #fff; }

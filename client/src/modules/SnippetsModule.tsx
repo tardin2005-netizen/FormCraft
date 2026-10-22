@@ -5,6 +5,7 @@ import vs from './SnippetsModule.module.css'
 import DeleteBtn from './DeleteBtn'
 import Glyph from '../components/Glyph'
 import ItemActions from './ItemActions'
+import { uploadUserFile, deleteUserFile, MAX_UPLOAD_MB } from '../utils/fileUpload'
 
 type SnippetCategory = 'Mensagem' | 'Endereço' | 'Preço' | 'Procedimento' | 'Servidor' | 'Acesso' | 'Outro'
 
@@ -13,6 +14,9 @@ interface SnippetData {
   body: string
   category: SnippetCategory
   tags: string
+  fileUrl?: string
+  fileName?: string
+  storagePath?: string
 }
 
 const CATEGORY_COLOR: Record<SnippetCategory, { bg: string; text: string }> = {
@@ -39,6 +43,9 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [activeCategory, setActiveCategory] = useState<SnippetCategory | 'Todos'>('Todos')
+  const [viewerId, setViewerId] = useState<string | null>(null)
+  const [pendingFile, setPendingFile] = useState<File | null>(null)
+  const [upload, setUpload] = useState({ busy: false, pct: 0, error: '' })
 
   function copy(text: string, id: string) {
     navigator.clipboard.writeText(text).catch(() => {})
@@ -46,7 +53,7 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
     setTimeout(() => setCopied(null), 2000)
   }
 
-  function openNew() { setForm(EMPTY_FORM); setEditingId(null); setShowForm(true) }
+  function openNew() { setForm(EMPTY_FORM); setEditingId(null); setPendingFile(null); setUpload({ busy: false, pct: 0, error: '' }); setShowForm(true) }
 
   function openEdit(id: string, e: React.MouseEvent) {
     e.stopPropagation()
@@ -55,12 +62,26 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
     const d = item.data as unknown as SnippetData
     setForm(d)
     setEditingId(id)
+    setPendingFile(null)
+    setUpload({ busy: false, pct: 0, error: '' })
     setShowForm(true)
   }
 
-  function handleSave() {
-    if (!form.title.trim() || !form.body.trim()) return
+  async function handleSave() {
+    if (!form.title.trim() || !form.body.trim() || upload.busy) return
     const tags = form.tags.split(',').map(t => t.trim()).filter(Boolean)
+    let data: SnippetData = form
+    if (pendingFile) {
+      setUpload({ busy: true, pct: 0, error: '' })
+      try {
+        const up = await uploadUserFile(pendingFile, pct => setUpload(u => ({ ...u, pct })))
+        if (form.storagePath) void deleteUserFile(form.storagePath)
+        data = { ...form, fileUrl: up.url, fileName: pendingFile.name, storagePath: up.storagePath }
+      } catch (err) {
+        setUpload({ busy: false, pct: 0, error: (err as Error).message })
+        return
+      }
+    }
     if (editingId) {
       removeItem(editingId)
     }
@@ -68,13 +89,21 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
       workspaceId,
       moduleId: module.id,
       contentType: 'snippets',
-      data: form as unknown as Record<string, unknown>,
+      data: data as unknown as Record<string, unknown>,
       tags,
       starred: false,
     })
+    setUpload({ busy: false, pct: 0, error: '' })
+    setPendingFile(null)
     setShowForm(false)
     setForm(EMPTY_FORM)
     setEditingId(null)
+  }
+
+  function removeSnippet(id: string) {
+    const d = items.find(i => i.id === id)?.data as unknown as SnippetData | undefined
+    if (d?.storagePath) void deleteUserFile(d.storagePath)
+    removeItem(id)
   }
 
   const expandedItem = expandedId ? items.find(i => i.id === expandedId) : null
@@ -165,7 +194,7 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
                     >
                       <Glyph value="ph:star" size={15} weight={item.starred ? 'fill' : 'bold'} />
                     </button>
-                    <ItemActions onEdit={e => openEdit(item.id, e)} onDelete={() => removeItem(item.id)} />
+                    <ItemActions onEdit={e => openEdit(item.id, e)} onDelete={() => removeSnippet(item.id)} />
                   </div>
                 </div>
 
@@ -176,6 +205,23 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
                   <div className={s.tags}>{item.tags.map(t => <span key={t} className={s.tag}>#{t}</span>)}</div>
                 )}
 
+                {d.fileUrl && (
+                  <div className={vs.fileActions}>
+                    <button
+                      className={vs.fileBtn}
+                      onClick={e => { e.stopPropagation(); setViewerId(item.id) }}
+                      title={d.fileName}
+                    ><Glyph value="ph:file-pdf" size={14} /> Abrir PDF</button>
+                    <a
+                      className={vs.fileBtn}
+                      href={d.fileUrl}
+                      download={d.fileName || 'procedimento.pdf'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={e => e.stopPropagation()}
+                    ><Glyph value="ph:download-simple" size={14} /> Baixar</a>
+                  </div>
+                )}
                 <button
                   className={`${vs.copyBtn} ${isCopied ? vs.copied : ''}`}
                   onClick={e => { e.stopPropagation(); copy(d.body, item.id) }}
@@ -209,6 +255,16 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
             </div>
             <div className={vs.expandBody}>{expandedData.body}</div>
             <div className={vs.expandFooter}>
+              {expandedData.fileUrl && (
+                <>
+                  <button className={vs.fileBtn} style={{ marginTop: 0, width: 'auto', padding: '9px 16px' }} onClick={() => setViewerId(expandedId)}>
+                    <Glyph value="ph:file-pdf" size={14} /> Abrir PDF
+                  </button>
+                  <a className={vs.fileBtn} style={{ marginTop: 0, width: 'auto', padding: '9px 16px' }} href={expandedData.fileUrl} download={expandedData.fileName || 'procedimento.pdf'} target="_blank" rel="noopener noreferrer">
+                    <Glyph value="ph:download-simple" size={14} /> Baixar
+                  </a>
+                </>
+              )}
               <button
                 className={`${vs.copyBtn} ${copied === expandedId ? vs.copied : ''}`}
                 onClick={() => copy(expandedData.body, expandedId)}
@@ -219,6 +275,25 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
           </div>
         </div>
       )}
+
+      {/* ── PDF viewer ── */}
+      {viewerId && (() => {
+        const vd = items.find(i => i.id === viewerId)?.data as unknown as SnippetData | undefined
+        if (!vd?.fileUrl) return null
+        return (
+          <div className={s.backdrop} onClick={() => setViewerId(null)}>
+            <div className={vs.viewer} onClick={e => e.stopPropagation()}>
+              <div className={vs.viewerBar}>
+                <span className={vs.viewerTitle}>{vd.title}</span>
+                <a className={vs.viewerBtn} href={vd.fileUrl} download={vd.fileName || 'procedimento.pdf'} target="_blank" rel="noopener noreferrer"><Glyph value="ph:download-simple" size={14} /> Baixar</a>
+                <a className={vs.viewerBtn} href={vd.fileUrl} target="_blank" rel="noopener noreferrer">Abrir em nova aba</a>
+                <button className={vs.expandClose} onClick={() => setViewerId(null)}>✕</button>
+              </div>
+              <iframe className={vs.viewerFrame} src={vd.fileUrl} title={vd.title} />
+            </div>
+          </div>
+        )
+      })()}
 
       {/* ── Form modal ── */}
       {showForm && (
@@ -263,6 +338,25 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
                   rows={8}
                 />
               </div>
+              <div className={`${s.formGroup} ${s.fullWidth}`}>
+                <label className={s.label}>PDF ou arquivo do procedimento</label>
+                {form.fileUrl && !pendingFile && (
+                  <div className={vs.fileRow}>
+                    <Glyph value="ph:paperclip" size={14} />
+                    <a href={form.fileUrl} target="_blank" rel="noopener noreferrer">{form.fileName || 'Arquivo anexado'}</a>
+                    <button type="button" onClick={() => setForm(p => ({ ...p, fileUrl: undefined, fileName: undefined }))}>remover</button>
+                  </div>
+                )}
+                <input
+                  className={s.input}
+                  type="file"
+                  accept=".pdf,image/*"
+                  onChange={e => { setPendingFile(e.target.files?.[0] ?? null); setUpload({ busy: false, pct: 0, error: '' }) }}
+                />
+                <span className={s.hint}>Opcional · até {MAX_UPLOAD_MB} MB. Fica salvo junto com o snippet.</span>
+                {upload.busy && <span className={s.hint}>Enviando… {upload.pct}%</span>}
+                {upload.error && <span className={s.hint} style={{ color: '#ef4444' }}>{upload.error}</span>}
+              </div>
               <div className={s.formGroup}>
                 <label className={s.label}>Tags</label>
                 <input
@@ -278,7 +372,7 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
               <button
                 className={s.saveBtn}
                 onClick={handleSave}
-                disabled={!form.title.trim() || !form.body.trim()}
+                disabled={!form.title.trim() || !form.body.trim() || upload.busy}
               >
                 Salvar
               </button>
