@@ -211,3 +211,10 @@
 .viewerBtn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 12.5px; font-weight: 600; text-decoration: none; background: var(--surface2); }
 .viewerBtn:hover { border-color: var(--accent); color: var(--accent); }
 .viewerFrame { flex: 1; width: 100%; border: none; background: #fff; }
+
+.secret { filter: blur(5px); user-select: none; transition: filter .15s; }
+.card:hover .secret { filter: none; user-select: text; }
+.secretHint { font-size: 11px; color: var(--text2); display: flex; align-items: center; gap: 4px; }
+.card:hover .secretHint { display: none; }
+.importList { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); margin: 10px 0 4px; }
+.importChip { background: var(--surface2); border: 1px solid var(--border); border-radius: 99px; padding: 2px 10px; color: var(--text); font-weight: 600; }

@@ -33,6 +33,18 @@ const CATEGORIES: SnippetCategory[] = ['Mensagem', 'Endereço', 'Preço', 'Proce
 
 const SERVER_TEMPLATE = 'Endereço: \nUsuário: \nGateway: \nPara que serve: \nSenha: guardada no gerenciador de senhas'
 
+/** Divide um texto colado em blocos separados por linhas de traços; 1ª linha vira o título. */
+export function parseAccessBlocks(text: string): { title: string; body: string }[] {
+  return text
+    .split(/\n\s*[—–_=-]{5,}\s*(?:\n|$)/)
+    .map(block => block.replace(/^\s*[—–_=-]{5,}\s*\n?/, '').trim())
+    .map(block => {
+      const lines = block.split('\n')
+      return { title: lines[0].trim(), body: lines.slice(1).join('\n').trim() }
+    })
+    .filter(b => b.title && b.body)
+}
+
 const EMPTY_FORM: SnippetData = { title: '', body: '', category: 'Outro', tags: '' }
 
 export default function SnippetsModule({ module, workspaceId, items, addItem, removeItem, toggleStar }: ModuleProps) {
@@ -43,6 +55,8 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [activeCategory, setActiveCategory] = useState<SnippetCategory | 'Todos'>('Todos')
+  const [importOpen, setImportOpen] = useState(false)
+  const [importText, setImportText] = useState('')
   const [viewerId, setViewerId] = useState<string | null>(null)
   const [pendingFile, setPendingFile] = useState<File | null>(null)
   const [upload, setUpload] = useState({ busy: false, pct: 0, error: '' })
@@ -100,6 +114,24 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
     setEditingId(null)
   }
 
+  const importBlocks = parseAccessBlocks(importText)
+
+  function handleImport() {
+    for (const b of importBlocks) {
+      addItem({
+        workspaceId,
+        moduleId: module.id,
+        contentType: 'snippets',
+        data: { title: b.title, body: b.body, category: 'Acesso', tags: 'acesso' } as unknown as Record<string, unknown>,
+        tags: ['acesso'],
+        starred: false,
+      })
+    }
+    setImportText('')
+    setImportOpen(false)
+    setActiveCategory('Acesso')
+  }
+
   function removeSnippet(id: string) {
     const d = items.find(i => i.id === id)?.data as unknown as SnippetData | undefined
     if (d?.storagePath) void deleteUserFile(d.storagePath)
@@ -126,7 +158,10 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
     <div>
       <div className={s.moduleHeader}>
         <h2 className={s.moduleTitle}>{module.name || 'Snippets'}</h2>
-        <button className={s.addBtn} onClick={openNew}>+ Adicionar</button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className={s.cancelBtn} onClick={() => setImportOpen(true)}>Importar acessos</button>
+          <button className={s.addBtn} onClick={openNew}>+ Adicionar</button>
+        </div>
       </div>
 
       {items.length > 0 && (
@@ -199,7 +234,8 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
                 </div>
 
                 <div className={vs.title}>{d.title}</div>
-                <div className={vs.preview}>{d.body}</div>
+                <div className={`${vs.preview} ${d.category === 'Acesso' ? vs.secret : ''}`}>{d.body}</div>
+                {d.category === 'Acesso' && <div className={vs.secretHint}><Glyph value="ph:lock" size={12} /> Passe o mouse para ver</div>}
 
                 {item.tags.length > 0 && (
                   <div className={s.tags}>{item.tags.map(t => <span key={t} className={s.tag}>#{t}</span>)}</div>
@@ -270,6 +306,36 @@ export default function SnippetsModule({ module, workspaceId, items, addItem, re
                 onClick={() => copy(expandedData.body, expandedId)}
               >
                 {copied === expandedId ? <><Glyph value="ph:check" size={13} /> Copiado!</> : <><Glyph value="ph:clipboard" size={13} /> Copiar conteúdo</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Importar acessos ── */}
+      {importOpen && (
+        <div className={s.backdrop} onClick={e => { if (e.target === e.currentTarget) setImportOpen(false) }}>
+          <div className={s.formModal}>
+            <h3 className={s.formTitle}>Importar acessos</h3>
+            <span className={s.hint}>Cole o texto. Cada bloco separado por uma linha de traços (————) vira um card na categoria Acesso; a primeira linha do bloco é o título.</span>
+            <textarea
+              className={s.textarea}
+              rows={12}
+              placeholder={'ADMINS RJ\nMac\nusuario\nsenha\n—————————\nSENHAS WIFI\nRede\nSENHA: ...'}
+              value={importText}
+              onChange={e => setImportText(e.target.value)}
+              autoFocus
+            />
+            {importBlocks.length > 0 && (
+              <div className={vs.importList}>
+                {importBlocks.length} {importBlocks.length === 1 ? 'card será criado' : 'cards serão criados'}:
+                {importBlocks.map((b, i) => <span key={i} className={vs.importChip}>{b.title}</span>)}
+              </div>
+            )}
+            <div className={s.formFooter}>
+              <button className={s.cancelBtn} onClick={() => { setImportOpen(false); setImportText('') }}>Cancelar</button>
+              <button className={s.saveBtn} onClick={handleImport} disabled={importBlocks.length === 0}>
+                Importar {importBlocks.length || ''}
               </button>
             </div>
           </div>
