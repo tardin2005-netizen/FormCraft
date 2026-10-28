@@ -39,8 +39,10 @@ const LOGO_SECTIONS: { title: string; items: Asset[] }[] = [
 ]
 
 const POST_BACKGROUNDS: Asset[] = [
-  { name: 'Fundo marrom listrado', tag: 'PNG 1600×2000', slug: 'fundo-post-marrom', bg: 'escuro', portrait: true },
-  { name: 'Fundo creme', tag: 'PNG 1600×2000', slug: 'fundo-post-creme', bg: 'creme', portrait: true },
+  { name: 'Marrom · com logotipo', tag: 'PNG 1600×2000', slug: 'fundo-post-marrom', bg: 'escuro', portrait: true },
+  { name: 'Marrom · sem logotipo', tag: 'PNG 1600×2000', slug: 'fundo-post-marrom-sem-logotipo', bg: 'escuro', portrait: true },
+  { name: 'Creme · com logotipo', tag: 'PNG 1600×2000', slug: 'fundo-post-creme', bg: 'creme', portrait: true },
+  { name: 'Creme · sem logotipo', tag: 'PNG 1600×2000', slug: 'fundo-post-creme-sem-logotipo', bg: 'creme', portrait: true },
 ]
 
 const AVATARS: Asset[] = [
