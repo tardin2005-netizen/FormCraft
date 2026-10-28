@@ -6,7 +6,7 @@ const BASE = `${import.meta.env.BASE_URL}livstar/`
 const file = (n: string) => `${BASE}livstar-${n}.png`
 
 type Bg = 'creme' | 'branco' | 'checker' | 'checkerDark' | 'escuro'
-interface Asset { name: string; tag: string; slug: string; bg: Bg; square?: boolean }
+interface Asset { name: string; tag: string; slug: string; bg: Bg; square?: boolean; portrait?: boolean }
 
 const BG_STYLE: Record<Bg, React.CSSProperties> = {
   creme: { background: '#f8f4ef' },
@@ -38,6 +38,11 @@ const LOGO_SECTIONS: { title: string; items: Asset[] }[] = [
   ] },
 ]
 
+const POST_BACKGROUNDS: Asset[] = [
+  { name: 'Fundo marrom listrado', tag: 'PNG 1600×2000', slug: 'fundo-post-marrom', bg: 'escuro', portrait: true },
+  { name: 'Fundo creme', tag: 'PNG 1600×2000', slug: 'fundo-post-creme', bg: 'creme', portrait: true },
+]
+
 const AVATARS: Asset[] = [
   { name: 'Estrela · creme', tag: 'PNG 1080×1080', slug: 'perfil-estrela-creme', bg: 'creme', square: true },
   { name: 'Estrela · marrom', tag: 'PNG 1080×1080', slug: 'perfil-estrela-marrom', bg: 'escuro', square: true },
@@ -54,7 +59,7 @@ function AssetCard({ a }: { a: Asset }) {
   const url = file(a.slug)
   return (
     <div className={s.card}>
-      <div className={`${s.preview} ${a.square ? s.square : ''} ${a.bg === 'checker' ? s.checker : a.bg === 'checkerDark' ? s.checkerDark : ''}`} style={BG_STYLE[a.bg]}>
+      <div className={`${s.preview} ${a.square ? s.square : ''} ${a.portrait ? s.portrait : ''} ${a.bg === 'checker' ? s.checker : a.bg === 'checkerDark' ? s.checkerDark : ''}`} style={BG_STYLE[a.bg]}>
         <img src={url} alt={a.name} loading="lazy" />
         {a.square && <span className={s.ring} />}
       </div>
@@ -89,6 +94,10 @@ export function LiveStarLogos() {
           <div className={s.grid}>{sec.items.map(a => <AssetCard key={a.slug} a={a} />)}</div>
         </div>
       ))}
+      <div className={s.section}>
+        <h3 className={s.sectionTitle}>Fundos de post (4:5)</h3>
+        <div className={s.grid}>{POST_BACKGROUNDS.map(a => <AssetCard key={a.slug} a={a} />)}</div>
+      </div>
       <div className={s.section}>
         <h3 className={s.sectionTitle}>Cores da marca</h3>
         <div className={s.palette}>
