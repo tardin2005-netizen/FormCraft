@@ -6,6 +6,7 @@ import ErrorBoundary from './components/ErrorBoundary'
 import { useMigrateFaculdadeHub } from './hooks/useMigrateFaculdadeHub'
 import { useSeedGrupoLive } from './hooks/useSeedGrupoLive'
 import { useSeedProcedimentosTI } from './hooks/useSeedProcedimentosTI'
+import { useSeedAulaIA } from './hooks/useSeedAulaIA'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Inbox from './pages/Inbox'
@@ -39,6 +40,7 @@ function AppRoutes() {
   useMigrateFaculdadeHub()
   useSeedGrupoLive()
   useSeedProcedimentosTI()
+  useSeedAulaIA()
 
   if (loading) return <LoadingScreen />
 

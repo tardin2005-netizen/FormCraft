@@ -182,6 +182,8 @@ function ContextMenu({ state, onClose }: { state: CtxMenuState; onClose: () => v
   )
 }
 
+const isImageUrl = (u?: string) => !!u && /\.(png|jpe?g|webp|gif|avif|svg)(\?|#|$)/i.test(u)
+
 function ContentCard({ c, onDelete }: { c: HubContent; onDelete: () => void }) {
   const [collapsed, setCollapsed] = useState(false)
   const blocks = c.content ? parseContent(c.content) : null
@@ -233,6 +235,12 @@ function ContentCard({ c, onDelete }: { c: HubContent; onDelete: () => void }) {
                 onReplace={() => replaceRef.current?.click()}
               />}
         </>
+      )}
+
+      {c.type === 'file' && isImageUrl(c.url) && (
+        <a href={c.url} target="_blank" rel="noopener noreferrer" className={s.cardImageLink} title="Abrir imagem">
+          <img src={c.url} alt={c.title} className={s.cardImage} loading="lazy" />
+        </a>
       )}
 
       {blocks && !collapsed && (
@@ -474,8 +482,8 @@ function SubjectPanel(p: SubjectPanelProps) {
                   const preview = c.content ? plainText(c.content).slice(0, 110) : c.url ? getDomain(c.url) : ''
                   return (
                     <button key={c.id} className={`${s.spTile} ${openMat === c.id ? s.spTileOn : ''}`} onClick={() => setOpenMat(openMat === c.id ? null : c.id)}>
-                      <span className={s.spTileCover} style={{ background: MAT_TINT[c.type] }}>
-                        <span className={s.spMatIcon}><Glyph value={CONTENT_ICON[c.type]} size={22} /></span>
+                      <span className={s.spTileCover} style={{ background: c.type === 'file' && isImageUrl(c.url) ? `center / cover no-repeat url(${c.url}), ${MAT_TINT[c.type]}` : MAT_TINT[c.type], minHeight: c.type === 'file' && isImageUrl(c.url) ? 96 : undefined }}>
+                        {!(c.type === 'file' && isImageUrl(c.url)) && <span className={s.spMatIcon}><Glyph value={CONTENT_ICON[c.type]} size={22} /></span>}
                         <span className={s.spTypeChip}>{CONTENT_LABEL[c.type]}</span>
                       </span>
                       <span className={s.spTileBody}>

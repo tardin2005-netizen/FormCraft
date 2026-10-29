@@ -37,6 +37,7 @@ const RAW_TOOLS: Omit<Tool, 'tags'>[] = [
   { name: 'Omni Flash',       cat: 'IA & Pesquisa',    pricing: 'FREEMIUM',   color: '#34A853', letter: 'G', url: 'https://gemini.google.com',              desc: 'Modelo multimodal do Gemini para vídeo em várias cenas e edição por instrução' },
   { name: 'Perplexity Comet', cat: 'IA & Pesquisa',    pricing: 'ASSINATURA', color: '#1BA1E2', letter: 'P', url: 'https://www.perplexity.ai/',             desc: 'Navegador com IA integrada em todas as abas — pesquisa contextual enquanto você navega' },
   // Imagem & Design
+  { name: 'AdCreative.ai',   cat: 'Imagem & Design',  pricing: 'ASSINATURA', color: '#7A4A00', letter: 'A', url: 'https://pt-br.adcreative.ai/',          desc: 'Gera imagens e criativos de campanha (Social Post, anúncios) com IA a partir da sua marca — usado na aula de IA de 29/10/2026' },
   { name: 'Figma',            cat: 'Imagem & Design',  pricing: 'FREEMIUM',   color: '#A259FF', letter: 'F', url: 'https://figma.com',                      desc: 'Design colaborativo e prototipagem na web' },
   { name: 'Canva',            cat: 'Imagem & Design',  pricing: 'FREEMIUM',   color: '#00C4CC', letter: 'C', url: 'https://canva.com',                      desc: 'Criação gráfica acessível para todos' },
   { name: 'Midjourney',       cat: 'Imagem & Design',  pricing: 'ASSINATURA', color: '#2D3277', letter: 'M', url: 'https://midjourney.com',                 desc: 'Geração de imagens de alta qualidade com IA' },
@@ -152,6 +153,7 @@ const RAW_TOOLS: Omit<Tool, 'tags'>[] = [
 
 /** Tags por ferramenta (sem acento; a busca ignora acentos). */
 const TOOL_TAGS: Record<string, string[]> = {
+  "AdCreative.ai": ["anúncios", "criativos", "campanha", "social post", "marca", "imagem"],
   "Perplexity": ["pesquisa", "busca", "fontes", "chatbot"],
   "Gemini": ["chatbot", "google", "multimodal", "assistente"],
   "Claude": ["chatbot", "raciocínio", "código", "assistente"],
