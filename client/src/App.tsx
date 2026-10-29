@@ -7,6 +7,7 @@ import { useMigrateFaculdadeHub } from './hooks/useMigrateFaculdadeHub'
 import { useSeedGrupoLive } from './hooks/useSeedGrupoLive'
 import { useSeedProcedimentosTI } from './hooks/useSeedProcedimentosTI'
 import { useSeedAulaIA } from './hooks/useSeedAulaIA'
+import { useSeedStorytellingADO } from './hooks/useSeedStorytellingADO'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Inbox from './pages/Inbox'
@@ -41,6 +42,7 @@ function AppRoutes() {
   useSeedGrupoLive()
   useSeedProcedimentosTI()
   useSeedAulaIA()
+  useSeedStorytellingADO()
 
   if (loading) return <LoadingScreen />
 
