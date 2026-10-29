@@ -184,6 +184,25 @@ function ContextMenu({ state, onClose }: { state: CtxMenuState; onClose: () => v
 
 const isImageUrl = (u?: string) => !!u && /\.(png|jpe?g|webp|gif|avif|svg)(\?|#|$)/i.test(u)
 
+function ImageLightbox({ src, title, onClose }: { src: string; title: string; onClose: () => void }) {
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', h)
+    return () => window.removeEventListener('keydown', h)
+  }, [onClose])
+  return (
+    <div className={s.lightbox} onClick={onClose}>
+      <div className={s.lightboxBar} onClick={e => e.stopPropagation()}>
+        <span className={s.lightboxTitle}>{title}</span>
+        <a href={src} target="_blank" rel="noopener noreferrer" className={s.lightboxBtn}>Abrir em nova aba</a>
+        <a href={src} download className={s.lightboxBtn}>Baixar</a>
+        <button className={s.lightboxBtn} onClick={onClose}>Fechar ✕</button>
+      </div>
+      <img src={src} alt={title} className={s.lightboxImg} onClick={e => e.stopPropagation()} />
+    </div>
+  )
+}
+
 function ContentCard({ c, onDelete }: { c: HubContent; onDelete: () => void }) {
   const [collapsed, setCollapsed] = useState(false)
   const blocks = c.content ? parseContent(c.content) : null
@@ -320,6 +339,7 @@ function SubjectPanel(p: SubjectPanelProps) {
   const { subj, classes, contents, concepts, selClass } = p
   const [tab, setTab] = useState<'aulas' | 'materiais' | 'conceitos'>('aulas')
   const [openMat, setOpenMat] = useState<string | null>(null)
+  const [lightbox, setLightbox] = useState<{ src: string; title: string } | null>(null)
   useEffect(() => { if (selClass) setTab('aulas') }, [selClass])
 
   const cls = classes.find(c => c.id === selClass)
@@ -481,7 +501,7 @@ function SubjectPanel(p: SubjectPanelProps) {
                   const owner = classes.find(x => x.id === c.classId)
                   const preview = c.content ? plainText(c.content).slice(0, 110) : c.url ? getDomain(c.url) : ''
                   return (
-                    <button key={c.id} className={`${s.spTile} ${openMat === c.id ? s.spTileOn : ''}`} onClick={() => setOpenMat(openMat === c.id ? null : c.id)}>
+                    <button key={c.id} className={`${s.spTile} ${openMat === c.id ? s.spTileOn : ''}`} onClick={() => (c.type === 'file' && isImageUrl(c.url) ? setLightbox({ src: c.url!, title: c.title }) : setOpenMat(openMat === c.id ? null : c.id))}>
                       <span className={s.spTileCover} style={{ background: c.type === 'file' && isImageUrl(c.url) ? `center / cover no-repeat url(${c.url}), ${MAT_TINT[c.type]}` : MAT_TINT[c.type], minHeight: c.type === 'file' && isImageUrl(c.url) ? 96 : undefined }}>
                         {!(c.type === 'file' && isImageUrl(c.url)) && <span className={s.spMatIcon}><Glyph value={CONTENT_ICON[c.type]} size={22} /></span>}
                         <span className={s.spTypeChip}>{CONTENT_LABEL[c.type]}</span>
@@ -495,6 +515,7 @@ function SubjectPanel(p: SubjectPanelProps) {
                   )
                 })}
               </div>
+              {lightbox && <ImageLightbox src={lightbox.src} title={lightbox.title} onClose={() => setLightbox(null)} />}
               {openMat && contents.find(c => c.id === openMat) && (
                 <ContentCard c={contents.find(c => c.id === openMat)!} onDelete={() => { p.onRemoveContent(openMat); setOpenMat(null) }} />
               )}
