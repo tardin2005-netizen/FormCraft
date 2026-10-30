@@ -4,6 +4,7 @@ import { useHubsStore } from '../store/hubsStore'
 import { useContentItemsStore } from '../store/contentItemsStore'
 
 const SEED_KEY = 'formcraft-seed-procedimento-backup-google-v1'
+const SEED_KEY_MSG = 'formcraft-seed-msg-maquina-pronta-v1'
 const FACULDADE_HUB_ID = '83b8b5a9-3cad-45f5-b780-edcb97fd126c'
 
 const BODY = `Guia rápido: exportar o E-mail e o Drive de um colaborador (8 passos).
@@ -32,6 +33,9 @@ Se algo travar
 - Baixar seus dados não funciona: o Admin precisa liberar o Google Takeout na unidade do usuário (Apps > Serviços adicionais do Google).
 - Passou de 10 GB: o Google divide em vários .zip; baixe todos.`
 
+const MSG_TITLE = 'Aviso — Máquina pronta (assinar termo)'
+const MSG_BODY = `Olá! Sua máquina já foi configurada pela TI. Assim que pegá-la, por favor assine o termo de recebimento que enviamos para o seu e-mail corporativo. Qualquer dúvida, estamos por aqui!`
+
 /** Cria uma vez o snippet "Backup de usuário Google" (com o PDF anexado) no hub de TI. */
 export function useSeedProcedimentosTI() {
   const { user } = useAuth()
@@ -40,7 +44,7 @@ export function useSeedProcedimentosTI() {
   const { items, addItem } = useContentItemsStore()
 
   useEffect(() => {
-    if (!user || localStorage.getItem(SEED_KEY)) return
+    if (!user || (localStorage.getItem(SEED_KEY) && localStorage.getItem(SEED_KEY_MSG))) return
     // Espera o Firestore carregar (mesmo critério do hub da faculdade)
     if (subjects.filter(x => x.hubId === FACULDADE_HUB_ID).length < 15) return
     // O hub de TI é o que já tem snippets de Servidor/Procedimento; se não achar, tenta pelo nome.
@@ -53,6 +57,20 @@ export function useSeedProcedimentosTI() {
       ?? hubs.find(h => /(^|[^a-zà-ú])ti([^a-zà-ú]|$)|tecnologia|suporte|infra|inform[aá]tica|sistemas/i.test(h.name))
     if (!ti) return
     const moduleId = `hub-${ti.id}-snippets`
+    if (!localStorage.getItem(SEED_KEY_MSG)) {
+      if (!items.some(i => i.moduleId === moduleId && (i.data as { title?: string }).title === MSG_TITLE)) {
+        addItem({
+          workspaceId: ti.id,
+          moduleId,
+          contentType: 'snippets',
+          data: { title: MSG_TITLE, body: MSG_BODY, category: 'Mensagem', tags: 'template, recebimento, maquina, email' },
+          tags: ['template', 'recebimento', 'maquina', 'email'],
+          starred: false,
+        })
+      }
+      localStorage.setItem(SEED_KEY_MSG, '1')
+    }
+    if (localStorage.getItem(SEED_KEY)) return
     const already = items.some(i => i.moduleId === moduleId && (i.data as { title?: string }).title === 'Backup de usuário Google')
     if (!already) {
       addItem({
